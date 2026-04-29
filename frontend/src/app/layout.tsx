@@ -1,18 +1,17 @@
 import type { Metadata } from "next";
-import { Alegreya_Sans, Bricolage_Grotesque } from "next/font/google";
+import { Lexend, Plus_Jakarta_Sans } from "next/font/google";
 
 import { AppProviders } from "@/components/providers/app-providers";
 
 import "./globals.css";
 
-const headingFont = Bricolage_Grotesque({
+const headingFont = Lexend({
   subsets: ["latin"],
   variable: "--font-heading"
 });
 
-const bodyFont = Alegreya_Sans({
+const bodyFont = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "700", "800"],
   variable: "--font-body"
 });
 

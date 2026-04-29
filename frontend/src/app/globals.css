@@ -4,17 +4,6 @@
 
 :root {
   color-scheme: light;
-  --cave-night: #17110d;
-  --cave-ink: #241912;
-  --cave-charcoal: #38271d;
-  --cave-stone: #f1dfc2;
-  --cave-stone-deep: #d8bd91;
-  --cave-bone: #fff7e6;
-  --cave-ochre: #c96524;
-  --cave-sun: #e4a92f;
-  --cave-moss: #577046;
-  --cave-clay: #8e3f24;
-  --cave-line: rgba(48, 31, 20, 0.22);
 }
 
 * {
@@ -29,12 +18,11 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(circle at 12% 8%, rgba(201, 101, 36, 0.18), transparent 28%),
-    radial-gradient(circle at 88% 12%, rgba(87, 112, 70, 0.14), transparent 24%),
-    linear-gradient(180deg, #f2dfbe 0%, #d9bd88 48%, #ba8a58 100%);
-  color: var(--cave-ink);
+    radial-gradient(circle at top left, rgba(14, 165, 233, 0.08), transparent 24%),
+    radial-gradient(circle at top right, rgba(245, 158, 11, 0.08), transparent 18%),
+    linear-gradient(180deg, #f4f7fb 0%, #edf2f8 100%);
+  color: #0f172a;
   font-family: var(--font-body), sans-serif;
-  font-size: 17px;
 }
 
 a {
@@ -49,29 +37,19 @@ textarea {
 }
 
 .surface-card {
-  position: relative;
-  overflow: hidden;
-  border: 2px solid rgba(54, 35, 22, 0.28);
-  border-radius: 8px;
-  background:
-    linear-gradient(135deg, rgba(255, 247, 230, 0.92), rgba(229, 197, 146, 0.86)),
-    repeating-linear-gradient(22deg, rgba(56, 39, 29, 0.045) 0 2px, transparent 2px 9px);
-  box-shadow: 0 18px 0 rgba(61, 38, 24, 0.08), 0 24px 54px -36px rgba(36, 25, 18, 0.62);
+  @apply rounded-2xl border border-slate-200/80 bg-white/95 shadow-[0_20px_60px_-42px_rgba(15,23,42,0.28)] backdrop-blur;
 }
 
 .surface-panel {
-  border: 2px solid rgba(54, 35, 22, 0.22);
-  border-radius: 8px;
-  background: rgba(255, 247, 230, 0.76);
-  backdrop-filter: blur(10px);
+  @apply rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur;
 }
 
 .section-title {
-  @apply font-heading text-2xl font-extrabold text-[#241912];
+  @apply font-heading text-2xl font-semibold tracking-tight text-slate-950;
 }
 
 .eyebrow {
-  @apply text-xs font-extrabold uppercase tracking-[0.2em] text-[#8e3f24];
+  @apply text-xs font-semibold uppercase tracking-[0.24em] text-slate-500;
 }
 
 .workspace-shell {
@@ -84,87 +62,20 @@ textarea {
   inset: 0;
   pointer-events: none;
   background-image:
-    radial-gradient(circle at 16% 18%, rgba(36, 25, 18, 0.16) 0 1px, transparent 2px),
-    radial-gradient(circle at 72% 36%, rgba(142, 63, 36, 0.14) 0 2px, transparent 3px),
-    repeating-linear-gradient(98deg, rgba(36, 25, 18, 0.045) 0 1px, transparent 1px 16px);
-  background-size: 68px 68px, 92px 92px, 100% 100%;
-  mix-blend-mode: multiply;
-  mask-image: linear-gradient(180deg, rgba(15, 23, 42, 0.38), transparent 88%);
+    linear-gradient(rgba(148, 163, 184, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.07) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: linear-gradient(180deg, rgba(15, 23, 42, 0.28), transparent 78%);
 }
 
 .dashboard-panel {
-  position: relative;
-  overflow: hidden;
-  border: 2px solid rgba(54, 35, 22, 0.28);
-  border-radius: 8px;
-  background:
-    linear-gradient(135deg, rgba(255, 247, 230, 0.92), rgba(229, 197, 146, 0.86)),
-    repeating-linear-gradient(22deg, rgba(56, 39, 29, 0.045) 0 2px, transparent 2px 9px);
-  box-shadow: 0 18px 0 rgba(61, 38, 24, 0.08), 0 24px 54px -36px rgba(36, 25, 18, 0.62);
+  @apply rounded-2xl border border-slate-200/80 bg-white/95 shadow-[0_18px_60px_-44px_rgba(15,23,42,0.28)] backdrop-blur-xl;
 }
 
 .dashboard-panel-muted {
-  border-radius: 8px;
-  border: 1px dashed rgba(56, 39, 29, 0.35);
-  background: rgba(255, 247, 230, 0.52);
+  @apply rounded-2xl border border-slate-200/70 bg-slate-50/90;
 }
 
 .panel-label {
-  @apply text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#8e3f24];
-}
-
-.cave-wall {
-  background:
-    radial-gradient(circle at 24% 18%, rgba(255, 247, 230, 0.22), transparent 20%),
-    radial-gradient(circle at 82% 30%, rgba(228, 169, 47, 0.16), transparent 22%),
-    linear-gradient(135deg, #27190f 0%, #5e3720 42%, #ae6a35 100%);
-}
-
-.cave-chip {
-  border: 1px solid rgba(54, 35, 22, 0.24);
-  border-radius: 999px;
-  background: rgba(255, 247, 230, 0.62);
-  color: var(--cave-charcoal);
-}
-
-.cave-input {
-  width: 100%;
-  border-radius: 8px;
-  border: 2px solid rgba(54, 35, 22, 0.2);
-  background: rgba(255, 247, 230, 0.82);
-  color: var(--cave-ink);
-  outline: none;
-  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
-}
-
-.cave-input:focus {
-  border-color: var(--cave-ochre);
-  background: var(--cave-bone);
-  box-shadow: 0 0 0 4px rgba(201, 101, 36, 0.14);
-}
-
-.cave-button {
-  border-radius: 8px;
-  border: 2px solid rgba(23, 17, 13, 0.92);
-  background: linear-gradient(180deg, #2d1f16, #17110d);
-  color: #fff7e6;
-  box-shadow: 0 5px 0 rgba(23, 17, 13, 0.28);
-  transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
-}
-
-.cave-button:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.08);
-  box-shadow: 0 7px 0 rgba(23, 17, 13, 0.22);
-}
-
-.cave-button:active {
-  transform: translateY(2px);
-  box-shadow: 0 2px 0 rgba(23, 17, 13, 0.28);
-}
-
-.cave-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.56;
-  transform: none;
+  @apply text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500;
 }

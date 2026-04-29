@@ -9,16 +9,16 @@ const config: Config = {
         body: ["var(--font-body)", "sans-serif"]
       },
       boxShadow: {
-        soft: "0 24px 60px rgba(48, 31, 20, 0.22)"
+        soft: "0 24px 60px rgba(15, 23, 42, 0.14)"
       },
       colors: {
         brand: {
-          ink: "#241912",
-          ocean: "#577046",
-          gold: "#E4A92F",
-          mint: "#7B8F54",
-          paper: "#FFF7E6",
-          line: "#B58B60"
+          ink: "#081225",
+          ocean: "#155DFC",
+          gold: "#F7B500",
+          mint: "#2ABF88",
+          paper: "#F7F9FC",
+          line: "#D6DEEB"
         }
       }
     }
