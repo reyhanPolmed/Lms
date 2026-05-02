@@ -46,7 +46,7 @@ export interface SidebarEntry {
   href: string;
   isLocked: boolean;
   isCompleted: boolean;
-  section: string;
+  bab: string;
 }
 
 export interface ModuleSection {

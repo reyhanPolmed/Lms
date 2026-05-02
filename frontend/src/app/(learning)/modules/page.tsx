@@ -1,5 +1,8 @@
 "use client";
 
+import Link from "next/link";
+import { ChevronRight, Home } from "lucide-react";
+
 import { ModuleCard } from "@/components/dashboard/module-card";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useModulesQuery } from "@/hooks/use-lms-data";
@@ -21,6 +24,16 @@ export default function ModulesPage() {
 
   return (
     <div className="space-y-8">
+      <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-slate-500">
+        <Home className="h-4 w-4" />
+        <ChevronRight className="h-4 w-4" />
+        <Link className="transition hover:text-brand-ocean" href="/dashboard">
+          Dashboard
+        </Link>
+        <ChevronRight className="h-4 w-4" />
+        <span className="text-slate-950">Materi</span>
+      </div>
+
       <section className="surface-card p-8">
         <p className="eyebrow">Courses</p>
         <h1 className="section-title mt-2">Semua modul yang sedang diikuti</h1>

@@ -1,22 +1,25 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { QuizDetail, QuizSubmitPayload } from "@/lib/types";
+import { QuizDetail, QuizSubmitPayload, SidebarEntry } from "@/lib/types";
 
 export function QuizRunner({
   quiz,
   onStart,
   onSubmit,
   isStarting,
-  isSubmitting
+  isSubmitting,
+  nextItem
 }: {
   quiz: QuizDetail;
   onStart: () => Promise<unknown>;
   onSubmit: (payload: QuizSubmitPayload) => Promise<unknown>;
   isStarting: boolean;
   isSubmitting: boolean;
+  nextItem?: SidebarEntry | null;
 }) {
   const [phase, setPhase] = useState<"intro" | "running" | "submitted">("intro");
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -74,6 +77,11 @@ export function QuizRunner({
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Gagal submit quiz");
     }
+  };
+
+  const handleRetry = async () => {
+    setResult(null);
+    await handleStart();
   };
 
   return (
@@ -182,6 +190,44 @@ export function QuizRunner({
               <p className="mt-4 text-sm text-slate-300">
                 {result?.isPassed ? "Status lulus" : "Belum lulus"} dengan passing grade {quiz.passScore}.
               </p>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              {result?.isPassed ? (
+                nextItem && !nextItem.isLocked ? (
+                  <Link
+                    className="rounded-2xl bg-brand-ocean px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#496ae8]"
+                    href={nextItem.href}
+                  >
+                    Lanjut
+                  </Link>
+                ) : (
+                  <button
+                    className="rounded-2xl bg-brand-ocean px-5 py-3 text-sm font-semibold text-white opacity-60"
+                    disabled
+                    type="button"
+                  >
+                    Lanjut
+                  </button>
+                )
+              ) : (
+                <>
+                  <button
+                    className="rounded-2xl bg-brand-ocean px-5 py-3 text-sm font-semibold text-white opacity-60"
+                    disabled
+                    type="button"
+                  >
+                    Lanjut
+                  </button>
+                  <button
+                    className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 disabled:opacity-60"
+                    disabled={isStarting}
+                    onClick={() => void handleRetry()}
+                    type="button"
+                  >
+                    {isStarting ? "Memulai..." : "Ulangi kuis"}
+                  </button>
+                </>
+              )}
             </div>
           </>
         )}

@@ -19,7 +19,7 @@ Inisiasi frontend berdasarkan `prd.md` dengan stack:
 - `src/app/(app)/tasks/[id]`: task submission
 - `src/app/(app)/profile`: profil dan ganti password
 - `src/lib/api`: axios client + service layer
-- `src/lib/mocks`: fallback data opsional bila `NEXT_PUBLIC_USE_MOCK_API=true`
+- `src/lib/mocks`: data dummy default selama tampilan frontend dikembangkan
 
 ## Menjalankan
 
@@ -28,7 +28,19 @@ npm install
 npm run dev
 ```
 
-Salin `.env.example` menjadi `.env.local` bila perlu. Secara default proyek memakai API backend pada `http://localhost:3001`.
+Secara default proyek memakai data dummy dari `src/lib/mocks` dan tidak memanggil API backend. Salin `.env.example` menjadi `.env.local` bila ingin mengubah konfigurasi.
+
+## Mode data
+
+Mode dummy aktif selama `NEXT_PUBLIC_USE_MOCK_API` tidak bernilai `false`. Dengan konfigurasi default ini, login, dashboard, modul, lesson, quiz, tugas, profil, dan logout berjalan dari data lokal tanpa request ke backend.
+
+Untuk mengaktifkan integrasi backend nanti, isi `.env.local`:
+
+```bash
+NEXT_PUBLIC_USE_MOCK_API=false
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
+NEXT_PUBLIC_CSRF_ENDPOINT=/api/csrf-cookie
+```
 
 ## Catatan integrasi backend
 

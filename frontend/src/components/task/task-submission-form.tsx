@@ -1,23 +1,26 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { toast } from "sonner";
 
 import { StatusBadge } from "@/components/ui/status-badge";
-import { TaskDetail } from "@/lib/types";
+import { SidebarEntry, TaskDetail } from "@/lib/types";
 import { formatDateTime } from "@/lib/utils";
 
 export function TaskSubmissionForm({
   task,
   onSubmit,
-  isSubmitting
+  isSubmitting,
+  nextItem
 }: {
   task: TaskDetail;
   onSubmit: (submissionLink: string) => Promise<unknown>;
   isSubmitting: boolean;
+  nextItem?: SidebarEntry | null;
 }) {
   const [submissionLink, setSubmissionLink] = useState(task.currentSubmission?.link ?? "");
-  const submissionLocked = Boolean(task.currentSubmission && !task.allowRevision);
+  const hasSubmitted = Boolean(task.currentSubmission);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -59,7 +62,7 @@ export function TaskSubmissionForm({
             <span className="mb-2 block text-sm font-medium text-slate-700">Link submission</span>
             <input
               className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-brand-ocean focus:bg-white"
-              disabled={submissionLocked}
+              disabled={hasSubmitted}
               onChange={(event) => setSubmissionLink(event.target.value)}
               placeholder="https://drive.google.com/..."
               required
@@ -68,19 +71,40 @@ export function TaskSubmissionForm({
             />
           </label>
 
-          {submissionLocked && (
-            <p className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-500">
-              Submission sudah terkirim dan backend tidak mengizinkan revisi untuk tugas ini.
-            </p>
+          {hasSubmitted && (
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+              Tugas sudah dikumpulkan. Status modul sekarang complete.
+            </div>
           )}
 
-          <button
-            className="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60"
-            disabled={isSubmitting || submissionLocked}
-            type="submit"
-          >
-            {submissionLocked ? "Revisi tidak diizinkan" : isSubmitting ? "Mengirim..." : "Kirim tugas"}
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <button
+              className="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60"
+              disabled={isSubmitting || hasSubmitted}
+              type="submit"
+            >
+              {hasSubmitted ? "Tugas sudah dikumpulkan" : isSubmitting ? "Mengirim..." : "Kirim tugas"}
+            </button>
+
+            {hasSubmitted ? (
+              nextItem && !nextItem.isLocked ? (
+                <Link
+                  className="rounded-2xl bg-brand-ocean px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#496ae8]"
+                  href={nextItem.href}
+                >
+                  Lanjut
+                </Link>
+              ) : (
+                <button
+                  className="rounded-2xl bg-brand-ocean px-5 py-3 text-sm font-semibold text-white opacity-60"
+                  disabled
+                  type="button"
+                >
+                  Lanjut
+                </button>
+              )
+            ) : null}
+          </div>
         </form>
       </section>
 

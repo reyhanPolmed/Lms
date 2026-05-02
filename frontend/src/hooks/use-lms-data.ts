@@ -41,24 +41,27 @@ export function useModuleDetailQuery(id: string) {
   });
 }
 
-export function useLessonDetailQuery(id: string) {
+export function useLessonDetailQuery(id: string, enabled = true) {
   return useQuery({
     queryKey: queryKeys.lessonDetail(id),
-    queryFn: () => lmsClient.getLessonById(id)
+    queryFn: () => lmsClient.getLessonById(id),
+    enabled: enabled && Boolean(id)
   });
 }
 
-export function useQuizDetailQuery(id: string) {
+export function useQuizDetailQuery(id: string, enabled = true) {
   return useQuery({
     queryKey: queryKeys.quizDetail(id),
-    queryFn: () => lmsClient.getQuizById(id)
+    queryFn: () => lmsClient.getQuizById(id),
+    enabled: enabled && Boolean(id)
   });
 }
 
-export function useTaskDetailQuery(id: string) {
+export function useTaskDetailQuery(id: string, enabled = true) {
   return useQuery({
     queryKey: queryKeys.taskDetail(id),
-    queryFn: () => lmsClient.getTaskById(id)
+    queryFn: () => lmsClient.getTaskById(id),
+    enabled: enabled && Boolean(id)
   });
 }
 

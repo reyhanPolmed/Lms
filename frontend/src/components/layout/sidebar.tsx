@@ -18,9 +18,8 @@ import { cn } from "@/lib/utils";
 const mainNavItems = [
   { href: "/dashboard", label: "Dashboard", icon: Gauge },
   { href: "/modules", label: "My Courses", icon: GraduationCap },
-  { href: "/dashboard", label: "Schedule", icon: CalendarDays },
-  { href: "/modules", label: "Resource Library", icon: BookOpen },
-  { href: "/profile", label: "Performance", icon: BarChart3 }
+  { href: "/schedule", label: "Schedule", icon: CalendarDays },
+  { href: "/library", label: "Resource Library", icon: BookOpen },
 ];
 
 const footerNavItems = [
