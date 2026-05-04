@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+:root {
+  --page-bg: #f7f4ff;
+  --page-ink: #1f2447;
+  --muted-ink: #66709a;
+  --line: rgba(113, 94, 215, 0.12);
+  --panel: rgba(255, 255, 255, 0.82);
+  --accent: #6d5dfc;
+  --font-sans: "Bahnschrift", "Aptos", "Segoe UI", sans-serif;
+  --font-display: "Georgia", "Cambria", "Times New Roman", serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(189, 177, 255, 0.42), transparent 22rem),
+    radial-gradient(circle at top right, rgba(131, 211, 185, 0.18), transparent 18rem),
+    linear-gradient(180deg, #faf7ff 0%, #f4f3ff 52%, #f7f9ff 100%);
+  color: var(--page-ink);
+  font-family: var(--font-sans), sans-serif;
+}
+
+::selection {
+  background: rgba(109, 93, 252, 0.2);
+}
+
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display), serif;
+    letter-spacing: -0.04em;
+  }
+}
+
+@layer components {
+  .panel-surface {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    backdrop-filter: blur(20px);
+    box-shadow:
+      0 16px 42px rgba(79, 70, 216, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  }
+
+  .subtle-grid {
+    background-image:
+      linear-gradient(rgba(113, 94, 215, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(113, 94, 215, 0.06) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
