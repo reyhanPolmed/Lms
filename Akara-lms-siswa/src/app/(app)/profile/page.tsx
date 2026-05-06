@@ -41,7 +41,7 @@ export default function ProfilePage() {
 
     try {
       await updateMutation.mutateAsync({
-        name: String(formData.get("name") ?? ""),
+        fullName: String(formData.get("fullName") ?? ""),
         email: String(formData.get("email") ?? ""),
         phone: String(formData.get("phone") ?? ""),
         bio: String(formData.get("bio") ?? "")
@@ -83,8 +83,8 @@ export default function ProfilePage() {
               <span className="mb-2 block text-sm font-medium text-slate-700">Nama</span>
               <input
                 className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-brand-ocean focus:bg-white"
-                defaultValue={profile.name}
-                name="name"
+                defaultValue={profile.fullName}
+                name="fullName"
                 required
               />
             </label>

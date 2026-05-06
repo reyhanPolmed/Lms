@@ -1,4 +1,6 @@
-export type StatusTone = "draft" | "published" | "scheduled" | "revision" | "approved" | "late";
+import type { SubmissionStatus } from "@akara/shared/constants/enums";
+
+export type StatusTone = "draft" | "published" | "scheduled" | SubmissionStatus;
 
 export type ModuleSummary = {
   id: string;
@@ -20,7 +22,7 @@ export type ReviewRow = {
   module: string;
   task: string;
   submittedAt: string;
-  status: "submitted" | "revision" | "approved" | "late";
+  status: SubmissionStatus;
   score: number;
 };
 
@@ -32,7 +34,7 @@ export type ProgressRow = {
   activeBab: string;
   doneItems: string;
   latestQuiz: number;
-  taskStatus: "submitted" | "revision" | "approved" | "late";
+  taskStatus: SubmissionStatus;
   risk: "rendah" | "sedang" | "tinggi";
   lastActivity: string;
 };
@@ -114,7 +116,7 @@ export const reviews: ReviewRow[] = [
     module: "English Literature",
     task: "Shakespeare Essay",
     submittedAt: "1h ago",
-    status: "revision",
+    status: "returned",
     score: 74,
   },
   {
@@ -148,7 +150,7 @@ export const progressRows: ProgressRow[] = [
     activeBab: "Bab 4 - Persamaan Linear",
     doneItems: "14/18",
     latestQuiz: 92,
-    taskStatus: "approved",
+    taskStatus: "graded",
     risk: "rendah",
     lastActivity: "15m ago",
   },
@@ -172,7 +174,7 @@ export const progressRows: ProgressRow[] = [
     activeBab: "Bab 2 - Operasi Pecahan",
     doneItems: "6/18",
     latestQuiz: 58,
-    taskStatus: "revision",
+    taskStatus: "returned",
     risk: "tinggi",
     lastActivity: "2h ago",
   },

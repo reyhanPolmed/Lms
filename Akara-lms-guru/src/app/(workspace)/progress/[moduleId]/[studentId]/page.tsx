@@ -1,8 +1,8 @@
 import { Badge, PageHeader, Surface } from "@/components/workspace/ui";
 
 const timeline = [
-  { item: "Lesson - Pengantar Konsep", status: "approved", note: "Selesai tepat waktu" },
-  { item: "Quiz - Persamaan Dasar", status: "revision", note: "Perlu review ulang soal 4 dan 7" },
+  { item: "Lesson - Pengantar Konsep", status: "graded", note: "Selesai tepat waktu" },
+  { item: "Quiz - Persamaan Dasar", status: "returned", note: "Perlu review ulang soal 4 dan 7" },
   { item: "Task - Ringkasan Bab 1", status: "submitted", note: "Menunggu penilaian" },
 ];
 
@@ -38,8 +38,8 @@ export default function StudentModuleDetailPage({
             </span>
             <textarea className="h-40 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white p-3 text-[11px] text-[#4f5678] outline-none" />
           </label>
-          <button className="mt-2 w-full rounded-[9px] bg-gradient-to-r from-[#765df5] to-[#5b50dc] px-2 py-2 text-[10px] font-semibold text-white">
-            Simpan Catatan
+          <button className="mt-2 w-full cursor-pointer rounded-[9px] bg-gradient-to-r from-[#765df5] to-[#5b50dc] px-2 py-2 text-[10px] font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98]">
+            Kirim Pesan
           </button>
         </Surface>
       </section>

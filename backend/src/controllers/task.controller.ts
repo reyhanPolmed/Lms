@@ -16,7 +16,7 @@ export async function submitTaskController(request: Request, response: Response)
   const task = await submitTaskSubmission(
     params.id,
     request.authUser!.id,
-    payload.submission_link
+    payload.submissionLink
   );
   response.json(task);
 }

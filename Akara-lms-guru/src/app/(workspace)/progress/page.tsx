@@ -1,22 +1,21 @@
 import Link from "next/link";
 
-import { Badge, MiniInput, PageHeader, Surface } from "@/components/workspace/ui";
-import { progressRows } from "@/lib/teacher-mocks";
+import { Badge, MiniSelect, PageHeader, Surface } from "@/components/workspace/ui";
+import { progressRows, modules } from "@/lib/teacher-mocks";
 
 export default function StudentProgressPage() {
   return (
     <div className="grid min-h-full grid-rows-[auto_auto_minmax(0,1fr)] gap-2">
       <PageHeader
         title="Progres Siswa"
-        description="Monitoring kemajuan per modul untuk identifikasi siswa tertinggal."
+        description="Monitoring kemajuan per mata pelajaran untuk identifikasi siswa tertinggal."
       />
 
       <Surface title="Filter Progres">
-        <div className="grid gap-2 md:grid-cols-4">
-          <MiniInput label="Kelas" placeholder="Semua kelas" />
-          <MiniInput label="Modul" placeholder="Semua modul" />
-          <MiniInput label="Status Progres" placeholder="aktif / tertinggal / selesai" />
-          <MiniInput label="Risiko" placeholder="rendah / sedang / tinggi" />
+        <div className="grid gap-2 md:grid-cols-3">
+          <MiniSelect label="Kelas" options={Array.from(new Set(progressRows.map(r => r.className)))} placeholder="Semua kelas" />
+          <MiniSelect label="Mata Pelajaran" options={Array.from(new Set(modules.map(m => m.name)))} placeholder="Semua mapel" />
+          <MiniSelect label="Status Progres" options={["aktif", "tertinggal", "selesai"]} placeholder="Semua status" />
         </div>
       </Surface>
 
@@ -27,12 +26,11 @@ export default function StudentProgressPage() {
               <tr>
                 <th className="px-3 py-2">Nama Siswa</th>
                 <th className="px-2 py-2">Kelas</th>
-                <th className="px-2 py-2">Modul</th>
+                <th className="px-2 py-2">Mata Pelajaran</th>
                 <th className="px-2 py-2">Bab Aktif</th>
                 <th className="px-2 py-2">Item Selesai</th>
                 <th className="px-2 py-2">Nilai Kuis</th>
                 <th className="px-2 py-2">Status Tugas</th>
-                <th className="px-2 py-2">Risiko</th>
                 <th className="px-2 py-2">Last Activity</th>
                 <th className="px-2 py-2">Aksi</th>
               </tr>
@@ -47,7 +45,6 @@ export default function StudentProgressPage() {
                   <td className="px-2 py-2.5">{row.doneItems}</td>
                   <td className="px-2 py-2.5">{row.latestQuiz}</td>
                   <td className="px-2 py-2.5"><Badge status={row.taskStatus} /></td>
-                  <td className="px-2 py-2.5"><Badge status={row.risk} /></td>
                   <td className="px-2 py-2.5">{row.lastActivity}</td>
                   <td className="px-2 py-2.5">
                     <Link

@@ -1,8 +1,12 @@
+"use client";
+
 import { Eye, Save, Send } from "lucide-react";
 
 import { MiniInput, PageHeader, Surface } from "@/components/workspace/ui";
+import { useToast } from "@/components/workspace/toast";
 
 export default function TaskEditorPage() {
+  const { toast } = useToast();
   return (
     <div className="grid min-h-full grid-rows-[auto_minmax(0,1fr)] gap-2">
       <PageHeader
@@ -37,9 +41,9 @@ export default function TaskEditorPage() {
               <textarea className="h-24 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white p-3 text-[11px] text-[#4f5678] outline-none" placeholder="- Akurasi konsep (30)&#10;- Analisis (40)&#10;- Struktur jawaban (30)" />
             </label>
             <div className="grid grid-cols-3 gap-2 text-[10px] font-semibold">
-              <button className="flex items-center justify-center gap-1 rounded-[9px] border border-[#bdb6f6] bg-white px-2 py-2 text-[#5b6191]"><Save className="h-3.5 w-3.5" /> Simpan Draft</button>
-              <button className="flex items-center justify-center gap-1 rounded-[9px] border border-[#6d5dfc]/45 bg-[#f7f4ff] px-2 py-2 text-[#6d5dfc]"><Eye className="h-3.5 w-3.5" /> Preview</button>
-              <button className="flex items-center justify-center gap-1 rounded-[9px] bg-gradient-to-r from-[#765df5] to-[#5b50dc] px-2 py-2 text-white"><Send className="h-3.5 w-3.5" /> Publish</button>
+              <button type="button" onClick={() => toast.success("Draft tugas berhasil disimpan")} className="flex cursor-pointer items-center justify-center gap-1 rounded-[9px] border border-[#bdb6f6] bg-white px-2 py-2 text-[#5b6191] transition-all hover:bg-[#f0edff] active:scale-95"><Save className="h-3.5 w-3.5" /> Simpan Draft</button>
+              <button type="button" className="flex cursor-pointer items-center justify-center gap-1 rounded-[9px] border border-[#6d5dfc]/45 bg-[#f7f4ff] px-2 py-2 text-[#6d5dfc] transition-all hover:bg-[#f0edff] active:scale-95"><Eye className="h-3.5 w-3.5" /> Preview</button>
+              <button type="button" onClick={() => toast.success("Tugas berhasil dipublish")} className="flex cursor-pointer items-center justify-center gap-1 rounded-[9px] bg-gradient-to-r from-[#765df5] to-[#5b50dc] px-2 py-2 text-white transition-all hover:opacity-90 active:scale-95"><Send className="h-3.5 w-3.5" /> Publish</button>
             </div>
           </div>
         </Surface>

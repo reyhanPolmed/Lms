@@ -30,7 +30,7 @@ export default function DashboardPage() {
     );
   }
 
-  const firstName = data.user.name.split(" ").filter(Boolean)[0] ?? "Siswa";
+  const firstName = data.user.fullName.split(" ").filter(Boolean)[0] ?? "Siswa";
   const pendingTasks = data.upcomingTasks.length;
   const stats = [
     {

@@ -11,7 +11,6 @@ export type AuthoredQuiz = {
   id: string;
   title: string;
   moduleName: string;
-  className: string;
   passScore: number;
   durationMinutes: number;
   deadline?: string;

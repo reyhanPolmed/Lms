@@ -4,7 +4,6 @@ export type MonitoringQuizRecord = {
   id: string;
   title: string;
   moduleName: string;
-  className: string;
   passScore: number;
   durationMinutes: number;
   questionCount: number;
@@ -18,7 +17,6 @@ export const defaultMonitoringQuizzes: MonitoringQuizRecord[] = [
     id: "seed-1",
     title: "Kuis Bab 1: Dasar Konsep",
     moduleName: "Matematika Inti",
-    className: "8A",
     passScore: 70,
     durationMinutes: 30,
     questionCount: 10,
@@ -30,7 +28,6 @@ export const defaultMonitoringQuizzes: MonitoringQuizRecord[] = [
     id: "seed-2",
     title: "Kuis Bab 2: Studi Kasus",
     moduleName: "Sains Terapan",
-    className: "8B",
     passScore: 75,
     durationMinutes: 45,
     questionCount: 12,
@@ -44,7 +41,6 @@ export function mapAuthoredQuizToMonitoringRecord(item: AuthoredQuiz): Monitorin
     id: item.id,
     title: item.title,
     moduleName: item.moduleName,
-    className: item.className,
     passScore: item.passScore,
     durationMinutes: item.durationMinutes,
     questionCount: item.questions.length,

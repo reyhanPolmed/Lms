@@ -1,9 +1,9 @@
 "use client";
 
-import { GripVertical, Plus } from "lucide-react";
+import { BookOpen, ClipboardList, GripVertical, HelpCircle, Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-
 import { PageHeader, Surface } from "@/components/workspace/ui";
+import { useToast } from "@/components/workspace/toast";
 import { getAuthoredQuizzes } from "@/lib/quiz-authoring";
 import { defaultMonitoringQuizzes, mapAuthoredQuizToMonitoringRecord, type MonitoringQuizRecord } from "@/lib/quiz-monitoring-data";
 
@@ -11,12 +11,13 @@ type ChapterItemKind = "Materi" | "Kuis" | "Tugas";
 
 type ChapterItemDetails = {
   contentType?: string;
+  contentUrl?: string;
   sourceQuizId?: string;
   sourceQuizTitle?: string;
   sourceQuizModule?: string;
-  sourceQuizClass?: string;
   passScore?: number;
   quizDurationMinutes?: number;
+  quizStartAt?: string;
   quizDeadline?: string;
   taskStartAt?: string;
   taskDeadline?: string;
@@ -48,13 +49,16 @@ type DraftItemForm = {
   title: string;
   description: string;
   contentType: string;
+  contentUrl: string;
   selectedQuizId: string;
+  quizStartAt: string;
+  quizDeadline: string;
   taskStartAt: string;
   taskDeadline: string;
   submitMethod: string;
 };
 
-const CONTENT_TYPE_OPTIONS = ["Text", "Video", "PDF", "Link"];
+const CONTENT_TYPE_OPTIONS = ["Link", "PDF"];
 const SUBMIT_METHOD_OPTIONS = ["File", "Link", "File + Link", "File + Catatan", "Link + Catatan"];
 
 const initialChapters: Chapter[] = [
@@ -81,9 +85,9 @@ const initialChapters: Chapter[] = [
           sourceQuizId: "seed-1",
           sourceQuizTitle: "Kuis Bab 1: Dasar Konsep",
           sourceQuizModule: "Matematika Inti",
-          sourceQuizClass: "8A",
           passScore: 70,
           quizDurationMinutes: 30,
+          quizStartAt: "2026-05-10T08:00",
           quizDeadline: "2026-05-10T20:00",
         },
       },
@@ -134,7 +138,6 @@ const initialChapters: Chapter[] = [
           sourceQuizId: "seed-2",
           sourceQuizTitle: "Kuis Bab 2: Studi Kasus",
           sourceQuizModule: "Sains Terapan",
-          sourceQuizClass: "8B",
           passScore: 75,
           quizDurationMinutes: 45,
         },
@@ -159,13 +162,16 @@ function getItemMeta(item: ChapterItem) {
 
   if (item.kind === "Kuis") {
     const meta = [
-      `Sumber: ${item.details.sourceQuizModule ?? "-"} (${item.details.sourceQuizClass ?? "-"})`,
+      `Sumber: ${item.details.sourceQuizModule ?? "-"}`,
       `Pass score: ${item.details.passScore ?? "-"}`,
       `Durasi: ${item.details.quizDurationMinutes ?? "-"} menit`,
     ];
 
+    if (item.details.quizStartAt) {
+      meta.push(`Mulai: ${formatDateTimeValue(item.details.quizStartAt)}`);
+    }
     if (item.details.quizDeadline) {
-      meta.push(`Deadline: ${formatDateTimeValue(item.details.quizDeadline)}`);
+      meta.push(`Selesai: ${formatDateTimeValue(item.details.quizDeadline)}`);
     }
 
     return meta;
@@ -186,7 +192,10 @@ function createDraftBase(chapterId: string, kind: ChapterItemKind): DraftItemFor
     title: "",
     description: "",
     contentType: CONTENT_TYPE_OPTIONS[0],
+    contentUrl: "",
     selectedQuizId: "",
+    quizStartAt: "",
+    quizDeadline: "",
     taskStartAt: "",
     taskDeadline: "",
     submitMethod: SUBMIT_METHOD_OPTIONS[0],
@@ -211,8 +220,13 @@ function validateDraft(draft: DraftItemForm, quizOptions: MonitoringQuizRecord[]
     if (!draft.description.trim()) missing.push("Deskripsi");
   }
 
-  if (draft.kind === "Materi" && !draft.contentType.trim()) {
-    missing.push("Content Type");
+  if (draft.kind === "Materi") {
+    if (!draft.contentType.trim()) {
+      missing.push("Content Type");
+    }
+    if (!draft.contentUrl.trim()) {
+      missing.push(draft.contentType === "Link" ? "URL Tautan" : "File PDF");
+    }
   }
 
   if (draft.kind === "Kuis") {
@@ -220,6 +234,12 @@ function validateDraft(draft: DraftItemForm, quizOptions: MonitoringQuizRecord[]
       missing.push("Pilih Kuis");
     } else if (!getQuizById(quizOptions, draft.selectedQuizId)) {
       return { isValid: false, message: "Kuis yang dipilih tidak ditemukan pada Monitoring Kuis." };
+    }
+    if (!draft.quizStartAt.trim()) missing.push("Waktu Mulai");
+    if (!draft.quizDeadline.trim()) missing.push("Waktu Selesai");
+
+    if (draft.quizStartAt && draft.quizDeadline && draft.quizStartAt >= draft.quizDeadline) {
+      return { isValid: false, message: "Waktu selesai kuis harus setelah waktu mulai." };
     }
   }
 
@@ -249,6 +269,7 @@ function buildItemFromDraft(draft: DraftItemForm, quizOptions: MonitoringQuizRec
       description: draft.description.trim(),
       details: {
         contentType: draft.contentType,
+        contentUrl: draft.contentUrl,
       },
     };
   }
@@ -264,15 +285,15 @@ function buildItemFromDraft(draft: DraftItemForm, quizOptions: MonitoringQuizRec
       id: draft.itemId ?? buildItemId(),
       kind: draft.kind,
       title: selectedQuiz.title,
-      description: `Kuis dari Monitoring Kuis: ${selectedQuiz.moduleName} - ${selectedQuiz.className}.`,
+      description: `Kuis dari Monitoring Kuis: ${selectedQuiz.moduleName}.`,
       details: {
         sourceQuizId: selectedQuiz.id,
         sourceQuizTitle: selectedQuiz.title,
         sourceQuizModule: selectedQuiz.moduleName,
-        sourceQuizClass: selectedQuiz.className,
         passScore: selectedQuiz.passScore,
         quizDurationMinutes: selectedQuiz.durationMinutes,
-        quizDeadline: selectedQuiz.deadline,
+        quizStartAt: draft.quizStartAt,
+        quizDeadline: draft.quizDeadline,
       },
     };
   }
@@ -291,6 +312,7 @@ function buildItemFromDraft(draft: DraftItemForm, quizOptions: MonitoringQuizRec
 }
 
 export default function ModuleBuilderPage({ params }: { params: { moduleId: string } }) {
+  const { toast } = useToast();
   const [chapters, setChapters] = useState<Chapter[]>(initialChapters);
   const [activeDraft, setActiveDraft] = useState<DraftItemForm | null>(null);
   const [draftError, setDraftError] = useState<string>("");
@@ -340,7 +362,10 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
       title: item.title,
       description: item.description,
       contentType: item.details.contentType ?? CONTENT_TYPE_OPTIONS[0],
+      contentUrl: item.details.contentUrl ?? "",
       selectedQuizId: item.details.sourceQuizId ?? "",
+      quizStartAt: item.details.quizStartAt ?? "",
+      quizDeadline: item.details.quizDeadline ?? "",
       taskStartAt: item.details.taskStartAt ?? "",
       taskDeadline: item.details.taskDeadline ?? "",
       submitMethod: item.details.submitMethod ?? SUBMIT_METHOD_OPTIONS[0],
@@ -360,6 +385,8 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
       setActiveDraft(null);
       setDraftError("");
     }
+    
+    toast.delete("Item berhasil dihapus dari bab");
   };
 
   const handleDraftChange = (field: keyof DraftItemForm, value: string) => {
@@ -397,6 +424,7 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
 
     setDraftError("");
     setActiveDraft(null);
+    toast.success(`Item ${activeDraft.kind} berhasil disimpan`);
   };
 
   const selectedQuiz = activeDraft?.kind === "Kuis" ? getQuizById(quizOptions, activeDraft.selectedQuizId) : undefined;
@@ -404,8 +432,8 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
   return (
     <div className="grid min-h-full grid-rows-[auto_minmax(0,1fr)] gap-2">
       <PageHeader
-        title={`Detail Module: ${params.moduleId}`}
-        description="Modul berasal dari admin. Guru dapat menambah Bab, materi, tugas, kuis, lalu mengelola tiap item."
+        title={`Detail Mata Pelajaran: ${params.moduleId}`}
+        description="Mata pelajaran berasal dari admin. Guru dapat menambah Bab, materi, tugas, kuis, lalu mengelola tiap item."
       />
 
       <section className="grid min-h-0 gap-2 xl:grid-cols-[1.4fr_1fr]">
@@ -415,7 +443,7 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
             <button
               type="button"
               onClick={handleAddChapter}
-              className="inline-flex items-center gap-1.5 rounded-[10px] border border-dashed border-[#bcb5f4] bg-[#faf7ff] px-2.5 py-1.5 text-[10px] font-semibold text-[#6d5dfc]"
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-[10px] border border-dashed border-[#bcb5f4] bg-[#faf7ff] px-2.5 py-1.5 text-[10px] font-semibold text-[#6d5dfc] transition-all hover:bg-[#f0eaff] active:scale-95"
             >
               <Plus className="h-3.5 w-3.5" /> Tambah Bab {nextBabNumber}
             </button>
@@ -448,14 +476,14 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
                             <button
                               type="button"
                               onClick={() => handleOpenEdit(chapter.id, item)}
-                              className="rounded-[6px] border border-[rgba(113,94,215,0.2)] bg-white px-1.5 py-0.5 text-[#5c6392]"
+                              className="cursor-pointer rounded-[6px] border border-[rgba(113,94,215,0.2)] bg-white px-1.5 py-0.5 text-[#5c6392] transition-all hover:bg-[#faf9ff] active:scale-95"
                             >
                               Edit
                             </button>
                             <button
                               type="button"
                               onClick={() => handleDeleteItem(chapter.id, item.id)}
-                              className="rounded-[6px] border border-[rgba(233,84,116,0.24)] bg-[#fff5f7] px-1.5 py-0.5 text-[#c54564]"
+                              className="cursor-pointer rounded-[6px] border border-[rgba(233,84,116,0.24)] bg-[#fff5f7] px-1.5 py-0.5 text-[#c54564] transition-all hover:bg-[#ffeef1] active:scale-95"
                             >
                               Hapus
                             </button>
@@ -474,23 +502,23 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
                   <button
                     type="button"
                     onClick={() => handleOpenCreate(chapter.id, "Materi")}
-                    className="rounded-[8px] border border-[rgba(113,94,215,0.18)] bg-white px-2 py-1.5"
+                    className="flex cursor-pointer items-center justify-center gap-1.5 rounded-[8px] border border-[rgba(113,94,215,0.18)] bg-white px-2 py-1.5 transition-all hover:bg-[#faf9ff] active:scale-95"
                   >
-                    + Materi
+                    <BookOpen className="h-3.5 w-3.5" /> + Materi
                   </button>
                   <button
                     type="button"
                     onClick={() => handleOpenCreate(chapter.id, "Kuis")}
-                    className="rounded-[8px] border border-[rgba(113,94,215,0.18)] bg-white px-2 py-1.5"
+                    className="flex cursor-pointer items-center justify-center gap-1.5 rounded-[8px] border border-[rgba(113,94,215,0.18)] bg-white px-2 py-1.5 transition-all hover:bg-[#faf9ff] active:scale-95"
                   >
-                    + Kuis
+                    <HelpCircle className="h-3.5 w-3.5" /> + Kuis
                   </button>
                   <button
                     type="button"
                     onClick={() => handleOpenCreate(chapter.id, "Tugas")}
-                    className="rounded-[8px] border border-[rgba(113,94,215,0.18)] bg-white px-2 py-1.5"
+                    className="flex cursor-pointer items-center justify-center gap-1.5 rounded-[8px] border border-[rgba(113,94,215,0.18)] bg-white px-2 py-1.5 transition-all hover:bg-[#faf9ff] active:scale-95"
                   >
-                    + Tugas
+                    <ClipboardList className="h-3.5 w-3.5" /> + Tugas
                   </button>
                 </div>
               </article>
@@ -516,7 +544,7 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
                         <option value="">Pilih kuis</option>
                         {quizOptions.map((quiz) => (
                           <option key={quiz.id} value={quiz.id}>
-                            {quiz.title} - {quiz.moduleName} ({quiz.className})
+                            {quiz.title} - {quiz.moduleName}
                           </option>
                         ))}
                       </select>
@@ -526,15 +554,40 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
                       <div className="rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-[#faf8ff] p-2.5 text-[9.5px] text-[#5c6392]">
                         <p className="font-semibold text-[#2f355f]">{selectedQuiz.title}</p>
                         <p className="mt-1">Modul: {selectedQuiz.moduleName}</p>
-                        <p>Kelas: {selectedQuiz.className}</p>
                         <p>Jumlah Soal: {selectedQuiz.questionCount}</p>
                         <p>Pass Score: {selectedQuiz.passScore}</p>
                         <p>Durasi: {selectedQuiz.durationMinutes} menit</p>
-                        <p>Deadline: {formatDateTimeValue(selectedQuiz.deadline)}</p>
                       </div>
                     ) : (
                       <p className="text-[9px] text-[#7e84a8]">Belum ada kuis yang dipilih.</p>
                     )}
+
+                    {selectedQuiz ? (
+                      <div className="mt-2 grid gap-2 md:grid-cols-2">
+                        <label className="block">
+                          <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7e84a8]">
+                            Waktu Mulai
+                          </span>
+                          <input
+                            type="datetime-local"
+                            value={activeDraft.quizStartAt}
+                            onChange={(event) => handleDraftChange("quizStartAt", event.target.value)}
+                            className="h-9 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 text-[11px] text-[#4f5678] outline-none"
+                          />
+                        </label>
+                        <label className="block">
+                          <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7e84a8]">
+                            Waktu Selesai (Deadline)
+                          </span>
+                          <input
+                            type="datetime-local"
+                            value={activeDraft.quizDeadline}
+                            onChange={(event) => handleDraftChange("quizDeadline", event.target.value)}
+                            className="h-9 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 text-[11px] text-[#4f5678] outline-none"
+                          />
+                        </label>
+                      </div>
+                    ) : null}
                   </>
                 ) : null}
 
@@ -578,6 +631,41 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
                         ))}
                       </select>
                     </label>
+
+                    {activeDraft.contentType === "Link" ? (
+                      <label className="block">
+                        <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7e84a8]">
+                          URL Tautan
+                        </span>
+                        <input
+                          type="url"
+                          value={activeDraft.contentUrl}
+                          onChange={(event) => handleDraftChange("contentUrl", event.target.value)}
+                          placeholder="https://contoh.com/materi"
+                          className="h-9 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 text-[11px] text-[#4f5678] outline-none"
+                        />
+                      </label>
+                    ) : (
+                      <label className="block">
+                        <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7e84a8]">
+                          Unggah File PDF
+                        </span>
+                        <input
+                          type="file"
+                          accept=".pdf"
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            if (file) {
+                              handleDraftChange("contentUrl", file.name);
+                            }
+                          }}
+                          className="w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 py-1.5 text-[11px] text-[#4f5678] outline-none file:mr-2 file:cursor-pointer file:rounded-[6px] file:border-0 file:bg-[#faf7ff] file:px-2 file:py-1 file:text-[10px] file:font-semibold file:text-[#6d5dfc] transition-colors hover:file:bg-[#f0eaff]"
+                        />
+                        {activeDraft.contentUrl && activeDraft.contentUrl.endsWith('.pdf') ? (
+                          <p className="mt-1 text-[9px] text-[#2f8c57]">File terpilih: {activeDraft.contentUrl}</p>
+                        ) : null}
+                      </label>
+                    )}
                   </>
                 ) : null}
 
@@ -663,14 +751,14 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
                       setDraftError("");
                       setActiveDraft(null);
                     }}
-                    className="rounded-[9px] border border-[rgba(113,94,215,0.2)] bg-white px-2 py-2 text-[#5b6191]"
+                    className="cursor-pointer rounded-[9px] border border-[rgba(113,94,215,0.2)] bg-white px-2 py-2 text-[#5b6191] transition-all hover:bg-[#faf9ff] active:scale-95"
                   >
                     Batal
                   </button>
                   <button
                     type="button"
                     onClick={handleSaveItem}
-                    className="rounded-[9px] bg-gradient-to-r from-[#765df5] to-[#5b50dc] px-2 py-2 text-white"
+                    className="cursor-pointer rounded-[9px] bg-gradient-to-r from-[#765df5] to-[#5b50dc] px-2 py-2 text-white transition-all hover:opacity-90 active:scale-[0.98]"
                   >
                     {activeDraft.mode === "edit" ? "Simpan Perubahan" : "Simpan ke Bab"}
                   </button>

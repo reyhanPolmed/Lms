@@ -59,6 +59,8 @@ export function Badge({ status }: { status: string }) {
     scheduled: "bg-[#e8f3ff] text-[#5896df]",
     archived: "bg-[#eceef4] text-[#70789c]",
     submitted: "bg-[#e7f1ff] text-[#488de2]",
+    returned: "bg-[#fff1d8] text-[#e69a2a]",
+    graded: "bg-[#e5f8ee] text-[#39b16a]",
     revision: "bg-[#fff1d8] text-[#e69a2a]",
     approved: "bg-[#e5f8ee] text-[#39b16a]",
     late: "bg-[#ffe9ef] text-[#ea5570]",
@@ -92,6 +94,32 @@ export function MiniInput({
         placeholder={placeholder}
         className="h-9 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 text-[11px] text-[#4f5678] outline-none"
       />
+    </label>
+  );
+}
+
+export function MiniSelect({
+  label,
+  options,
+  placeholder = "Semua",
+}: {
+  label: string;
+  options: string[];
+  placeholder?: string;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7e84a8]">
+        {label}
+      </span>
+      <select className="h-9 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 text-[11px] text-[#4f5678] outline-none">
+        <option value="">{placeholder}</option>
+        {options.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
     </label>
   );
 }

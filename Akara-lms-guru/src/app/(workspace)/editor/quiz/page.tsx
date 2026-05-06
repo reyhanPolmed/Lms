@@ -1,10 +1,11 @@
 "use client";
 
-import { Eye, Plus, Save, Send, Trash2 } from "lucide-react";
+import { Eye, Plus, Save, Send, Trash2, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { PageHeader, Surface } from "@/components/workspace/ui";
+import { useToast } from "@/components/workspace/toast";
 import { type AuthoredQuiz, type AuthoredQuizQuestion, upsertAuthoredQuiz } from "@/lib/quiz-authoring";
 
 const QUIZ_DURATION_OPTIONS = [
@@ -30,15 +31,15 @@ function FieldLabel({ children }: { children: string }) {
 }
 
 export default function QuizEditorPage() {
+  const { toast } = useToast();
   const router = useRouter();
 
   const [title, setTitle] = useState("");
   const [moduleName, setModuleName] = useState("");
-  const [className, setClassName] = useState("");
   const [passScore, setPassScore] = useState("75");
   const [durationMinutes, setDurationMinutes] = useState(QUIZ_DURATION_OPTIONS[0].value);
-  const [deadline, setDeadline] = useState("");
-  const [penaltyNote, setPenaltyNote] = useState("");
+  const deadline = undefined;
+  const penaltyNote = undefined;
   const [questions, setQuestions] = useState<AuthoredQuizQuestion[]>([buildQuestion(1)]);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -84,7 +85,6 @@ export default function QuizEditorPage() {
   const validatePayload = () => {
     if (!title.trim()) return "Judul kuis wajib diisi.";
     if (!moduleName.trim()) return "Nama modul wajib diisi.";
-    if (!className.trim()) return "Kelas target wajib diisi.";
 
     const score = Number(passScore);
     if (Number.isNaN(score) || score < 0 || score > 100) return "Pass score harus angka 0 sampai 100.";
@@ -113,11 +113,10 @@ export default function QuizEditorPage() {
       id: `quiz-${Date.now()}`,
       title: title.trim(),
       moduleName: moduleName.trim(),
-      className: className.trim(),
       passScore: Number(passScore),
       durationMinutes: Number(durationMinutes),
-      deadline: deadline || undefined,
-      penaltyNote: penaltyNote.trim() || undefined,
+      deadline: deadline,
+      penaltyNote: penaltyNote,
       status,
       createdAt: now,
       updatedAt: now,
@@ -125,6 +124,7 @@ export default function QuizEditorPage() {
     };
 
     upsertAuthoredQuiz(payload);
+    toast.success(status === "published" ? "Kuis berhasil dipublish!" : "Draft kuis berhasil disimpan!");
     router.push("/monitoring/quizzes?created=1");
   };
 
@@ -162,7 +162,7 @@ export default function QuizEditorPage() {
 
             <div className="grid gap-2 md:grid-cols-2">
               <label className="block">
-                <FieldLabel>Modul</FieldLabel>
+                <FieldLabel>Mata Pelajaran</FieldLabel>
                 <input
                   value={moduleName}
                   onChange={(event) => setModuleName(event.target.value)}
@@ -170,18 +170,6 @@ export default function QuizEditorPage() {
                   className="h-9 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 text-[11px] text-[#4f5678] outline-none"
                 />
               </label>
-              <label className="block">
-                <FieldLabel>Kelas Target</FieldLabel>
-                <input
-                  value={className}
-                  onChange={(event) => setClassName(event.target.value)}
-                  placeholder="Contoh: 8A, 8B"
-                  className="h-9 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 text-[11px] text-[#4f5678] outline-none"
-                />
-              </label>
-            </div>
-
-            <div className="grid gap-2 md:grid-cols-2">
               <label className="block">
                 <FieldLabel>Durasi Kuis</FieldLabel>
                 <select
@@ -196,26 +184,7 @@ export default function QuizEditorPage() {
                   ))}
                 </select>
               </label>
-              <label className="block">
-                <FieldLabel>Deadline (Opsional)</FieldLabel>
-                <input
-                  type="datetime-local"
-                  value={deadline}
-                  onChange={(event) => setDeadline(event.target.value)}
-                  className="h-9 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 text-[11px] text-[#4f5678] outline-none"
-                />
-              </label>
             </div>
-
-            <label className="block">
-              <FieldLabel>Catatan Penalti (Opsional)</FieldLabel>
-              <input
-                value={penaltyNote}
-                onChange={(event) => setPenaltyNote(event.target.value)}
-                placeholder="Contoh: Telat submit: -10 poin"
-                className="h-9 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 text-[11px] text-[#4f5678] outline-none"
-              />
-            </label>
 
             <div className="space-y-2">
               {questions.map((question, idx) => (
@@ -226,7 +195,7 @@ export default function QuizEditorPage() {
                       type="button"
                       onClick={() => removeQuestion(question.id)}
                       disabled={questions.length <= 1}
-                      className="inline-flex items-center gap-1 rounded-[7px] border border-[rgba(233,84,116,0.2)] bg-[#fff5f7] px-2 py-1 text-[9px] text-[#c54564] disabled:opacity-50"
+                      className="inline-flex cursor-pointer items-center gap-1 rounded-[7px] border border-[rgba(233,84,116,0.2)] bg-[#fff5f7] px-2 py-1 text-[9px] text-[#c54564] transition-all hover:bg-[#ffeef1] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <Trash2 className="h-3 w-3" /> Hapus Soal
                     </button>
@@ -253,10 +222,10 @@ export default function QuizEditorPage() {
                         <button
                           type="button"
                           onClick={() => updateCorrectOption(question.id, optionIndex)}
-                          className={`rounded-[8px] px-2 text-[9px] font-semibold ${
+                          className={`cursor-pointer rounded-[8px] px-2 text-[9px] font-semibold transition-all active:scale-95 ${
                             question.correctOptionIndex === optionIndex
                               ? "bg-[#eaf6ee] text-[#2f8c57]"
-                              : "border border-[rgba(113,94,215,0.2)] bg-white text-[#5b6191]"
+                              : "border border-[rgba(113,94,215,0.2)] bg-white text-[#5b6191] hover:bg-[#faf9ff]"
                           }`}
                         >
                           {question.correctOptionIndex === optionIndex ? "Jawaban Benar" : "Pilih Benar"}
@@ -270,7 +239,7 @@ export default function QuizEditorPage() {
               <button
                 type="button"
                 onClick={addQuestion}
-                className="flex w-full items-center justify-center gap-1 rounded-[9px] border border-dashed border-[#bcb5f4] bg-[#faf7ff] px-2 py-2 text-[10px] font-semibold text-[#6d5dfc]"
+                className="flex w-full cursor-pointer items-center justify-center gap-1 rounded-[9px] border border-dashed border-[#bcb5f4] bg-[#faf7ff] px-2 py-2 text-[10px] font-semibold text-[#6d5dfc] transition-all hover:bg-[#f0eaff] active:scale-[0.99]"
               >
                 <Plus className="h-3.5 w-3.5" /> Tambah Soal
               </button>
@@ -284,21 +253,21 @@ export default function QuizEditorPage() {
               <button
                 type="button"
                 onClick={() => saveQuiz("draft")}
-                className="flex items-center justify-center gap-1 rounded-[9px] border border-[#bdb6f6] bg-white px-2 py-2 text-[#5b6191]"
+                className="flex cursor-pointer items-center justify-center gap-1 rounded-[9px] border border-[#bdb6f6] bg-white px-2 py-2 text-[#5b6191] transition-all hover:bg-[#f0edff] active:scale-95"
               >
                 <Save className="h-3.5 w-3.5" /> Simpan Draft
               </button>
               <button
                 type="button"
                 disabled={!canPreview}
-                className="flex items-center justify-center gap-1 rounded-[9px] border border-[#6d5dfc]/45 bg-[#f7f4ff] px-2 py-2 text-[#6d5dfc] disabled:opacity-50"
+                className="flex cursor-pointer items-center justify-center gap-1 rounded-[9px] border border-[#6d5dfc]/45 bg-[#f7f4ff] px-2 py-2 text-[#6d5dfc] transition-all hover:bg-[#f0edff] disabled:cursor-not-allowed disabled:opacity-50 active:scale-95"
               >
                 <Eye className="h-3.5 w-3.5" /> Preview
               </button>
               <button
                 type="button"
                 onClick={() => saveQuiz("published")}
-                className="flex items-center justify-center gap-1 rounded-[9px] bg-gradient-to-r from-[#765df5] to-[#5b50dc] px-2 py-2 text-white"
+                className="flex cursor-pointer items-center justify-center gap-1 rounded-[9px] bg-gradient-to-r from-[#765df5] to-[#5b50dc] px-2 py-2 text-white transition-all hover:opacity-90 active:scale-95"
               >
                 <Send className="h-3.5 w-3.5" /> Publish
               </button>
@@ -316,9 +285,6 @@ export default function QuizEditorPage() {
             </li>
             <li className="rounded-[10px] bg-[#faf8ff] px-2.5 py-2">
               Pass score: <b className="text-[#2f355f]">{passScore || "-"}</b>
-            </li>
-            <li className="rounded-[10px] bg-[#faf8ff] px-2.5 py-2">
-              Kelas target: <b className="text-[#2f355f]">{className || "-"}</b>
             </li>
             <li className="rounded-[10px] bg-[#fff1d8] px-2.5 py-2 text-[#a16514]">
               Validasi: semua soal wajib terisi dan memiliki jawaban benar.

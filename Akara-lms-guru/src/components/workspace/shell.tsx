@@ -7,7 +7,7 @@ import {
   FileCheck2,
   GraduationCap,
   LayoutDashboard,
-  Settings,
+  LogOut,
   User,
   Users,
 } from "lucide-react";
@@ -18,7 +18,7 @@ import type { ReactNode } from "react";
 const navGroups = [
   [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/modules", label: "Modul", icon: Archive },
+    { href: "/modules", label: "Mata Pelajaran", icon: Archive },
     { href: "/reviews", label: "Review", icon: FileCheck2 },
     { href: "/monitoring/quizzes", label: "Monitoring Kuis", icon: ClipboardList },
     { href: "/progress", label: "Progres Siswa", icon: Users },
@@ -26,7 +26,7 @@ const navGroups = [
   [
     { href: "/notifications", label: "Inbox", icon: Bell },
     { href: "/profile", label: "Profil", icon: User },
-    { href: "/settings", label: "Settings", icon: Settings },
+    { href: "/", label: "Keluar", icon: LogOut },
   ],
 ];
 
@@ -73,11 +73,6 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
             ))}
           </div>
 
-          <div className="mt-3 rounded-[18px] bg-gradient-to-br from-[#ebe8ff] to-[#b6a7ff] p-3.5 text-center shadow-[0_16px_36px_rgba(109,93,252,.18)]">
-            <p className="text-[11px] font-medium leading-4 text-[#3e4380]">
-              Workspace ringkas untuk modul, kuis, tugas, dan review.
-            </p>
-          </div>
         </aside>
 
         <section className="panel-surface min-h-0 overflow-auto rounded-[24px] bg-[#fbfaff] p-2.5">

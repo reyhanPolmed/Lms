@@ -1,14 +1,17 @@
+import type {
+  ChangePasswordPayload,
+  LoginPayload,
+  ProfileUpdatePayload,
+  QuizSubmitPayload,
+  StudentProfileView,
+  TaskSubmissionView,
+  TrackDurationPayload
+} from "@akara/shared/types/contracts";
+
 export type SidebarItemType = "lesson" | "quiz" | "task";
 export type ContentType = "video" | "pdf" | "text" | "link";
 
-export interface UserProfile {
-  id: string;
-  name: string;
-  email: string;
-  className: string;
-  department: string;
-  weeklyProgress: number;
-}
+export type UserProfile = StudentProfileView;
 
 export interface DashboardMetric {
   label: string;
@@ -115,12 +118,7 @@ export interface QuizAttempt {
   questionOrder: string[];
 }
 
-export interface CurrentSubmission {
-  link: string;
-  status: "submitted" | "revision" | "approved";
-  teacherNote?: string;
-  submittedAt: string | null;
-}
+export type CurrentSubmission = TaskSubmissionView;
 
 export interface TaskDetail {
   id: string;
@@ -140,29 +138,6 @@ export interface ProfileDetail extends UserProfile {
   nisn: string | null;
 }
 
-export interface LoginPayload {
-  email: string;
-  password: string;
-}
-
-export interface TrackDurationPayload {
-  seconds: number;
-}
-
-export interface QuizSubmitPayload {
-  answers: Record<string, string>;
-  fullscreenViolation: boolean;
-}
-
-export interface ProfilePayload {
-  name: string;
-  email: string;
-  phone: string;
-  bio: string;
-}
-
-export interface PasswordPayload {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-}
+export type ProfilePayload = ProfileUpdatePayload;
+export type PasswordPayload = ChangePasswordPayload;
+export type { LoginPayload, QuizSubmitPayload, TrackDurationPayload };

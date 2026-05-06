@@ -14,7 +14,7 @@ export async function getStudentProfile(userId: string) {
 
   return {
     id: String(student.user.id),
-    name: student.user.name,
+    fullName: student.user.name,
     email: student.user.email ?? "",
     className: student.kelas.namaKelas,
     department: student.kelas.jurusan?.namaJurusan ?? student.jurusan?.namaJurusan ?? "",
@@ -28,7 +28,7 @@ export async function getStudentProfile(userId: string) {
 export async function updateStudentProfile(
   userId: string,
   payload: {
-    name: string;
+    fullName: string;
     email: string;
     phone?: string;
     bio?: string;
@@ -55,7 +55,7 @@ export async function updateStudentProfile(
         id: normalizedUserId
       },
       data: {
-        name: payload.name,
+        name: payload.fullName,
         email: payload.email
       }
     }),
@@ -64,7 +64,7 @@ export async function updateStudentProfile(
         id: student.id
       },
       data: {
-        nama: payload.name,
+        nama: payload.fullName,
         email: payload.email,
         hpOrangTua: payload.phone || null
       }

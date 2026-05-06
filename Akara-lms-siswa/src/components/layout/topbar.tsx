@@ -44,11 +44,11 @@ export function Topbar({ profile }: { profile: ProfileDetail }) {
         </button>
 
         <button
-          aria-label={`Profil ${profile.name}`}
+          aria-label={`Profil ${profile.fullName}`}
           className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#eff4ff] bg-[#ffdcc5] text-xs font-bold text-[#703800] shadow-sm"
           type="button"
         >
-          {getInitials(profile.name)}
+          {getInitials(profile.fullName)}
         </button>
 
         <button

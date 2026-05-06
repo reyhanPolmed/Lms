@@ -1,27 +1,26 @@
 import { Layers3 } from "lucide-react";
 import Link from "next/link";
 
-import { Badge, MiniInput, PageHeader, Surface } from "@/components/workspace/ui";
+import { Badge, MiniSelect, PageHeader, Surface } from "@/components/workspace/ui";
 import { modules } from "@/lib/teacher-mocks";
 
 export default function ModulesPage() {
   return (
     <div className="grid min-h-full grid-rows-[auto_auto_minmax(0,1fr)] gap-2">
       <PageHeader
-        title="Daftar Modul / Mata Pelajaran"
-        description="Daftar modul yang didaftarkan admin dan dapat dilengkapi kontennya oleh guru."
+        title="Daftar Mata Pelajaran"
+        description="Daftar mata pelajaran yang didaftarkan admin dan dapat dilengkapi kontennya oleh guru."
       />
 
-      <Surface title="Input & Filter Modul">
-        <div className="grid gap-2 md:grid-cols-4">
-          <MiniInput label="Nama Modul" placeholder="Contoh: Matematika Inti" />
-          <MiniInput label="Mata Pelajaran" placeholder="Matematika / Sains / ..." />
-          <MiniInput label="Kelas Target" placeholder="Kelas 8A, 9B, dst" />
-          <MiniInput label="Status" placeholder="published / scheduled" />
+      <Surface title="Filter Mata Pelajaran">
+        <div className="grid gap-2 md:grid-cols-3">
+          <MiniSelect label="Nama Mata Pelajaran" options={Array.from(new Set(modules.map(m => m.name)))} placeholder="Semua mata pelajaran" />
+          <MiniSelect label="Mata Pelajaran" options={Array.from(new Set(modules.map(m => m.subject)))} placeholder="Semua mata pelajaran" />
+          <MiniSelect label="Kelas Target" options={Array.from(new Set(modules.map(m => m.grade)))} placeholder="Semua kelas" />
         </div>
       </Surface>
 
-      <Surface title="List Modul dari Admin">
+      <Surface title="List Mata Pelajaran">
         <div className="grid min-h-0 gap-2 md:grid-cols-2 2xl:grid-cols-4">
           {modules.map((module) => (
             <article
@@ -30,7 +29,6 @@ export default function ModulesPage() {
             >
               <div className="flex items-center justify-between">
                 <p className="text-[12px] font-semibold text-[#2b325b]">{module.name}</p>
-                <Badge status={module.status} />
               </div>
               <p className="mt-1 text-[10px] text-[#6f759a]">{module.subject} - {module.grade}</p>
               <div className="mt-3 grid grid-cols-2 gap-2 text-[9.5px] text-[#70769a]">
@@ -51,7 +49,7 @@ export default function ModulesPage() {
               <div className="mt-3 grid grid-cols-1 gap-1.5 text-[9px] font-semibold">
                 <ActionButton
                   href={`/modules/${module.id}/builder`}
-                  label="Detail Module"
+                  label="Detail Mata Pelajaran"
                   icon={<Layers3 className="h-3.5 w-3.5" />}
                 />
               </div>

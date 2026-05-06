@@ -1,8 +1,8 @@
 import { BookOpen, ClipboardCheck, FilePlus2, Plus, Users } from "lucide-react";
 import Link from "next/link";
 
-import { Badge, MiniInput, PageHeader, Surface } from "@/components/workspace/ui";
-import { dashboardKpi, modules, reviews } from "@/lib/teacher-mocks";
+import { Badge, MiniSelect, PageHeader, Surface } from "@/components/workspace/ui";
+import { dashboardKpi, modules, reviews, progressRows } from "@/lib/teacher-mocks";
 
 export default function DashboardPage() {
   return (
@@ -14,10 +14,9 @@ export default function DashboardPage() {
 
       <Surface title="Filter Cepat">
         <div className="grid gap-2 md:grid-cols-4">
-          <MiniInput label="Mapel" placeholder="Semua mapel" />
-          <MiniInput label="Kelas" placeholder="Semua kelas" />
-          <MiniInput label="Rentang Waktu" placeholder="Minggu ini" />
-          <MiniInput label="Status Kerja" placeholder="draft, scheduled, review" />
+          <MiniSelect label="Mapel" options={Array.from(new Set(modules.map(m => m.subject)))} placeholder="Semua mapel" />
+          <MiniSelect label="Kelas" options={Array.from(new Set([...reviews, ...progressRows].map(r => r.className)))} placeholder="Semua kelas" />
+          <MiniSelect label="Rentang Waktu" options={["Hari ini", "Minggu ini", "Bulan ini"]} placeholder="Semua waktu" />
         </div>
       </Surface>
 
@@ -52,9 +51,9 @@ export default function DashboardPage() {
         ))}
       </section>
 
-      <section className="grid min-h-0 gap-2 xl:grid-cols-[1.35fr_1fr]">
+      <section className="grid min-h-0 gap-2">
         <Surface
-          title="Modul Aktif"
+          title="Mata Pelajaran Aktif"
           action={
             <Link href="/modules" className="text-[10px] font-semibold text-[#8684c7]">
               Buka daftar modul
@@ -69,7 +68,6 @@ export default function DashboardPage() {
                   <th className="px-2 py-2">Bab</th>
                   <th className="px-2 py-2">L/Q/T</th>
                   <th className="px-2 py-2">Progress</th>
-                  <th className="px-2 py-2">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[rgba(113,94,215,0.1)]">
@@ -84,62 +82,13 @@ export default function DashboardPage() {
                       {row.lessons}/{row.quizzes}/{row.tasks}
                     </td>
                     <td className="px-2 py-2.5">{row.completionRate}%</td>
-                    <td className="px-2 py-2.5"><Badge status={row.status} /></td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </Surface>
-
-        <div className="grid min-h-0 gap-2 xl:grid-rows-[1fr_auto]">
-          <Surface title="Submission Perlu Review">
-            <div className="space-y-2">
-              {reviews.slice(0, 4).map((row) => (
-                <div
-                  key={row.id}
-                  className="rounded-[12px] border border-[rgba(113,94,215,0.1)] bg-white px-3 py-2.5"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-[11px] font-semibold text-[#4e5378]">{row.student}</p>
-                    <Badge status={row.status} />
-                  </div>
-                  <p className="mt-0.5 text-[10px] text-[#6f759a]">{row.task}</p>
-                  <p className="text-[9px] text-[#7e84a8]">{row.className} - {row.submittedAt}</p>
-                </div>
-              ))}
-            </div>
-          </Surface>
-
-          <Surface title="Quick Actions">
-            <div className="grid grid-cols-2 gap-2">
-              <QuickAction href="/modules" label="Lihat Modul" icon={<Plus className="h-4 w-4" />} />
-              <QuickAction href="/editor/quiz" label="Tambah Kuis" icon={<ClipboardCheck className="h-4 w-4" />} />
-              <QuickAction href="/editor/task" label="Tambah Tugas" icon={<FilePlus2 className="h-4 w-4" />} />
-              <QuickAction href="/reviews" label="Review Queue" icon={<BookOpen className="h-4 w-4" />} />
-            </div>
-          </Surface>
-        </div>
       </section>
     </div>
-  );
-}
-
-function QuickAction({
-  href,
-  label,
-  icon,
-}: {
-  href: string;
-  label: string;
-  icon: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      className="rounded-[12px] border border-[rgba(113,94,215,0.14)] bg-white px-3 py-2 text-[10px] font-semibold text-[#4f5678] transition hover:bg-[#f8f4ff]"
-    >
-      <span className="flex items-center gap-2 text-[#6d5dfc]">{icon}{label}</span>
-    </Link>
   );
 }

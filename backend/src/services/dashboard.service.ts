@@ -81,7 +81,7 @@ export async function getStudentDashboard(userId: string) {
   return {
     user: {
       id: profile.id,
-      name: profile.name,
+      fullName: profile.fullName,
       email: profile.email,
       className: profile.className,
       department: profile.department,

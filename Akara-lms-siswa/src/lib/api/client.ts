@@ -576,7 +576,7 @@ export const lmsClient = {
 
     await ensureCsrfCookie();
     const response = await http.post(`/api/tasks/${id}/submit`, {
-      submission_link: submissionLink
+      submissionLink
     });
     return unwrapApiData<TaskDetail>(response.data);
   },

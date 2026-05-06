@@ -117,7 +117,7 @@ function task(
 
 export const mockProfile: ProfileDetail = {
   id: "u-01",
-  name: "Muhammad Fadlil Habill",
+  fullName: "Muhammad Fadlil Habill",
   email: "student@akara.sch.id",
   className: "Kelas 12 - A",
   department: "Perhotelan",
