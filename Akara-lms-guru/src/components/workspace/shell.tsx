@@ -3,6 +3,7 @@
 import {
   Archive,
   Bell,
+  ClipboardCheck,
   ClipboardList,
   FileCheck2,
   GraduationCap,
@@ -19,12 +20,12 @@ const navGroups = [
   [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/modules", label: "Mata Pelajaran", icon: Archive },
-    { href: "/reviews", label: "Review", icon: FileCheck2 },
+    { href: "/reviews", label: "Review Kuis", icon: FileCheck2 },
+    { href: "/review-tugas", label: "Review Tugas", icon: ClipboardCheck },
     { href: "/monitoring/quizzes", label: "Monitoring Kuis", icon: ClipboardList },
     { href: "/progress", label: "Progres Siswa", icon: Users },
   ],
   [
-    { href: "/notifications", label: "Inbox", icon: Bell },
     { href: "/profile", label: "Profil", icon: User },
     { href: "/", label: "Keluar", icon: LogOut },
   ],

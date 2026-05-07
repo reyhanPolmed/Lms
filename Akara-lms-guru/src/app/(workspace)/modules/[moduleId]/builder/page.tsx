@@ -22,6 +22,7 @@ type ChapterItemDetails = {
   taskStartAt?: string;
   taskDeadline?: string;
   submitMethod?: string;
+  questionFile?: string;
 };
 
 type ChapterItem = {
@@ -41,6 +42,13 @@ type Chapter = {
 
 type DraftMode = "create" | "edit";
 
+type DraftChapterForm = {
+  mode: DraftMode;
+  chapterId: string;
+  title: string;
+  summary: string;
+};
+
 type DraftItemForm = {
   mode: DraftMode;
   chapterId: string;
@@ -56,10 +64,11 @@ type DraftItemForm = {
   taskStartAt: string;
   taskDeadline: string;
   submitMethod: string;
+  questionFile: string;
 };
 
 const CONTENT_TYPE_OPTIONS = ["Link", "PDF"];
-const SUBMIT_METHOD_OPTIONS = ["File", "Link", "File + Link", "File + Catatan", "Link + Catatan"];
+const SUBMIT_METHOD_OPTIONS = ["File + Link", "File", "Link"];
 
 const initialChapters: Chapter[] = [
   {
@@ -199,6 +208,7 @@ function createDraftBase(chapterId: string, kind: ChapterItemKind): DraftItemFor
     taskStartAt: "",
     taskDeadline: "",
     submitMethod: SUBMIT_METHOD_OPTIONS[0],
+    questionFile: "",
   };
 }
 
@@ -307,6 +317,7 @@ function buildItemFromDraft(draft: DraftItemForm, quizOptions: MonitoringQuizRec
       taskStartAt: draft.taskStartAt,
       taskDeadline: draft.taskDeadline,
       submitMethod: draft.submitMethod,
+      questionFile: draft.questionFile,
     },
   };
 }
@@ -315,6 +326,7 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
   const { toast } = useToast();
   const [chapters, setChapters] = useState<Chapter[]>(initialChapters);
   const [activeDraft, setActiveDraft] = useState<DraftItemForm | null>(null);
+  const [activeChapterDraft, setActiveChapterDraft] = useState<DraftChapterForm | null>(null);
   const [draftError, setDraftError] = useState<string>("");
   const [quizOptions, setQuizOptions] = useState<MonitoringQuizRecord[]>(defaultMonitoringQuizzes);
 
@@ -326,19 +338,30 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
   const nextBabNumber = useMemo(() => chapters.length + 1, [chapters.length]);
 
   const handleAddChapter = () => {
-    setChapters((prev) => [
-      ...prev,
-      {
-        id: `bab-${Date.now()}`,
-        title: `Bab ${prev.length + 1} - Bab Baru`,
-        summary: "Lengkapi ringkasan pembelajaran untuk bab ini.",
-        items: [],
-      },
-    ]);
+    setDraftError("");
+    setActiveDraft(null);
+    setActiveChapterDraft({
+      mode: "create",
+      chapterId: `bab-${Date.now()}`,
+      title: `Bab ${nextBabNumber} - `,
+      summary: "",
+    });
+  };
+
+  const handleEditChapter = (chapter: Chapter) => {
+    setDraftError("");
+    setActiveDraft(null);
+    setActiveChapterDraft({
+      mode: "edit",
+      chapterId: chapter.id,
+      title: chapter.title,
+      summary: chapter.summary,
+    });
   };
 
   const handleOpenCreate = (chapterId: string, kind: ChapterItemKind) => {
     setDraftError("");
+    setActiveChapterDraft(null);
     const base = createDraftBase(chapterId, kind);
 
     if (kind === "Kuis") {
@@ -354,6 +377,7 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
 
   const handleOpenEdit = (chapterId: string, item: ChapterItem) => {
     setDraftError("");
+    setActiveChapterDraft(null);
     setActiveDraft({
       mode: "edit",
       chapterId,
@@ -369,6 +393,7 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
       taskStartAt: item.details.taskStartAt ?? "",
       taskDeadline: item.details.taskDeadline ?? "",
       submitMethod: item.details.submitMethod ?? SUBMIT_METHOD_OPTIONS[0],
+      questionFile: item.details.questionFile ?? "",
     });
   };
 
@@ -457,7 +482,16 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
                     <p className="text-[11px] font-semibold text-[#2b325b]">{chapter.title}</p>
                     <p className="text-[9.5px] text-[#6f759a]">{chapter.summary}</p>
                   </div>
-                  <GripVertical className="h-4 w-4 text-[#8a92ba]" />
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleEditChapter(chapter)}
+                      className="cursor-pointer text-[9.5px] font-semibold text-[#6d5dfc] hover:underline"
+                    >
+                      Edit Bab
+                    </button>
+                    <GripVertical className="h-4 w-4 text-[#8a92ba]" />
+                  </div>
                 </div>
 
                 <div className="mt-2 space-y-1.5">
@@ -695,6 +729,25 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
                     </label>
                     <label className="block">
                       <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7e84a8]">
+                        Unggah File Soal (Opsional)
+                      </span>
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx,.jpg,.png"
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          if (file) {
+                            handleDraftChange("questionFile", file.name);
+                          }
+                        }}
+                        className="w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 py-1.5 text-[11px] text-[#4f5678] outline-none file:mr-2 file:cursor-pointer file:rounded-[6px] file:border-0 file:bg-[#faf7ff] file:px-2 file:py-1 file:text-[10px] file:font-semibold file:text-[#6d5dfc] transition-colors hover:file:bg-[#f0eaff]"
+                      />
+                      {activeDraft.questionFile ? (
+                        <p className="mt-1 text-[9px] text-[#2f8c57]">File terpilih: {activeDraft.questionFile}</p>
+                      ) : null}
+                    </label>
+                    <label className="block">
+                      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7e84a8]">
                         Start Tugas
                       </span>
                       <input
@@ -761,6 +814,86 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
                     className="cursor-pointer rounded-[9px] bg-gradient-to-r from-[#765df5] to-[#5b50dc] px-2 py-2 text-white transition-all hover:opacity-90 active:scale-[0.98]"
                   >
                     {activeDraft.mode === "edit" ? "Simpan Perubahan" : "Simpan ke Bab"}
+                  </button>
+                </div>
+              </div>
+            </Surface>
+          ) : activeChapterDraft ? (
+            <Surface title={`${activeChapterDraft.mode === "edit" ? "Edit" : "Input Detail"} Bab`}>
+              <div className="grid gap-2">
+                <label className="block">
+                  <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7e84a8]">
+                    Judul Bab
+                  </span>
+                  <input
+                    value={activeChapterDraft.title}
+                    onChange={(event) => setActiveChapterDraft(prev => prev ? { ...prev, title: event.target.value } : prev)}
+                    placeholder="Contoh: Bab 3 - Lanjutan Konsep"
+                    className="h-9 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 text-[11px] text-[#4f5678] outline-none"
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7e84a8]">
+                    Deskripsi Bab
+                  </span>
+                  <textarea
+                    value={activeChapterDraft.summary}
+                    onChange={(event) => setActiveChapterDraft(prev => prev ? { ...prev, summary: event.target.value } : prev)}
+                    placeholder="Ringkasan singkat pembelajaran untuk bab ini"
+                    className="h-20 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white p-3 text-[11px] text-[#4f5678] outline-none"
+                  />
+                </label>
+
+                {draftError && (
+                  <p className="rounded-[9px] border border-[#f5c4cd] bg-[#fff2f5] px-2 py-1.5 text-[9px] text-[#ba4b64]">
+                    {draftError}
+                  </p>
+                )}
+
+                <div className="mt-2 grid grid-cols-2 gap-2 text-[10px] font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDraftError("");
+                      setActiveChapterDraft(null);
+                    }}
+                    className="cursor-pointer rounded-[9px] border border-[rgba(113,94,215,0.2)] bg-white px-2 py-2 text-[#5b6191] transition-all hover:bg-[#faf9ff] active:scale-95"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!activeChapterDraft.title.trim() || !activeChapterDraft.summary.trim()) {
+                        setDraftError("Judul dan Deskripsi bab wajib diisi");
+                        return;
+                      }
+                      
+                      if (activeChapterDraft.mode === "create") {
+                        setChapters(prev => [
+                          ...prev,
+                          {
+                            id: activeChapterDraft.chapterId,
+                            title: activeChapterDraft.title,
+                            summary: activeChapterDraft.summary,
+                            items: [],
+                          }
+                        ]);
+                      } else {
+                        setChapters(prev => prev.map(ch => 
+                          ch.id === activeChapterDraft.chapterId 
+                            ? { ...ch, title: activeChapterDraft.title, summary: activeChapterDraft.summary }
+                            : ch
+                        ));
+                      }
+                      
+                      setActiveChapterDraft(null);
+                      setDraftError("");
+                      toast.success(`Bab berhasil ${activeChapterDraft.mode === 'create' ? 'ditambahkan' : 'diperbarui'}`);
+                    }}
+                    className="cursor-pointer rounded-[9px] bg-gradient-to-r from-[#765df5] to-[#5b50dc] px-2 py-2 text-white transition-all hover:opacity-90 active:scale-[0.98]"
+                  >
+                    {activeChapterDraft.mode === "edit" ? "Simpan Perubahan" : "Simpan Bab"}
                   </button>
                 </div>
               </div>

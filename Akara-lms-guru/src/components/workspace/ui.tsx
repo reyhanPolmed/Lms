@@ -42,8 +42,8 @@ export function Surface({
   children: ReactNode;
 }) {
   return (
-    <section className="panel-surface min-h-0 overflow-hidden rounded-[18px] bg-white p-3.5">
-      <div className="mb-3 flex items-center justify-between gap-3">
+    <section className="panel-surface flex h-full flex-col min-h-0 overflow-hidden rounded-[18px] bg-white p-3.5">
+      <div className="mb-3 shrink-0 flex items-center justify-between gap-3">
         <h2 className="text-[16px] text-[#23284a]">{title}</h2>
         {action}
       </div>
@@ -81,9 +81,11 @@ export function Badge({ status }: { status: string }) {
 export function MiniInput({
   label,
   placeholder,
+  type = "text",
 }: {
   label: string;
   placeholder: string;
+  type?: string;
 }) {
   return (
     <label className="block">
@@ -91,6 +93,7 @@ export function MiniInput({
         {label}
       </span>
       <input
+        type={type}
         placeholder={placeholder}
         className="h-9 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 text-[11px] text-[#4f5678] outline-none"
       />
@@ -102,17 +105,25 @@ export function MiniSelect({
   label,
   options,
   placeholder = "Semua",
+  value,
+  onChange,
 }: {
   label: string;
   options: string[];
   placeholder?: string;
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
 }) {
   return (
     <label className="block">
       <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7e84a8]">
         {label}
       </span>
-      <select className="h-9 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 text-[11px] text-[#4f5678] outline-none">
+      <select
+        value={value}
+        onChange={onChange}
+        className="h-9 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 text-[11px] text-[#4f5678] outline-none"
+      >
         <option value="">{placeholder}</option>
         {options.map((opt) => (
           <option key={opt} value={opt}>

@@ -20,7 +20,7 @@ export default function TaskEditorPage() {
               <MiniInput label="Judul Tugas" placeholder="Analisis Gerak Newton" />
               <MiniInput label="Deadline" placeholder="2026-05-15 23:59" />
             </div>
-            <MiniInput label="Metode Submit" placeholder="link / file / link+catatan" />
+            <MiniInput label="Metode Submit" placeholder="file + link / file / link" />
             <MiniInput label="Allow Revision" placeholder="ya / tidak" />
             <label className="block">
               <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7e84a8]">

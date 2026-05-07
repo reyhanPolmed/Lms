@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useMemo } from "react";
 import { Layers3 } from "lucide-react";
 import Link from "next/link";
 
@@ -5,6 +8,17 @@ import { Badge, MiniSelect, PageHeader, Surface } from "@/components/workspace/u
 import { modules } from "@/lib/teacher-mocks";
 
 export default function ModulesPage() {
+  const [subjectFilter, setSubjectFilter] = useState("");
+  const [gradeFilter, setGradeFilter] = useState("");
+
+  const filteredModules = useMemo(() => {
+    return modules.filter((m) => {
+      if (subjectFilter && m.subject !== subjectFilter) return false;
+      if (gradeFilter && m.grade !== gradeFilter) return false;
+      return true;
+    });
+  }, [subjectFilter, gradeFilter]);
+
   return (
     <div className="grid min-h-full grid-rows-[auto_auto_minmax(0,1fr)] gap-2">
       <PageHeader
@@ -13,16 +27,28 @@ export default function ModulesPage() {
       />
 
       <Surface title="Filter Mata Pelajaran">
-        <div className="grid gap-2 md:grid-cols-3">
-          <MiniSelect label="Nama Mata Pelajaran" options={Array.from(new Set(modules.map(m => m.name)))} placeholder="Semua mata pelajaran" />
-          <MiniSelect label="Mata Pelajaran" options={Array.from(new Set(modules.map(m => m.subject)))} placeholder="Semua mata pelajaran" />
-          <MiniSelect label="Kelas Target" options={Array.from(new Set(modules.map(m => m.grade)))} placeholder="Semua kelas" />
+        <div className="grid gap-2 md:grid-cols-2">
+          <MiniSelect 
+            label="Mata Pelajaran" 
+            options={Array.from(new Set(modules.map(m => m.subject)))} 
+            placeholder="Semua mata pelajaran" 
+            value={subjectFilter}
+            onChange={(e) => setSubjectFilter(e.target.value)}
+          />
+          <MiniSelect 
+            label="Kelas Target" 
+            options={Array.from(new Set(modules.map(m => m.grade)))} 
+            placeholder="Semua kelas" 
+            value={gradeFilter}
+            onChange={(e) => setGradeFilter(e.target.value)}
+          />
         </div>
       </Surface>
 
       <Surface title="List Mata Pelajaran">
-        <div className="grid min-h-0 gap-2 md:grid-cols-2 2xl:grid-cols-4">
-          {modules.map((module) => (
+        <div className="flex-1 overflow-y-auto pr-1">
+          <div className="grid min-h-0 gap-2 md:grid-cols-2 2xl:grid-cols-4">
+            {filteredModules.map((module) => (
             <article
               key={module.id}
               className="rounded-[14px] border border-[rgba(113,94,215,0.12)] bg-white p-3"
@@ -54,7 +80,8 @@ export default function ModulesPage() {
                 />
               </div>
             </article>
-          ))}
+            ))}
+          </div>
         </div>
       </Surface>
     </div>
