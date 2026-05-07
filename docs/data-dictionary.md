@@ -1,138 +1,128 @@
-# LMS Data Dictionary
+# Data Dictionary (Canonical)
 
-## Canonical Naming Rules
-- API/frontend attributes: `camelCase`
-- Database physical columns: may remain `snake_case` via ORM mapping
-- Canonical person name attribute: `fullName`
-- Canonical task payload attribute: `submissionLink`
+This document standardizes the names of all entities and attributes used across the Akara LMS project. All frontend and backend applications must adhere to this naming convention.
 
-## Canonical Enums
-- `UserRole`: `student | teacher | admin`
-- `SubmissionStatus`: `draft | submitted | late | graded | returned`
-- `AttendanceStatus`: `present | absent | late | excused`
-- `TargetRole`: `all | student | teacher | admin`
+## Base Entity Attributes
+- `id`: string (UUID or standard ID)
+- `createdAt`: string (ISO-8601 Date)
+- `updatedAt`: string (ISO-8601 Date)
 
-## Canonical Entities
+## Entities
 
-### User
-- `id`
-- `fullName`
-- `email`
-- `role`
-- `avatarUrl`
-- `isActive`
-- `createdAt`
-- `updatedAt`
+### `User`
+- `id`: string
+- `fullName`: string (Legacy DB map: `nama` / `name`)
+- `email`: string
+- `role`: enum (`student`, `teacher`, `admin`)
+- `avatarUrl`: string | null (Legacy DB map: `foto` / `image`)
+- `isActive`: boolean
 
-### StudentProfile
-- `id`
-- `userId`
-- `nisn`
-- `classId`
-- `createdAt`
-- `updatedAt`
+### `StudentProfile`
+- `id`: string
+- `userId`: string
+- `nisn`: string | null
+- `classId`: string | null (Legacy DB map: `kelasId`)
 
-### TeacherProfile
-- `id`
-- `userId`
-- `employeeId`
-- `subjectSpecialization`
-- `createdAt`
-- `updatedAt`
+### `TeacherProfile`
+- `id`: string
+- `userId`: string
+- `employeeId`: string | null (Legacy DB map: `nip`)
+- `subjectSpecialization`: string | null
 
-### ClassRoom
-- `id`
-- `name`
-- `gradeLevel`
-- `academicYear`
-- `homeroomTeacherId`
-- `createdAt`
-- `updatedAt`
+### `AdminProfile`
+- `id`: string
+- `userId`: string
 
-### Course
-- `id`
-- `title`
-- `description`
-- `teacherId`
-- `classId`
-- `createdAt`
-- `updatedAt`
+### `ClassRoom` (replaces `StudentClass` / `kelas`)
+- `id`: string
+- `name`: string (Legacy DB map: `namaKelas`)
+- `gradeLevel`: string
+- `academicYear`: string
+- `homeroomTeacherId`: string | null
 
-### Material
-- `id`
-- `courseId`
-- `title`
-- `description`
-- `fileUrl`
-- `content`
-- `isPublished`
-- `createdAt`
-- `updatedAt`
+### `Course` (replaces `Module` / `mapel`)
+- `id`: string
+- `title`: string (Legacy DB map: `judul`)
+- `description`: string (Legacy DB map: `deskripsi`)
+- `teacherId`: string | null
+- `classId`: string | null
 
-### Assignment
-- `id`
-- `courseId`
-- `title`
-- `description`
-- `dueAt`
-- `maxScore`
-- `isPublished`
-- `createdAt`
-- `updatedAt`
+### `Enrollment` (replaces `ModuleStudentClass`)
+- `id`: string
+- `studentId`: string
+- `classId`: string
 
-### Submission
-- `id`
-- `assignmentId`
-- `studentId`
-- `content`
-- `fileUrl`
-- `submittedAt`
-- `score`
-- `feedback`
-- `status`
-- `createdAt`
-- `updatedAt`
+### `Material` (replaces `Lesson`)
+- `id`: string
+- `courseId`: string
+- `title`: string (Legacy DB map: `judul`)
+- `description`: string
+- `fileUrl`: string | null
+- `content`: string (Legacy DB map: `konten`)
+- `isPublished`: boolean
 
-### Quiz
-- `id`
-- `courseId`
-- `title`
-- `description`
-- `startsAt`
-- `endsAt`
-- `durationMinutes`
-- `isPublished`
-- `createdAt`
-- `updatedAt`
+### `Assignment` (replaces `Task`)
+- `id`: string
+- `courseId`: string
+- `title`: string (Legacy DB map: `judul`)
+- `description`: string (Legacy DB map: `deskripsi`)
+- `dueAt`: string
+- `maxScore`: number | null
+- `isPublished`: boolean
 
-### Grade
-- `id`
-- `studentId`
-- `courseId`
-- `assignmentId`
-- `quizId`
-- `score`
-- `maxScore`
-- `feedback`
-- `createdAt`
-- `updatedAt`
+### `Submission` (replaces `TaskSubmission`)
+- `id`: string
+- `assignmentId`: string
+- `studentId`: string
+- `content`: string | null
+- `fileUrl`: string | null (Legacy DB map: `submissionLink`)
+- `submittedAt`: string | null
+- `score`: number | null
+- `feedback`: string | null (Legacy DB map: `teacherNote`)
+- `status`: enum (`draft`, `submitted`, `late`, `graded`, `returned`)
 
-### Attendance
-- `id`
-- `studentId`
-- `classId`
-- `courseId`
-- `date`
-- `status`
-- `note`
-- `createdAt`
-- `updatedAt`
+### `Quiz`
+- `id`: string
+- `courseId`: string
+- `title`: string (Legacy DB map: `judul`)
+- `description`: string
+- `startsAt`: string | null
+- `endsAt`: string | null
+- `durationMinutes`: number
+- `isPublished`: boolean
 
-### Announcement
-- `id`
-- `title`
-- `content`
-- `targetRole`
-- `createdById`
-- `createdAt`
-- `updatedAt`
+### `Grade`
+- `id`: string
+- `studentId`: string
+- `courseId`: string
+- `assignmentId`: string | null
+- `quizId`: string | null
+- `score`: number
+- `maxScore`: number
+- `feedback`: string | null
+
+### `Attendance`
+- `id`: string
+- `studentId`: string
+- `classId`: string
+- `courseId`: string | null
+- `date`: string
+- `status`: enum (`present`, `absent`, `late`, `excused`)
+- `note`: string | null
+
+### `Announcement`
+- `id`: string
+- `title`: string
+- `content`: string
+- `targetRole`: enum (`all`, `student`, `teacher`, `admin`)
+- `createdById`: string
+
+### `Notification`
+- `id`: string
+- `userId`: string
+- `title`: string
+- `message`: string
+- `isRead`: boolean
+
+## Legacy Name Mapping Rule
+If the backend database currently uses a legacy name (e.g., `nama_jurusan`, `nip`), the backend controllers/mappers **MUST** transform these keys into the canonical camelCase attributes defined above before sending the JSON response. The frontend must only consume canonical names.

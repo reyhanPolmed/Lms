@@ -5,64 +5,33 @@ import type {
   QuizSubmitPayload,
   StudentProfileView,
   TaskSubmissionView,
-  TrackDurationPayload
+  TrackDurationPayload,
+  DashboardMetricView,
+  AgendaItemView,
+  CourseSummaryView,
+  SidebarItemType as SharedSidebarItemType,
+  SidebarEntryView,
+  CourseSectionView,
+  CourseDetailView,
+  MaterialDetailView,
+  QuizQuestionView,
+  QuizDetailView,
+  QuizAttemptView,
+  AssignmentDetailView,
 } from "@akara/shared/types/contracts";
 
-export type SidebarItemType = "lesson" | "quiz" | "task";
 export type ContentType = "video" | "pdf" | "text" | "link";
 
 export type UserProfile = StudentProfileView;
 
-export interface DashboardMetric {
-  label: string;
-  value: number;
-  helper: string;
-  tone: "gold" | "sky" | "mint";
-}
+export type DashboardMetric = DashboardMetricView;
+export type AgendaItem = AgendaItemView;
+export type ModuleSummary = CourseSummaryView;
 
-export interface AgendaItem {
-  id: string;
-  title: string;
-  type: "quiz" | "task";
-  dueAt: string;
-  moduleTitle: string;
-  status: "due-soon" | "scheduled" | "revision";
-  href: string;
-}
-
-export interface ModuleSummary {
-  id: string;
-  title: string;
-  department: string;
-  teacher: string;
-  totalItems: number;
-  completionPercent: number;
-  nextItemTitle: string;
-  accent: string;
-  bannerLabel: string;
-}
-
-export interface SidebarEntry {
-  id: string;
-  title: string;
-  type: SidebarItemType;
-  href: string;
-  isLocked: boolean;
-  isCompleted: boolean;
-  bab: string;
-}
-
-export interface ModuleSection {
-  id: string;
-  title: string;
-  description: string;
-  items: SidebarEntry[];
-}
-
-export interface ModuleDetail extends ModuleSummary {
-  description: string;
-  sections: ModuleSection[];
-}
+export type SidebarItemType = SharedSidebarItemType;
+export type SidebarEntry = SidebarEntryView;
+export type ModuleSection = CourseSectionView;
+export type ModuleDetail = CourseDetailView;
 
 export interface DashboardData {
   user: UserProfile;
@@ -72,72 +41,16 @@ export interface DashboardData {
   upcomingTasks: AgendaItem[];
 }
 
-export interface LessonDetail {
-  id: string;
-  moduleId: string;
-  title: string;
-  contentType: ContentType;
-  contentUrl: string;
-  excerpt: string;
-  body: string;
-  durationTargetSeconds: number;
-  trackedSeconds: number;
-  isCompleted: boolean;
-  sidebar: SidebarEntry[];
-  tips: string[];
-}
-
-export interface QuizQuestion {
-  id: string;
-  prompt: string;
-  options: {
-    key: string;
-    label: string;
-  }[];
-  correctOption: string;
-}
-
-export interface QuizDetail {
-  id: string;
-  moduleId: string;
-  title: string;
-  intro: string;
-  passScore: number;
-  durationMinutes: number;
-  questionOrder: string[];
-  questions: QuizQuestion[];
-  penaltyNote: string;
-  sidebar: SidebarEntry[];
-  lastScore?: number;
-}
-
-export interface QuizAttempt {
-  id: string;
-  quizId: string;
-  status: "in_progress" | "submitted";
-  questionOrder: string[];
-}
+export type LessonDetail = MaterialDetailView;
+export type QuizQuestion = QuizQuestionView;
+export type QuizDetail = QuizDetailView;
+export type QuizAttempt = QuizAttemptView;
 
 export type CurrentSubmission = TaskSubmissionView;
+export type TaskDetail = AssignmentDetailView;
 
-export interface TaskDetail {
-  id: string;
-  moduleId: string;
-  title: string;
-  description: string;
-  deadline: string;
-  allowRevision: boolean;
-  currentSubmission?: CurrentSubmission;
-  sidebar: SidebarEntry[];
-  checklist: string[];
-}
-
-export interface ProfileDetail extends UserProfile {
-  phone: string;
-  bio: string;
-  nisn: string | null;
-}
-
+export type ProfileDetail = StudentProfileView;
 export type ProfilePayload = ProfileUpdatePayload;
 export type PasswordPayload = ChangePasswordPayload;
+
 export type { LoginPayload, QuizSubmitPayload, TrackDurationPayload };

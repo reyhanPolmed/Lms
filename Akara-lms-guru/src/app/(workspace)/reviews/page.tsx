@@ -7,13 +7,13 @@ import { useState, useMemo, useEffect } from "react";
 import { modules } from "@/lib/teacher-mocks";
 
 // Mock data specific for Quiz Review
-const quizSubmissions = [
+const initialQuizSubmissions = [
   {
     id: "qs-1",
-    student: "Liam Johnson",
+    studentName: "Liam Johnson",
     className: "9A",
-    subject: "Sains Terapan",
-    quizName: "Kuis Bab 3 - Gaya dan Gerak",
+    courseTitle: "Sains Terapan",
+    assignmentTitle: "Kuis Bab 3 - Gaya dan Gerak",
     submittedAt: "10:30 AM",
     status: "submitted",
     score: 85,
@@ -27,6 +27,7 @@ const quizSubmissions = [
         isCorrect: true,
         points: 10,
         maxPoints: 10,
+        teacherNote: "",
       },
       {
         id: "q2",
@@ -37,6 +38,7 @@ const quizSubmissions = [
         isCorrect: false,
         points: 0,
         maxPoints: 10,
+        teacherNote: "",
       },
       {
         id: "q3",
@@ -45,17 +47,18 @@ const quizSubmissions = [
         studentAnswer: "Gaya gesek statis adalah gaya gesek yang terjadi ketika benda diam dan belum bergerak. Menahan benda agar tidak bergeser.",
         correctAnswer: "Panduan Jawaban: Menyebutkan bahwa gaya gesek statis bekerja pada benda yang diam hingga tepat akan bergerak.",
         isCorrect: null, // needs manual review
-        points: 15,
-        maxPoints: 20,
+        points: 0, // Belum dinilai, default 0
+        maxPoints: 10,
+        teacherNote: "",
       }
     ]
   },
   {
     id: "qs-2",
-    student: "Noah Williams",
+    studentName: "Noah Williams",
     className: "9A",
-    subject: "Sains Terapan",
-    quizName: "Kuis Bab 3 - Gaya dan Gerak",
+    courseTitle: "Sains Terapan",
+    assignmentTitle: "Kuis Bab 3 - Gaya dan Gerak",
     submittedAt: "10:45 AM",
     status: "graded",
     score: 95,
@@ -69,6 +72,7 @@ const quizSubmissions = [
         isCorrect: true,
         points: 10,
         maxPoints: 10,
+        teacherNote: "",
       },
       {
         id: "q3",
@@ -77,17 +81,18 @@ const quizSubmissions = [
         studentAnswer: "Gaya yang bekerja pada benda yang diam hingga tepat akan bergerak.",
         correctAnswer: "Panduan Jawaban: Menyebutkan bahwa gaya gesek statis bekerja pada benda yang diam hingga tepat akan bergerak.",
         isCorrect: null,
-        points: 20,
-        maxPoints: 20,
+        points: 10,
+        maxPoints: 10,
+        teacherNote: "Jawaban singkat tapi tepat.",
       }
     ]
   },
   {
     id: "qs-3",
-    student: "Emma Brown",
+    studentName: "Emma Brown",
     className: "9B",
-    subject: "Sains Terapan",
-    quizName: "Kuis Bab 3 - Gaya dan Gerak",
+    courseTitle: "Sains Terapan",
+    assignmentTitle: "Kuis Bab 3 - Gaya dan Gerak",
     submittedAt: "11:00 AM",
     status: "late",
     score: 70,
@@ -98,30 +103,65 @@ const quizSubmissions = [
 export default function QuizReviewsPage() {
   const { toast } = useToast();
 
+  const [submissions, setSubmissions] = useState(initialQuizSubmissions);
+
   const [subjectFilter, setSubjectFilter] = useState("");
   const [classFilter, setClassFilter] = useState("");
   const [quizFilter, setQuizFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
   const filteredSubmissions = useMemo(() => {
-    return quizSubmissions.filter((s) => {
-      if (subjectFilter && s.subject !== subjectFilter) return false;
+    return submissions.filter((s) => {
+      if (subjectFilter && s.courseTitle !== subjectFilter) return false;
       if (classFilter && s.className !== classFilter) return false;
-      if (quizFilter && s.quizName !== quizFilter) return false;
+      if (quizFilter && s.assignmentTitle !== quizFilter) return false;
       if (statusFilter && s.status !== statusFilter) return false;
       return true;
     });
-  }, [subjectFilter, classFilter, quizFilter, statusFilter]);
+  }, [submissions, subjectFilter, classFilter, quizFilter, statusFilter]);
 
-  const [selectedSubmission, setSelectedSubmission] = useState(filteredSubmissions[0] || null);
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null);
+
+  // Derive selectedSubmission from submissions state to ensure it stays fresh
+  const selectedSubmission = useMemo(() => {
+    return submissions.find((s) => s.id === selectedSubmissionId) || null;
+  }, [submissions, selectedSubmissionId]);
 
   useEffect(() => {
-    if (filteredSubmissions.length > 0 && !filteredSubmissions.find(s => s.id === selectedSubmission?.id)) {
-      setSelectedSubmission(filteredSubmissions[0]);
+    if (filteredSubmissions.length > 0 && !filteredSubmissions.find(s => s.id === selectedSubmissionId)) {
+      setSelectedSubmissionId(filteredSubmissions[0].id);
     } else if (filteredSubmissions.length === 0) {
-      setSelectedSubmission(null);
+      setSelectedSubmissionId(null);
     }
-  }, [filteredSubmissions, selectedSubmission]);
+  }, [filteredSubmissions, selectedSubmissionId]);
+
+  const handleUpdateQuestion = (submissionId: string, questionId: string, updates: any) => {
+    setSubmissions((prev) => prev.map((sub) => {
+      if (sub.id !== submissionId) return sub;
+      const updatedQuestions = sub.questions.map((q) => {
+        if (q.id !== questionId) return q;
+        return { ...q, ...updates };
+      });
+      const totalPoints = updatedQuestions.reduce((acc, q) => acc + (Number(q.points) || 0), 0);
+      const maxPoints = updatedQuestions.reduce((acc, q) => acc + (q.maxPoints || 0), 0);
+      const newScore = maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100) : sub.score;
+      return { ...sub, questions: updatedQuestions, score: newScore };
+    }));
+  };
+
+  const handleAction = (submissionId: string, actionType: 'draft' | 'retake' | 'publish') => {
+    setSubmissions((prev) => prev.map((sub) => {
+      if (sub.id !== submissionId) return sub;
+      let newStatus = sub.status;
+      if (actionType === 'publish') newStatus = 'graded';
+      if (actionType === 'retake') newStatus = 'retake';
+      return { ...sub, status: newStatus };
+    }));
+    
+    if (actionType === 'draft') toast.success("Draft nilai disimpan");
+    if (actionType === 'retake') toast.success("Permintaan re-take dikirim");
+    if (actionType === 'publish') toast.success("Nilai kuis di-publish ke siswa");
+  };
 
   return (
     <div className="grid min-h-full grid-rows-[auto_auto_minmax(0,1fr)] gap-2">
@@ -134,28 +174,28 @@ export default function QuizReviewsPage() {
         <div className="grid gap-2 md:grid-cols-4">
           <MiniSelect 
             label="Mata Pelajaran" 
-            options={Array.from(new Set(quizSubmissions.map(s => s.subject)))} 
+            options={Array.from(new Set(initialQuizSubmissions.map(s => s.courseTitle)))} 
             placeholder="Pilih Mata Pelajaran" 
             value={subjectFilter}
             onChange={e => setSubjectFilter(e.target.value)}
           />
           <MiniSelect 
             label="Kelas" 
-            options={Array.from(new Set(quizSubmissions.map(s => s.className)))} 
+            options={Array.from(new Set(initialQuizSubmissions.map(s => s.className)))} 
             placeholder="Pilih Kelas" 
             value={classFilter}
             onChange={e => setClassFilter(e.target.value)}
           />
           <MiniSelect 
             label="Kuis" 
-            options={Array.from(new Set(quizSubmissions.map(s => s.quizName)))} 
+            options={Array.from(new Set(initialQuizSubmissions.map(s => s.assignmentTitle)))} 
             placeholder="Pilih Kuis" 
             value={quizFilter}
             onChange={e => setQuizFilter(e.target.value)}
           />
           <MiniSelect 
             label="Status Review" 
-            options={Array.from(new Set(quizSubmissions.map(s => s.status)))} 
+            options={Array.from(new Set(initialQuizSubmissions.map(s => s.status)))} 
             placeholder="Semua Status" 
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
@@ -170,15 +210,15 @@ export default function QuizReviewsPage() {
               filteredSubmissions.map((row) => (
                 <button
                   key={row.id}
-                  onClick={() => setSelectedSubmission(row)}
+                  onClick={() => setSelectedSubmissionId(row.id)}
                   className={`flex w-full cursor-pointer items-start justify-between border-b px-3 py-2.5 text-left transition-all active:scale-[0.99] last:border-b-0 ${selectedSubmission?.id === row.id
                       ? "border-[rgba(113,94,215,0.4)] bg-[#f0edff]"
                       : "border-[rgba(113,94,215,0.1)] hover:bg-[#faf9ff]"
                     }`}
                 >
                   <span>
-                    <span className="block text-[11px] font-semibold text-[#4e5378]">{row.student}</span>
-                    <span className="block text-[10px] text-[#6f759a]">{row.quizName}</span>
+                    <span className="block text-[11px] font-semibold text-[#4e5378]">{row.studentName}</span>
+                    <span className="block text-[10px] text-[#6f759a]">{row.assignmentTitle}</span>
                     <span className="block text-[9px] text-[#7e84a8]">Kelas {row.className} • Submit: {row.submittedAt}</span>
                   </span>
                   <div className="text-right flex flex-col items-end gap-1">
@@ -201,8 +241,8 @@ export default function QuizReviewsPage() {
               {/* Header info kuis */}
             <div className="mb-2 shrink-0 rounded-[12px] border border-[rgba(113,94,215,0.12)] bg-white p-3 flex justify-between items-center">
               <div>
-                <p className="text-[12px] font-bold text-[#2b325b]">{selectedSubmission.student}</p>
-                <p className="text-[10px] text-[#6f759a]">{selectedSubmission.subject} • Kelas {selectedSubmission.className}</p>
+                <p className="text-[12px] font-bold text-[#2b325b]">{selectedSubmission.studentName}</p>
+                <p className="text-[10px] text-[#6f759a]">{selectedSubmission.courseTitle} • Kelas {selectedSubmission.className}</p>
               </div>
               <div className="text-right">
                 <p className="text-[10px] text-[#7e84a8] uppercase tracking-wider font-semibold mb-0.5">Total Skor</p>
@@ -249,11 +289,11 @@ export default function QuizReviewsPage() {
                         <div className="mt-3 grid grid-cols-[1fr_auto] gap-2 items-end pt-2 border-t border-[rgba(113,94,215,0.08)]">
                           <label className="block">
                             <span className="mb-1 block text-[9.5px] font-semibold text-[#7e84a8]">Catatan Guru (Opsional)</span>
-                            <input type="text" className="w-full rounded-[6px] border border-[rgba(113,94,215,0.15)] bg-white px-2 py-1.5 text-[10px] outline-none focus:border-[#715ed7]" placeholder="Tambahkan komentar..." />
+                            <input type="text" value={q.teacherNote || ''} onChange={(e) => handleUpdateQuestion(selectedSubmission.id, q.id, { teacherNote: e.target.value })} className="w-full rounded-[6px] border border-[rgba(113,94,215,0.15)] bg-white px-2 py-1.5 text-[10px] outline-none focus:border-[#715ed7]" placeholder="Tambahkan komentar..." />
                           </label>
                           <div className="flex items-center gap-1.5">
                             <span className="text-[9.5px] font-semibold text-[#7e84a8]">Beri Poin:</span>
-                            <input type="number" defaultValue={q.points} className="w-14 rounded-[6px] border border-[rgba(113,94,215,0.15)] bg-white px-2 py-1.5 text-[10px] text-center font-bold text-[#4e5378] outline-none focus:border-[#715ed7]" />
+                            <input type="number" value={q.points} onChange={(e) => handleUpdateQuestion(selectedSubmission.id, q.id, { points: Number(e.target.value) })} className="w-14 rounded-[6px] border border-[rgba(113,94,215,0.15)] bg-white px-2 py-1.5 text-[10px] text-center font-bold text-[#4e5378] outline-none focus:border-[#715ed7]" />
                             <span className="text-[9.5px] text-[#a5aecf]">/{q.maxPoints}</span>
                           </div>
                         </div>
@@ -273,15 +313,15 @@ export default function QuizReviewsPage() {
             <div className="mt-3 shrink-0 rounded-[12px] border border-[rgba(113,94,215,0.12)] bg-white p-2.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <button onClick={() => toast.success("Draft nilai disimpan")} className="cursor-pointer rounded-[8px] border border-[#bdb6f6] bg-white px-3 py-1.5 text-[10px] font-semibold text-[#5b6191] transition-all hover:bg-[#f0edff] active:scale-95">
+                  <button onClick={() => handleAction(selectedSubmission.id, 'draft')} className="cursor-pointer rounded-[8px] border border-[#bdb6f6] bg-white px-3 py-1.5 text-[10px] font-semibold text-[#5b6191] transition-all hover:bg-[#f0edff] active:scale-95">
                     Simpan Draft
                   </button>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => toast.success("Permintaan re-take dikirim")} className="cursor-pointer rounded-[8px] border border-[#f0b16b] bg-[#fff8ef] px-3 py-1.5 text-[10px] font-semibold text-[#c1782c] transition-all hover:bg-[#fdf0e0] active:scale-95">
+                  <button onClick={() => handleAction(selectedSubmission.id, 'retake')} className="cursor-pointer rounded-[8px] border border-[#f0b16b] bg-[#fff8ef] px-3 py-1.5 text-[10px] font-semibold text-[#c1782c] transition-all hover:bg-[#fdf0e0] active:scale-95">
                     Minta Re-take
                   </button>
-                  <button onClick={() => toast.success("Nilai kuis di-publish ke siswa")} className="cursor-pointer rounded-[8px] bg-gradient-to-r from-[#56bf7a] to-[#36a662] px-4 py-1.5 text-[10px] font-semibold text-white transition-all hover:opacity-90 active:scale-95 shadow-sm">
+                  <button onClick={() => handleAction(selectedSubmission.id, 'publish')} className="cursor-pointer rounded-[8px] bg-gradient-to-r from-[#56bf7a] to-[#36a662] px-4 py-1.5 text-[10px] font-semibold text-white transition-all hover:opacity-90 active:scale-95 shadow-sm">
                     Publish Nilai
                   </button>
                 </div>

@@ -7,16 +7,32 @@ import { useState, useMemo, useEffect } from "react";
 import { modules } from "@/lib/teacher-mocks";
 
 // Mock data specific for Task/Assignment Review
-const taskSubmissions = [
+export type MockSubmission = {
+  id: string;
+  studentName: string;
+  className: string;
+  courseTitle: string;
+  assignmentTitle: string;
+  submittedAt: string;
+  status: string;
+  score: number | null;
+  teacherFeedback: string;
+  files: { name: string; size: string; type: string }[];
+  studentNote: string;
+  rubrics: { id: string; name: string; maxScore: number; score: number | null }[];
+};
+
+const initialTaskSubmissions: MockSubmission[] = [
   {
     id: "ts-1",
-    student: "Liam Johnson",
+    studentName: "Liam Johnson",
     className: "9A",
-    subject: "Sains Terapan",
-    taskName: "Laporan Eksperimen Hukum Newton",
+    courseTitle: "Sains Terapan",
+    assignmentTitle: "Laporan Eksperimen Hukum Newton",
     submittedAt: "Kemarin, 14:30",
     status: "submitted",
     score: null,
+    teacherFeedback: "",
     files: [
       { name: "Laporan_Newton_Liam.pdf", size: "2.4 MB", type: "pdf" },
       { name: "Dokumentasi_Praktikum.jpg", size: "1.1 MB", type: "image" }
@@ -30,13 +46,14 @@ const taskSubmissions = [
   },
   {
     id: "ts-2",
-    student: "Ava Davis",
+    studentName: "Ava Davis",
     className: "10B",
-    subject: "English Literature",
-    taskName: "Shakespeare Character Analysis Essay",
+    courseTitle: "English Literature",
+    assignmentTitle: "Shakespeare Character Analysis Essay",
     submittedAt: "Hari ini, 09:15",
     status: "revision",
     score: 65,
+    teacherFeedback: "",
     files: [
       { name: "Essay_Hamlet_Ava.docx", size: "1.2 MB", type: "doc" }
     ],
@@ -49,13 +66,14 @@ const taskSubmissions = [
   },
   {
     id: "ts-3",
-    student: "Noah Williams",
+    studentName: "Noah Williams",
     className: "9A",
-    subject: "Sains Terapan",
-    taskName: "Laporan Eksperimen Hukum Newton",
+    courseTitle: "Sains Terapan",
+    assignmentTitle: "Laporan Eksperimen Hukum Newton",
     submittedAt: "2 Jam yang lalu",
     status: "graded",
     score: 92,
+    teacherFeedback: "",
     files: [
       { name: "Laporan_Hukum_Newton_Noah.pdf", size: "3.1 MB", type: "pdf" }
     ],
@@ -71,30 +89,71 @@ const taskSubmissions = [
 export default function TaskReviewsPage() {
   const { toast } = useToast();
 
+  const [submissions, setSubmissions] = useState(initialTaskSubmissions);
+
   const [subjectFilter, setSubjectFilter] = useState("");
   const [classFilter, setClassFilter] = useState("");
   const [taskFilter, setTaskFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
   const filteredSubmissions = useMemo(() => {
-    return taskSubmissions.filter((s) => {
-      if (subjectFilter && s.subject !== subjectFilter) return false;
+    return submissions.filter((s) => {
+      if (subjectFilter && s.courseTitle !== subjectFilter) return false;
       if (classFilter && s.className !== classFilter) return false;
-      if (taskFilter && s.taskName !== taskFilter) return false;
+      if (taskFilter && s.assignmentTitle !== taskFilter) return false;
       if (statusFilter && s.status !== statusFilter) return false;
       return true;
     });
-  }, [subjectFilter, classFilter, taskFilter, statusFilter]);
+  }, [submissions, subjectFilter, classFilter, taskFilter, statusFilter]);
 
-  const [selectedSubmission, setSelectedSubmission] = useState(filteredSubmissions[0] || null);
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null);
+
+  const selectedSubmission = useMemo(() => {
+    return submissions.find((s) => s.id === selectedSubmissionId) || null;
+  }, [submissions, selectedSubmissionId]);
 
   useEffect(() => {
-    if (filteredSubmissions.length > 0 && !filteredSubmissions.find(s => s.id === selectedSubmission?.id)) {
-      setSelectedSubmission(filteredSubmissions[0]);
+    if (filteredSubmissions.length > 0 && !filteredSubmissions.find(s => s.id === selectedSubmissionId)) {
+      setSelectedSubmissionId(filteredSubmissions[0].id);
     } else if (filteredSubmissions.length === 0) {
-      setSelectedSubmission(null);
+      setSelectedSubmissionId(null);
     }
-  }, [filteredSubmissions, selectedSubmission]);
+  }, [filteredSubmissions, selectedSubmissionId]);
+
+  const handleUpdateRubric = (submissionId: string, rubricId: string, score: number) => {
+    setSubmissions((prev) => prev.map((sub) => {
+      if (sub.id !== submissionId) return sub;
+      const updatedRubrics = sub.rubrics.map((r) => {
+        if (r.id !== rubricId) return r;
+        return { ...r, score };
+      });
+      const totalScore = updatedRubrics.reduce((acc, r) => acc + (Number(r.score) || 0), 0);
+      const maxScore = updatedRubrics.reduce((acc, r) => acc + (r.maxScore || 0), 0);
+      const finalScore = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : sub.score;
+      return { ...sub, rubrics: updatedRubrics, score: finalScore };
+    }));
+  };
+
+  const handleUpdateFeedback = (submissionId: string, feedback: string) => {
+    setSubmissions((prev) => prev.map((sub) => {
+      if (sub.id !== submissionId) return sub;
+      return { ...sub, teacherFeedback: feedback };
+    }));
+  };
+
+  const handleAction = (submissionId: string, actionType: 'draft' | 'revision' | 'publish') => {
+    setSubmissions((prev) => prev.map((sub) => {
+      if (sub.id !== submissionId) return sub;
+      let newStatus = sub.status;
+      if (actionType === 'publish') newStatus = 'graded';
+      if (actionType === 'revision') newStatus = 'revision';
+      return { ...sub, status: newStatus };
+    }));
+    
+    if (actionType === 'draft') toast.success("Draft penilaian disimpan");
+    if (actionType === 'revision') toast.success("Permintaan revisi dikirim ke siswa");
+    if (actionType === 'publish') toast.success("Nilai tugas di-publish ke siswa");
+  };
 
   return (
     <div className="grid min-h-full grid-rows-[auto_auto_minmax(0,1fr)] gap-2">
@@ -107,28 +166,28 @@ export default function TaskReviewsPage() {
         <div className="grid gap-2 md:grid-cols-4">
           <MiniSelect 
             label="Mata Pelajaran" 
-            options={Array.from(new Set(taskSubmissions.map(m => m.subject)))} 
+            options={Array.from(new Set(initialTaskSubmissions.map(m => m.courseTitle)))} 
             placeholder="Pilih Mata Pelajaran" 
             value={subjectFilter}
             onChange={e => setSubjectFilter(e.target.value)}
           />
           <MiniSelect 
             label="Kelas" 
-            options={Array.from(new Set(taskSubmissions.map(m => m.className)))} 
+            options={Array.from(new Set(initialTaskSubmissions.map(m => m.className)))} 
             placeholder="Pilih Kelas" 
             value={classFilter}
             onChange={e => setClassFilter(e.target.value)}
           />
           <MiniSelect 
             label="Tugas" 
-            options={Array.from(new Set(taskSubmissions.map(m => m.taskName)))} 
+            options={Array.from(new Set(initialTaskSubmissions.map(m => m.assignmentTitle)))} 
             placeholder="Pilih Tugas" 
             value={taskFilter}
             onChange={e => setTaskFilter(e.target.value)}
           />
           <MiniSelect 
             label="Status Review" 
-            options={Array.from(new Set(taskSubmissions.map(m => m.status)))} 
+            options={Array.from(new Set(initialTaskSubmissions.map(m => m.status)))} 
             placeholder="Semua Status" 
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
@@ -143,7 +202,7 @@ export default function TaskReviewsPage() {
               filteredSubmissions.map((row) => (
                 <button
                   key={row.id}
-                  onClick={() => setSelectedSubmission(row)}
+                  onClick={() => setSelectedSubmissionId(row.id)}
                   className={`flex w-full cursor-pointer items-start justify-between border-b px-3 py-2.5 text-left transition-all active:scale-[0.99] last:border-b-0 ${
                     selectedSubmission?.id === row.id
                       ? "border-[rgba(113,94,215,0.4)] bg-[#f0edff]"
@@ -151,8 +210,8 @@ export default function TaskReviewsPage() {
                   }`}
                 >
                   <span>
-                    <span className="block text-[11px] font-semibold text-[#4e5378]">{row.student}</span>
-                    <span className="block text-[10px] text-[#6f759a]">{row.taskName}</span>
+                    <span className="block text-[11px] font-semibold text-[#4e5378]">{row.studentName}</span>
+                    <span className="block text-[10px] text-[#6f759a]">{row.assignmentTitle}</span>
                     <span className="block text-[9px] text-[#7e84a8]">Kelas {row.className} • {row.submittedAt}</span>
                   </span>
                   <div className="text-right flex flex-col items-end gap-1">
@@ -177,8 +236,8 @@ export default function TaskReviewsPage() {
               {/* Header info Tugas */}
             <div className="mb-2 shrink-0 rounded-[12px] border border-[rgba(113,94,215,0.12)] bg-white p-3 flex justify-between items-start">
               <div>
-                <p className="text-[12px] font-bold text-[#2b325b]">{selectedSubmission.student}</p>
-                <p className="text-[10px] text-[#6f759a]">{selectedSubmission.subject} • Kelas {selectedSubmission.className}</p>
+                <p className="text-[12px] font-bold text-[#2b325b]">{selectedSubmission.studentName}</p>
+                <p className="text-[10px] text-[#6f759a]">{selectedSubmission.courseTitle} • Kelas {selectedSubmission.className}</p>
                 
                 {selectedSubmission.studentNote && (
                   <div className="mt-2 rounded-[8px] bg-[#f8f9fc] p-2 border border-[#e2e6f3]">
@@ -247,7 +306,8 @@ export default function TaskReviewsPage() {
                       <div className="flex items-center gap-1.5">
                         <input 
                           type="number" 
-                          defaultValue={rubric.score ?? ''} 
+                          value={rubric.score ?? ''} 
+                          onChange={(e) => handleUpdateRubric(selectedSubmission.id, rubric.id, Number(e.target.value))}
                           className="w-14 rounded-[6px] border border-[rgba(113,94,215,0.15)] bg-[#faf9ff] px-2 py-1 text-[11px] text-center font-bold text-[#4e5378] outline-none focus:border-[#715ed7]" 
                           placeholder="0"
                         />
@@ -264,6 +324,8 @@ export default function TaskReviewsPage() {
                   <AlertCircle className="w-3.5 h-3.5" /> Feedback Guru
                 </span>
                 <textarea 
+                  value={selectedSubmission.teacherFeedback || ''}
+                  onChange={(e) => handleUpdateFeedback(selectedSubmission.id, e.target.value)}
                   className="h-20 w-full resize-none rounded-[8px] border border-[rgba(113,94,215,0.12)] bg-white p-2.5 text-[11px] text-[#4f5678] outline-none focus:border-[#715ed7]" 
                   placeholder="Berikan catatan, masukan, atau alasan mengapa siswa perlu melakukan revisi..."
                 />
@@ -275,15 +337,15 @@ export default function TaskReviewsPage() {
             <div className="mt-3 shrink-0 rounded-[12px] border border-[rgba(113,94,215,0.12)] bg-white p-2.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <button onClick={() => toast.success("Draft penilaian disimpan")} className="cursor-pointer rounded-[8px] border border-[#bdb6f6] bg-white px-3 py-1.5 text-[10px] font-semibold text-[#5b6191] transition-all hover:bg-[#f0edff] active:scale-95">
+                  <button onClick={() => handleAction(selectedSubmission.id, 'draft')} className="cursor-pointer rounded-[8px] border border-[#bdb6f6] bg-white px-3 py-1.5 text-[10px] font-semibold text-[#5b6191] transition-all hover:bg-[#f0edff] active:scale-95">
                     Simpan Draft
                   </button>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => toast.success("Permintaan revisi dikirim ke siswa")} className="cursor-pointer rounded-[8px] border border-[#f0b16b] bg-[#fff8ef] px-3 py-1.5 text-[10px] font-semibold text-[#c1782c] transition-all hover:bg-[#fdf0e0] active:scale-95">
+                  <button onClick={() => handleAction(selectedSubmission.id, 'revision')} className="cursor-pointer rounded-[8px] border border-[#f0b16b] bg-[#fff8ef] px-3 py-1.5 text-[10px] font-semibold text-[#c1782c] transition-all hover:bg-[#fdf0e0] active:scale-95">
                     Minta Revisi
                   </button>
-                  <button onClick={() => toast.success("Nilai tugas di-publish ke siswa")} className="cursor-pointer rounded-[8px] bg-gradient-to-r from-[#56bf7a] to-[#36a662] px-4 py-1.5 text-[10px] font-semibold text-white transition-all hover:opacity-90 active:scale-95 shadow-sm">
+                  <button onClick={() => handleAction(selectedSubmission.id, 'publish')} className="cursor-pointer rounded-[8px] bg-gradient-to-r from-[#56bf7a] to-[#36a662] px-4 py-1.5 text-[10px] font-semibold text-white transition-all hover:opacity-90 active:scale-95 shadow-sm">
                     Publish Nilai
                   </button>
                 </div>

@@ -124,7 +124,7 @@ function buildSidebar(moduleId: string): SidebarEntry[] {
       href: routeEntry.href,
       isCompleted,
       isLocked: isCompleted ? false : hasIncompleteBefore,
-      bab: item.bab
+      chapter: item.bab
     };
   });
 }
@@ -143,9 +143,9 @@ function buildModuleSummary(module: MockModuleBlueprint): ModuleSummary {
     id: module.id,
     title: module.title,
     department: module.department,
-    teacher: module.teacher,
+    teacherName: module.teacher,
     totalItems,
-    completionPercent,
+    completionRate: completionPercent,
     nextItemTitle,
     accent: module.accent,
     bannerLabel: `${lessonCount} lesson • ${quizCount} quiz • ${taskCount} task`
@@ -186,12 +186,12 @@ function buildLessonDetail(id: string): LessonDetail {
 
   return {
     id,
-    moduleId: entry.module.id,
+    courseId: entry.module.id,
     title: entry.item.title,
     contentType: lesson.contentType,
     contentUrl: lesson.contentUrl,
     excerpt: lesson.excerpt,
-    body: lesson.body,
+    content: lesson.body,
     durationTargetSeconds: lesson.durationTargetSeconds,
     trackedSeconds: isCompleted
       ? Math.max(trackedSeconds, lesson.durationTargetSeconds)
@@ -212,7 +212,7 @@ function buildQuizDetail(id: string): QuizDetail {
 
   return {
     id,
-    moduleId: entry.module.id,
+    courseId: entry.module.id,
     title: entry.item.title,
     intro: quiz.intro,
     passScore: quiz.passScore,
@@ -235,10 +235,10 @@ function buildTaskDetail(id: string): TaskDetail {
 
   return {
     id,
-    moduleId: entry.module.id,
+    courseId: entry.module.id,
     title: entry.item.title,
     description: task.description,
-    deadline: task.deadline,
+    dueAt: task.deadline,
     allowRevision: task.allowRevision,
     currentSubmission: taskSubmissionState[id],
     sidebar: normalizeSidebarRoutes(entry.module.id, buildSidebar(entry.module.id)),
@@ -293,7 +293,7 @@ function buildDashboardData(): DashboardData {
             title: item.title,
             type: "quiz" as const,
             dueAt: item.quiz.dueAt,
-            moduleTitle: module.title,
+            courseTitle: module.title,
             status: "scheduled" as const,
             href:
               buildModuleItemRoutes(module.id, flattenModuleItems(module)).find(
@@ -320,7 +320,7 @@ function buildDashboardData(): DashboardData {
             title: item.title,
             type: "task" as const,
             dueAt: item.task.deadline,
-            moduleTitle: module.title,
+            courseTitle: module.title,
             status: "due-soon" as const,
             href:
               buildModuleItemRoutes(module.id, flattenModuleItems(module)).find(
@@ -444,7 +444,7 @@ export const lmsClient = {
     const data = unwrapApiData<LessonDetail>(response.data);
     return {
       ...data,
-      sidebar: normalizeSidebarRoutes(data.moduleId, data.sidebar)
+      sidebar: normalizeSidebarRoutes(data.courseId, data.sidebar)
     };
   },
 
@@ -469,7 +469,7 @@ export const lmsClient = {
       await sleep();
       const lesson = buildLessonDetail(id);
       lessonProgressState[id] = lesson.durationTargetSeconds;
-      markModuleItemComplete(lesson.moduleId, id);
+      markModuleItemComplete(lesson.courseId, id);
       return buildLessonDetail(id);
     }
 
@@ -488,7 +488,7 @@ export const lmsClient = {
     const data = unwrapApiData<QuizDetail>(response.data);
     return {
       ...data,
-      sidebar: normalizeSidebarRoutes(data.moduleId, data.sidebar)
+      sidebar: normalizeSidebarRoutes(data.courseId, data.sidebar)
     };
   },
 
@@ -525,7 +525,7 @@ export const lmsClient = {
       quizScoreState[id] = score;
 
       if (isPassed) {
-        markModuleItemComplete(quiz.moduleId, id);
+        markModuleItemComplete(quiz.courseId, id);
       }
 
       return {
@@ -549,7 +549,7 @@ export const lmsClient = {
     const data = unwrapApiData<TaskDetail>(response.data);
     return {
       ...data,
-      sidebar: normalizeSidebarRoutes(data.moduleId, data.sidebar)
+      sidebar: normalizeSidebarRoutes(data.courseId, data.sidebar)
     };
   },
 
@@ -570,7 +570,7 @@ export const lmsClient = {
         status: "submitted",
         submittedAt: new Date().toISOString()
       } satisfies CurrentSubmission;
-      markModuleItemComplete(task.moduleId, id);
+      markModuleItemComplete(task.courseId, id);
       return buildTaskDetail(id);
     }
 

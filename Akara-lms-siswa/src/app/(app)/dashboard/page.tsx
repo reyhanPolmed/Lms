@@ -126,7 +126,7 @@ export default function DashboardPage() {
 
                   <h3 className="line-clamp-1 font-heading text-xl font-semibold text-[#0b1c30]">{module.title}</h3>
                   <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#464556]">
-                    {module.department} bersama {module.teacher}. Lanjutkan dari {module.nextItemTitle}.
+                    {module.department} bersama {module.teacherName}. Lanjutkan dari {module.nextItemTitle}.
                   </p>
 
                   <div className="mt-auto flex items-center justify-between border-t border-[#e5eeff] pt-4">

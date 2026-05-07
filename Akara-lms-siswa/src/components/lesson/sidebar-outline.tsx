@@ -24,7 +24,9 @@ const typeMeta: Record<
 > = {
   lesson: { icon: BookOpen, label: "Text" },
   quiz: { icon: SquarePen, label: "Kuis" },
-  task: { icon: List, label: "Tugas" }
+  task: { icon: List, label: "Tugas" },
+  assignment: { icon: List, label: "Tugas" },
+  material: { icon: BookOpen, label: "Materi" }
 };
 
 export function SidebarOutline({
@@ -34,18 +36,18 @@ export function SidebarOutline({
   items: SidebarEntry[];
   activeItemId: string;
 }) {
-  const groupedItems = items.reduce<Array<{ bab: string; items: SidebarEntry[] }>>((acc, item) => {
+  const groupedItems = items.reduce<Array<{ chapter: string; items: SidebarEntry[] }>>((acc, item) => {
     const currentGroup = acc[acc.length - 1];
-    if (currentGroup && currentGroup.bab === item.bab) {
+    if (currentGroup && currentGroup.chapter === item.chapter) {
       currentGroup.items.push(item);
       return acc;
     }
 
-    acc.push({ bab: item.bab, items: [item] });
+    acc.push({ chapter: item.chapter, items: [item] });
     return acc;
   }, []);
-  const activeBab = groupedItems.find((group) => group.items.some((item) => item.id === activeItemId))?.bab;
-  const [openBab, setOpenBab] = useState<string | null>(activeBab ?? groupedItems[0]?.bab ?? null);
+  const activeBab = groupedItems.find((group) => group.items.some((item) => item.id === activeItemId))?.chapter;
+  const [openBab, setOpenBab] = useState<string | null>(activeBab ?? groupedItems[0]?.chapter ?? null);
 
   useEffect(() => {
     if (activeBab) {
@@ -65,16 +67,16 @@ export function SidebarOutline({
       ) : (
         <div className="flex flex-col">
           {groupedItems.map((group) => {
-            const expanded = openBab === group.bab;
+            const expanded = openBab === group.chapter;
 
             return (
-              <div key={group.bab} className="border-b border-slate-100 last:border-0">
+              <div key={group.chapter} className="border-b border-slate-100 last:border-0">
                 <button
                   className="flex w-full items-center justify-between bg-white px-5 py-4 text-left text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
-                  onClick={() => setOpenBab((current) => (current === group.bab ? null : group.bab))}
+                  onClick={() => setOpenBab((current) => (current === group.chapter ? null : group.chapter))}
                   type="button"
                 >
-                  <span>{group.bab}</span>
+                  <span>{group.chapter}</span>
                   <ChevronDown
                     className={`h-4 w-4 text-slate-500 transition ${expanded ? "rotate-180" : ""}`}
                   />

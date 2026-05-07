@@ -39,17 +39,17 @@ export function LessonPlayer({
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               className="aspect-video w-full"
-              src={lesson.contentUrl}
+              src={lesson.contentUrl || undefined}
               title={lesson.title}
             />
           ) : lesson.contentType === "pdf" ? (
-            <iframe className="h-[720px] w-full bg-white" src={lesson.contentUrl} title={lesson.title} />
+            <iframe className="h-[720px] w-full bg-white" src={lesson.contentUrl || undefined} title={lesson.title} />
           ) : lesson.contentType === "link" ? (
             <div className="flex aspect-video items-end bg-[linear-gradient(145deg,#dce7ff_0%,#eef4fd_44%,#ffffff_100%)] p-6">
               <div className="max-w-2xl rounded-[24px] border border-white/70 bg-white/85 p-6 shadow-[0_18px_50px_-36px_rgba(15,23,42,0.35)] backdrop-blur">
                 <p className="eyebrow text-brand-ocean">{contentTypeLabel[lesson.contentType]}</p>
                 <p className="mt-3 font-heading text-3xl font-semibold text-slate-950">{lesson.title}</p>
-                <p className="mt-4 text-sm leading-7 text-slate-600">{lesson.body || lesson.excerpt}</p>
+                <p className="mt-4 text-sm leading-7 text-slate-600">{lesson.content || lesson.excerpt}</p>
               </div>
             </div>
           ) : (
@@ -57,7 +57,7 @@ export function LessonPlayer({
               <div className="max-w-2xl rounded-[24px] border border-white/10 bg-white/10 p-6 text-white shadow-[0_18px_50px_-36px_rgba(15,23,42,0.5)] backdrop-blur">
                 <p className="eyebrow text-white/60">{contentTypeLabel[lesson.contentType]}</p>
                 <p className="mt-3 font-heading text-3xl font-semibold">{lesson.title}</p>
-                <p className="mt-4 text-sm leading-7 text-white/80">{lesson.body || lesson.excerpt}</p>
+                <p className="mt-4 text-sm leading-7 text-white/80">{lesson.content || lesson.excerpt}</p>
               </div>
             </div>
           )}
@@ -74,7 +74,7 @@ export function LessonPlayer({
           {showExternalAction ? (
             <a
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-brand-ocean/10 bg-brand-ocean/5 text-brand-ocean transition hover:bg-brand-ocean/10"
-              href={lesson.contentUrl}
+              href={lesson.contentUrl || undefined}
               rel="noreferrer"
               target="_blank"
             >
@@ -107,7 +107,7 @@ export function LessonPlayer({
           </div>
 
           <div className="rounded-xl bg-slate-50 p-5 text-sm leading-7 text-slate-600">
-            <p>{lesson.body}</p>
+            <p>{lesson.content}</p>
           </div>
         </div>
       </div>

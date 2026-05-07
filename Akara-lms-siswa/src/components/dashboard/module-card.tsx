@@ -17,19 +17,19 @@ export function ModuleCard({ module }: { module: ModuleSummary }) {
         <div className="relative z-10">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">{module.bannerLabel}</p>
           <h3 className="mt-4 font-heading text-2xl font-semibold">{module.title}</h3>
-          <p className="mt-2 text-sm text-white/75">{module.teacher}</p>
+          <p className="mt-2 text-sm text-white/75">{module.teacherName}</p>
         </div>
       </div>
 
       <div className="p-6">
         <div className="flex items-center justify-between text-sm text-slate-500">
           <span>Progress</span>
-          <span>{module.completionPercent}%</span>
+          <span>{module.completionRate}%</span>
         </div>
         <div className="mt-3 h-2 rounded-full bg-slate-100">
           <div
             className="h-full rounded-full bg-slate-950"
-            style={{ width: `${module.completionPercent}%` }}
+            style={{ width: `${module.completionRate}%` }}
           />
         </div>
 

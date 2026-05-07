@@ -53,7 +53,7 @@ export function TaskSubmissionForm({
           Info pengumpulan
         </h2>
         <div className="mt-5 space-y-4 text-sm text-slate-600">
-          <p>Deadline: {formatDateTime(task.deadline)}</p>
+          <p>Deadline: {formatDateTime(task.dueAt)}</p>
           <p>Revisi: {task.allowRevision ? "Diizinkan" : "Tidak diizinkan"}</p>
         </div>
       </section>

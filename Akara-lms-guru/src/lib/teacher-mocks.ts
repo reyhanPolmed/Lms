@@ -1,43 +1,14 @@
 import type { SubmissionStatus } from "@akara/shared/constants/enums";
+import type {
+  CourseSummaryView,
+  SubmissionReviewView,
+  StudentProgressView,
+  StatusTone
+} from "@akara/shared/types/contracts";
 
-export type StatusTone = "draft" | "published" | "scheduled" | SubmissionStatus;
-
-export type ModuleSummary = {
-  id: string;
-  name: string;
-  subject: string;
-  grade: string;
-  chapters: number;
-  lessons: number;
-  quizzes: number;
-  tasks: number;
-  completionRate: number;
-  status: StatusTone;
-};
-
-export type ReviewRow = {
-  id: string;
-  student: string;
-  className: string;
-  module: string;
-  task: string;
-  submittedAt: string;
-  status: SubmissionStatus;
-  score: number;
-};
-
-export type ProgressRow = {
-  id: string;
-  student: string;
-  className: string;
-  module: string;
-  activeBab: string;
-  doneItems: string;
-  latestQuiz: number;
-  taskStatus: SubmissionStatus;
-  risk: "rendah" | "sedang" | "tinggi";
-  lastActivity: string;
-};
+export type ModuleSummary = CourseSummaryView;
+export type ReviewRow = SubmissionReviewView;
+export type ProgressRow = StudentProgressView;
 
 export const dashboardKpi = [
   { label: "Modul Aktif", value: "24", delta: "+12%" },
@@ -50,9 +21,9 @@ export const dashboardKpi = [
 export const modules: ModuleSummary[] = [
   {
     id: "matematika-8",
-    name: "Matematika Inti",
-    subject: "Matematika",
-    grade: "Kelas 8",
+    title: "Matematika Inti",
+    department: "Matematika",
+    gradeLevel: "Kelas 8",
     chapters: 6,
     lessons: 18,
     quizzes: 6,
@@ -62,9 +33,9 @@ export const modules: ModuleSummary[] = [
   },
   {
     id: "sains-8",
-    name: "Sains Terapan",
-    subject: "Sains",
-    grade: "Kelas 8",
+    title: "Sains Terapan",
+    department: "Sains",
+    gradeLevel: "Kelas 8",
     chapters: 5,
     lessons: 16,
     quizzes: 5,
@@ -74,9 +45,9 @@ export const modules: ModuleSummary[] = [
   },
   {
     id: "english-10",
-    name: "English Literature",
-    subject: "Bahasa Inggris",
-    grade: "Kelas 10",
+    title: "English Literature",
+    department: "Bahasa Inggris",
+    gradeLevel: "Kelas 10",
     chapters: 4,
     lessons: 12,
     quizzes: 4,
@@ -86,9 +57,9 @@ export const modules: ModuleSummary[] = [
   },
   {
     id: "history-9",
-    name: "Sejarah Nusantara",
-    subject: "Sejarah",
-    grade: "Kelas 9",
+    title: "Sejarah Nusantara",
+    department: "Sejarah",
+    gradeLevel: "Kelas 9",
     chapters: 6,
     lessons: 14,
     quizzes: 5,
@@ -101,40 +72,40 @@ export const modules: ModuleSummary[] = [
 export const reviews: ReviewRow[] = [
   {
     id: "rv-1",
-    student: "Liam Johnson",
+    studentName: "Liam Johnson",
     className: "9A",
-    module: "Sains Terapan",
-    task: "Newton's Laws Assignment",
+    courseTitle: "Sains Terapan",
+    assignmentTitle: "Newton's Laws Assignment",
     submittedAt: "20m ago",
     status: "submitted",
     score: 82,
   },
   {
     id: "rv-2",
-    student: "Ava Davis",
+    studentName: "Ava Davis",
     className: "10B",
-    module: "English Literature",
-    task: "Shakespeare Essay",
+    courseTitle: "English Literature",
+    assignmentTitle: "Shakespeare Essay",
     submittedAt: "1h ago",
     status: "returned",
     score: 74,
   },
   {
     id: "rv-3",
-    student: "Noah Williams",
+    studentName: "Noah Williams",
     className: "8C",
-    module: "Matematika Inti",
-    task: "Algebra Basics Quiz",
+    courseTitle: "Matematika Inti",
+    assignmentTitle: "Algebra Basics Quiz",
     submittedAt: "2h ago",
     status: "submitted",
     score: 88,
   },
   {
     id: "rv-4",
-    student: "Mia Anderson",
+    studentName: "Mia Anderson",
     className: "8B",
-    module: "Sains Terapan",
-    task: "Cell Structure Worksheet",
+    courseTitle: "Sains Terapan",
+    assignmentTitle: "Cell Structure Worksheet",
     submittedAt: "3h ago",
     status: "late",
     score: 69,
@@ -144,51 +115,51 @@ export const reviews: ReviewRow[] = [
 export const progressRows: ProgressRow[] = [
   {
     id: "st-1",
-    student: "Sophia Martinez",
+    studentName: "Sophia Martinez",
     className: "8A",
-    module: "Matematika Inti",
-    activeBab: "Bab 4 - Persamaan Linear",
-    doneItems: "14/18",
-    latestQuiz: 92,
+    courseTitle: "Matematika Inti",
+    activeChapter: "Bab 4 - Persamaan Linear",
+    completedItemsCount: "14/18",
+    latestQuizScore: 92,
     taskStatus: "graded",
-    risk: "rendah",
-    lastActivity: "15m ago",
+    riskLevel: "rendah",
+    lastActivityAt: "15m ago",
   },
   {
     id: "st-2",
-    student: "Liam Johnson",
+    studentName: "Liam Johnson",
     className: "9A",
-    module: "Sains Terapan",
-    activeBab: "Bab 3 - Gaya dan Gerak",
-    doneItems: "10/16",
-    latestQuiz: 78,
+    courseTitle: "Sains Terapan",
+    activeChapter: "Bab 3 - Gaya dan Gerak",
+    completedItemsCount: "10/16",
+    latestQuizScore: 78,
     taskStatus: "submitted",
-    risk: "sedang",
-    lastActivity: "35m ago",
+    riskLevel: "sedang",
+    lastActivityAt: "35m ago",
   },
   {
     id: "st-3",
-    student: "Ava Thompson",
+    studentName: "Ava Thompson",
     className: "8C",
-    module: "Matematika Inti",
-    activeBab: "Bab 2 - Operasi Pecahan",
-    doneItems: "6/18",
-    latestQuiz: 58,
+    courseTitle: "Matematika Inti",
+    activeChapter: "Bab 2 - Operasi Pecahan",
+    completedItemsCount: "6/18",
+    latestQuizScore: 58,
     taskStatus: "returned",
-    risk: "tinggi",
-    lastActivity: "2h ago",
+    riskLevel: "tinggi",
+    lastActivityAt: "2h ago",
   },
   {
     id: "st-4",
-    student: "Ethan Brown",
+    studentName: "Ethan Brown",
     className: "9B",
-    module: "Sejarah Nusantara",
-    activeBab: "Bab 1 - Kerajaan Awal",
-    doneItems: "4/14",
-    latestQuiz: 64,
+    courseTitle: "Sejarah Nusantara",
+    activeChapter: "Bab 1 - Kerajaan Awal",
+    completedItemsCount: "4/14",
+    latestQuizScore: 64,
     taskStatus: "late",
-    risk: "tinggi",
-    lastActivity: "5h ago",
+    riskLevel: "tinggi",
+    lastActivityAt: "5h ago",
   },
 ];
 

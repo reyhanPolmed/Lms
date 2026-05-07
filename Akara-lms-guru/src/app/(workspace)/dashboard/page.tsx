@@ -14,7 +14,7 @@ export default function DashboardPage() {
 
       <Surface title="Filter Cepat">
         <div className="grid gap-2 md:grid-cols-4">
-          <MiniSelect label="Mapel" options={Array.from(new Set(modules.map(m => m.subject)))} placeholder="Semua mapel" />
+          <MiniSelect label="Mapel" options={Array.from(new Set(modules.map(m => m.department!)))} placeholder="Semua mapel" />
           <MiniSelect label="Kelas" options={Array.from(new Set([...reviews, ...progressRows].map(r => r.className)))} placeholder="Semua kelas" />
           <MiniSelect label="Rentang Waktu" options={["Hari ini", "Minggu ini", "Bulan ini"]} placeholder="Semua waktu" />
         </div>
@@ -74,8 +74,8 @@ export default function DashboardPage() {
                 {modules.map((row) => (
                   <tr key={row.id}>
                     <td className="px-3 py-2.5">
-                      <p className="font-semibold text-[#4e5378]">{row.name}</p>
-                      <p>{row.subject} - {row.grade}</p>
+                      <p className="font-semibold text-[#4e5378]">{row.title}</p>
+                      <p>{row.department} - {row.gradeLevel}</p>
                     </td>
                     <td className="px-2 py-2.5">{row.chapters}</td>
                     <td className="px-2 py-2.5">

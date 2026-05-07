@@ -13,8 +13,8 @@ export default function ModulesPage() {
 
   const filteredModules = useMemo(() => {
     return modules.filter((m) => {
-      if (subjectFilter && m.subject !== subjectFilter) return false;
-      if (gradeFilter && m.grade !== gradeFilter) return false;
+      if (subjectFilter && m.department !== subjectFilter) return false;
+      if (gradeFilter && m.gradeLevel !== gradeFilter) return false;
       return true;
     });
   }, [subjectFilter, gradeFilter]);
@@ -30,14 +30,14 @@ export default function ModulesPage() {
         <div className="grid gap-2 md:grid-cols-2">
           <MiniSelect 
             label="Mata Pelajaran" 
-            options={Array.from(new Set(modules.map(m => m.subject)))} 
+            options={Array.from(new Set(modules.map(m => m.department!)))} 
             placeholder="Semua mata pelajaran" 
             value={subjectFilter}
             onChange={(e) => setSubjectFilter(e.target.value)}
           />
           <MiniSelect 
             label="Kelas Target" 
-            options={Array.from(new Set(modules.map(m => m.grade)))} 
+            options={Array.from(new Set(modules.map(m => m.gradeLevel!)))} 
             placeholder="Semua kelas" 
             value={gradeFilter}
             onChange={(e) => setGradeFilter(e.target.value)}
@@ -54,9 +54,9 @@ export default function ModulesPage() {
               className="rounded-[14px] border border-[rgba(113,94,215,0.12)] bg-white p-3"
             >
               <div className="flex items-center justify-between">
-                <p className="text-[12px] font-semibold text-[#2b325b]">{module.name}</p>
+                <p className="text-[12px] font-semibold text-[#2b325b]">{module.title}</p>
               </div>
-              <p className="mt-1 text-[10px] text-[#6f759a]">{module.subject} - {module.grade}</p>
+              <p className="mt-1 text-[10px] text-[#6f759a]">{module.department} - {module.gradeLevel}</p>
               <div className="mt-3 grid grid-cols-2 gap-2 text-[9.5px] text-[#70769a]">
                 <Metric label="Bab" value={String(module.chapters)} />
                 <Metric label="Materi" value={String(module.lessons)} />

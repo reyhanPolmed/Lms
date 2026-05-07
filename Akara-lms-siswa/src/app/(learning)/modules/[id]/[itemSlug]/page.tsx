@@ -101,7 +101,7 @@ export default function ModuleItemDetailPage({
           sidebar={<SidebarOutline activeItemId={lesson.id} items={lesson.sidebar} />}
         >
           <LessonPlayer
-            babLabel={activeEntry?.bab}
+            babLabel={activeEntry?.chapter}
             isCompleting={completeMutation.isPending}
             lesson={lesson}
             nextItem={nextItem}

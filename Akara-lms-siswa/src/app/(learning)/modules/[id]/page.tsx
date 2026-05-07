@@ -28,7 +28,9 @@ const typeMeta: Record<
 > = {
   lesson: { icon: BookOpen, label: "Text", helper: "Materi" },
   quiz: { icon: SquarePen, label: "Kuis", helper: "Latihan" },
-  task: { icon: List, label: "Tugas", helper: "Submission" }
+  task: { icon: List, label: "Tugas", helper: "Submission" },
+  assignment: { icon: List, label: "Tugas", helper: "Submission" },
+  material: { icon: BookOpen, label: "Materi", helper: "Bahan Bacaan" }
 };
 
 export default function ModuleDetailPage({
@@ -78,15 +80,15 @@ export default function ModuleDetailPage({
           <div className="grid gap-3 rounded-[28px] border border-white/10 bg-white/10 p-5">
             <div>
               <p className="text-xs uppercase tracking-[0.24em] text-white/60">Progress</p>
-              <p className="mt-2 font-heading text-3xl font-semibold">{data.completionPercent}%</p>
+              <p className="mt-2 font-heading text-3xl font-semibold">{data.completionRate}%</p>
             </div>
             <div className="h-2 rounded-full bg-white/10">
               <div
                 className="h-full rounded-full bg-brand-gold"
-                style={{ width: `${data.completionPercent}%` }}
+                style={{ width: `${data.completionRate}%` }}
               />
             </div>
-            <p className="text-sm text-white/70">Pengajar: {data.teacher}</p>
+            <p className="text-sm text-white/70">Pengajar: {data.teacherName}</p>
           </div>
         </div>
       </section>
@@ -138,7 +140,7 @@ export default function ModuleDetailPage({
           <ul className="mt-5 space-y-3 text-sm leading-6 text-slate-600">
             <li>Jumlah item belajar: {data.totalItems}</li>
             <li>Item berikutnya: {data.nextItemTitle}</li>
-            <li>Progress berjalan: {data.completionPercent}%</li>
+            <li>Progress berjalan: {data.completionRate}%</li>
             <li>Lesson sekarang dibuka lewat halaman terpisah, bukan viewer di URL modul.</li>
           </ul>
         </aside>

@@ -14,8 +14,8 @@ export default function StudentProgressPage() {
   const filteredRows = useMemo(() => {
     return progressRows.filter((r) => {
       if (classFilter && r.className !== classFilter) return false;
-      if (subjectFilter && r.module !== subjectFilter) return false;
-      if (riskFilter && r.risk !== riskFilter) return false;
+      if (subjectFilter && r.courseTitle !== subjectFilter) return false;
+      if (riskFilter && r.riskLevel !== riskFilter) return false;
       return true;
     });
   }, [classFilter, subjectFilter, riskFilter]);
@@ -38,7 +38,7 @@ export default function StudentProgressPage() {
           />
           <MiniSelect 
             label="Mata Pelajaran" 
-            options={Array.from(new Set(progressRows.map(r => r.module)))} 
+            options={Array.from(new Set(progressRows.map(r => r.courseTitle)))} 
             placeholder="Semua mapel" 
             value={subjectFilter}
             onChange={(e) => setSubjectFilter(e.target.value)}
@@ -73,14 +73,14 @@ export default function StudentProgressPage() {
               {filteredRows.length > 0 ? (
                 filteredRows.map((row) => (
                   <tr key={row.id}>
-                    <td className="px-3 py-2.5 font-semibold text-[#4e5378]">{row.student}</td>
+                    <td className="px-3 py-2.5 font-semibold text-[#4e5378]">{row.studentName}</td>
                     <td className="px-2 py-2.5">{row.className}</td>
-                    <td className="px-2 py-2.5">{row.module}</td>
-                    <td className="px-2 py-2.5">{row.activeBab}</td>
-                    <td className="px-2 py-2.5">{row.doneItems}</td>
-                    <td className="px-2 py-2.5">{row.latestQuiz}</td>
+                    <td className="px-2 py-2.5">{row.courseTitle}</td>
+                    <td className="px-2 py-2.5">{row.activeChapter}</td>
+                    <td className="px-2 py-2.5">{row.completedItemsCount}</td>
+                    <td className="px-2 py-2.5">{row.latestQuizScore}</td>
                     <td className="px-2 py-2.5"><Badge status={row.taskStatus} /></td>
-                    <td className="px-2 py-2.5">{row.lastActivity}</td>
+                    <td className="px-2 py-2.5">{row.lastActivityAt}</td>
                     <td className="px-2 py-2.5">
                       <Link
                         href={`/progress/matematika-8/${row.id}`}

@@ -10,7 +10,9 @@ export interface ModuleItemRouteEntry extends RouteableItem {
 const routePrefixByType: Record<SidebarItemType, string> = {
   lesson: "lesson",
   quiz: "quiz",
-  task: "task"
+  task: "task",
+  assignment: "assignment",
+  material: "material"
 };
 
 export function buildModuleItemRoutes(
@@ -20,7 +22,9 @@ export function buildModuleItemRoutes(
   const counters: Record<SidebarItemType, number> = {
     lesson: 0,
     quiz: 0,
-    task: 0
+    task: 0,
+    assignment: 0,
+    material: 0
   };
 
   return items.map((item) => {
