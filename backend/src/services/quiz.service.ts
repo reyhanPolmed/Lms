@@ -161,7 +161,7 @@ export async function getStudentQuizDetail(quizId: string, userId: string) {
 
   return {
     id: String(quiz.id),
-    moduleId: String(quiz.moduleStudentClass.id),
+    courseId: String(quiz.moduleStudentClass.id),
     title: quiz.judul,
     intro: "",
     passScore: quiz.skorLulus,

@@ -76,7 +76,7 @@ export async function getStudentDashboard(userId: string) {
   ]);
 
   const revisionCount = tasks.filter((task) => task.submissions[0]?.status === SubmissionStatus.REVISED).length;
-  const completedModules = modules.filter((item) => item.completionPercent === 100).length;
+  const completedModules = modules.filter((item) => (item.completionRate ?? 0) === 100).length;
 
   return {
     user: {

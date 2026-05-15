@@ -20,7 +20,7 @@ import {
   useTaskDetailQuery,
   useTaskSubmitMutation
 } from "@/hooks/use-lms-data";
-import { resolveModuleItemRoute } from "@/lib/learning-routes";
+import { getModuleItemIdentity, resolveModuleItemRoute } from "@/lib/learning-routes";
 
 export default function ModuleItemDetailPage({
   params
@@ -85,11 +85,12 @@ export default function ModuleItemDetailPage({
     }
 
     const lesson = lessonQuery.data;
-    const activeIndex = lesson.sidebar.findIndex((item) => item.id === lesson.id);
+    const activeItemKey = getModuleItemIdentity(routeEntry);
+    const activeIndex = lesson.sidebar.findIndex((item) => getModuleItemIdentity(item) === activeItemKey);
     const previousItem = activeIndex > 0 ? lesson.sidebar[activeIndex - 1] : null;
     const nextItem =
       activeIndex >= 0 && activeIndex < lesson.sidebar.length - 1 ? lesson.sidebar[activeIndex + 1] : null;
-    const activeEntry = lesson.sidebar.find((item) => item.id === lesson.id) ?? null;
+    const activeEntry = lesson.sidebar.find((item) => getModuleItemIdentity(item) === activeItemKey) ?? null;
 
     return (
       <div className="space-y-6">
@@ -98,7 +99,7 @@ export default function ModuleItemDetailPage({
         <BackToModuleLink moduleId={id} />
 
         <DetailPageLayout
-          sidebar={<SidebarOutline activeItemId={lesson.id} items={lesson.sidebar} />}
+          sidebar={<SidebarOutline activeItemKey={activeItemKey} items={lesson.sidebar} />}
         >
           <LessonPlayer
             babLabel={activeEntry?.chapter}
@@ -134,7 +135,8 @@ export default function ModuleItemDetailPage({
     }
 
     const quiz = quizQuery.data;
-    const activeIndex = quiz.sidebar.findIndex((item) => item.id === quiz.id);
+    const activeItemKey = getModuleItemIdentity(routeEntry);
+    const activeIndex = quiz.sidebar.findIndex((item) => getModuleItemIdentity(item) === activeItemKey);
     const previousItem = activeIndex > 0 ? quiz.sidebar[activeIndex - 1] : null;
     const nextItem =
       activeIndex >= 0 && activeIndex < quiz.sidebar.length - 1 ? quiz.sidebar[activeIndex + 1] : null;
@@ -146,7 +148,7 @@ export default function ModuleItemDetailPage({
         <BackToModuleLink moduleId={id} />
 
         <DetailPageLayout
-          sidebar={<SidebarOutline activeItemId={quiz.id} items={quiz.sidebar} />}
+          sidebar={<SidebarOutline activeItemKey={activeItemKey} items={quiz.sidebar} />}
         >
           <QuizRunner
             isStarting={startMutation.isPending}
@@ -175,7 +177,8 @@ export default function ModuleItemDetailPage({
   }
 
   const task = taskQuery.data;
-  const activeIndex = task.sidebar.findIndex((item) => item.id === task.id);
+  const activeItemKey = getModuleItemIdentity(routeEntry);
+  const activeIndex = task.sidebar.findIndex((item) => getModuleItemIdentity(item) === activeItemKey);
   const previousItem = activeIndex > 0 ? task.sidebar[activeIndex - 1] : null;
   const nextItem =
     activeIndex >= 0 && activeIndex < task.sidebar.length - 1 ? task.sidebar[activeIndex + 1] : null;
@@ -187,7 +190,7 @@ export default function ModuleItemDetailPage({
       <BackToModuleLink moduleId={id} />
 
       <DetailPageLayout
-        sidebar={<SidebarOutline activeItemId={task.id} items={task.sidebar} />}
+        sidebar={<SidebarOutline activeItemKey={activeItemKey} items={task.sidebar} />}
       >
         <TaskSubmissionForm
           isSubmitting={submitTaskMutation.isPending}

@@ -139,19 +139,19 @@ export async function getStudentLessonDetail(lessonId: string, userId: string) {
 
   return {
     id: String(lesson.id),
-    moduleId: String(lesson.moduleStudentClass.id),
+    courseId: String(lesson.moduleStudentClass.id),
     title: lesson.judul,
     contentType: mapContentType(lesson.tipeKonten),
     contentUrl: lesson.urlKonten ?? "",
     excerpt: lesson.konten.slice(0, 160),
-    body: lesson.konten,
+    content: lesson.konten,
     durationTargetSeconds,
     trackedSeconds,
     isCompleted: lesson.lessonUsers.some((progress) => progress.isCompleted),
     sidebar,
     tips: ensureStringArray(null, [
-      "Kirim durasi berkala ke endpoint tracking.",
-      "Tombol selesai aktif setelah durasi minimum tercapai.",
+      "Pelajari materi dengan seksama.",
+      "Tombol selesai dapat ditekan kapan saja.",
       "Sidebar diproses server-side."
     ])
   };
@@ -190,12 +190,6 @@ export async function trackLessonDuration(lessonId: string, userId: string, seco
 export async function completeLesson(lessonId: string, userId: string) {
   const student = await requireStudentContext(userId);
   const lesson = await getLessonGraph(lessonId, userId);
-  const trackedSeconds = lesson.lessonDurations[0]?.seconds ?? 0;
-  const durationTargetSeconds = lesson.durasi ?? 0;
-
-  if (trackedSeconds < durationTargetSeconds) {
-    throw new AppError("Durasi minimum belum terpenuhi", 422);
-  }
 
   await prisma.lessonUser.upsert({
     where: {

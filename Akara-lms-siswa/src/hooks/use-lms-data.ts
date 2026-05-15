@@ -135,6 +135,7 @@ export function useQuizSubmitMutation(id: string) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.quizDetail(id) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.modules });
     }
   });
 }
@@ -148,6 +149,7 @@ export function useTaskSubmitMutation(id: string) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.taskDetail(id) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.modules });
     }
   });
 }

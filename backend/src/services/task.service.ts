@@ -132,10 +132,10 @@ export async function getStudentTaskDetail(taskId: string, userId: string) {
 
   return {
     id: String(task.id),
-    moduleId: String(task.moduleStudentClass.id),
+    courseId: String(task.moduleStudentClass.id),
     title: task.judul,
     description: task.deskripsi ?? "",
-    deadline: task.deadline.toISOString(),
+    dueAt: task.deadline.toISOString(),
     allowRevision: task.allowRevision,
     currentSubmission: currentSubmission
       ? {

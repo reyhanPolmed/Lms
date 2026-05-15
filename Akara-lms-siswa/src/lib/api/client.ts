@@ -33,6 +33,7 @@ import {
   normalizeSidebarRoutes
 } from "@/lib/learning-routes";
 
+// When NEXT_PUBLIC_USE_MOCK_API is not explicitly "false", use mock data
 const useMockApi = process.env.NEXT_PUBLIC_USE_MOCK_API !== "false";
 
 type ItemLookupEntry = {
@@ -191,7 +192,7 @@ function buildLessonDetail(id: string): LessonDetail {
     contentType: lesson.contentType,
     contentUrl: lesson.contentUrl,
     excerpt: lesson.excerpt,
-    content: lesson.body,
+    content: lesson.content,
     durationTargetSeconds: lesson.durationTargetSeconds,
     trackedSeconds: isCompleted
       ? Math.max(trackedSeconds, lesson.durationTargetSeconds)
@@ -238,7 +239,7 @@ function buildTaskDetail(id: string): TaskDetail {
     courseId: entry.module.id,
     title: entry.item.title,
     description: task.description,
-    dueAt: task.deadline,
+    dueAt: task.dueAt,
     allowRevision: task.allowRevision,
     currentSubmission: taskSubmissionState[id],
     sidebar: normalizeSidebarRoutes(entry.module.id, buildSidebar(entry.module.id)),
@@ -390,7 +391,7 @@ export const lmsClient = {
 
     await ensureCsrfCookie();
     const response = await http.post("/login", payload);
-    return unwrapApiData<unknown>(response.data);
+    return unwrapApiData<ProfileDetail>(response.data);
   },
 
   async logout() {
@@ -401,7 +402,7 @@ export const lmsClient = {
 
     await ensureCsrfCookie();
     const response = await http.post("/logout");
-    return unwrapApiData<unknown>(response.data);
+    return unwrapApiData<{ success: boolean }>(response.data);
   },
 
   async getDashboard() {

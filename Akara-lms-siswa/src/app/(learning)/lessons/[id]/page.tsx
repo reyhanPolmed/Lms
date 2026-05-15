@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { LoadingState } from "@/components/ui/loading-state";
 import { useLessonDetailQuery } from "@/hooks/use-lms-data";
+import { getModuleItemIdentity } from "@/lib/learning-routes";
 
 export default function LessonLegacyRedirectPage({
   params
@@ -20,7 +21,9 @@ export default function LessonLegacyRedirectPage({
       return;
     }
 
-    const nextHref = lessonQuery.data.sidebar.find((item) => item.id === lessonQuery.data?.id)?.href;
+    const nextHref = lessonQuery.data.sidebar.find(
+      (item) => getModuleItemIdentity(item) === getModuleItemIdentity({ id: lessonQuery.data.id, type: "lesson" })
+    )?.href;
     if (nextHref) {
       router.replace(nextHref);
     }

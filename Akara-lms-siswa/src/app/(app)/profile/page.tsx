@@ -5,7 +5,6 @@ import { toast } from "sonner";
 
 import { LoadingState } from "@/components/ui/loading-state";
 import {
-  usePasswordChangeMutation,
   useProfileQuery,
   useProfileUpdateMutation
 } from "@/hooks/use-lms-data";
@@ -13,7 +12,6 @@ import {
 export default function ProfilePage() {
   const profileQuery = useProfileQuery();
   const updateMutation = useProfileUpdateMutation();
-  const passwordMutation = usePasswordChangeMutation();
 
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
@@ -52,19 +50,40 @@ export default function ProfilePage() {
     }
   };
 
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
   const handlePasswordSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast.error("Password baru dan konfirmasi tidak cocok");
+      return;
+    }
+
+    setIsChangingPassword(true);
+
     try {
-      await passwordMutation.mutateAsync(passwordForm);
+      const { changePassword } = await import("@/lib/auth-client");
+      const { data, error } = await changePassword({
+        newPassword: passwordForm.newPassword,
+        currentPassword: passwordForm.currentPassword,
+        revokeOtherSessions: true,
+      });
+
+      if (error) {
+        throw new Error(error.message || "Gagal mengganti password");
+      }
+
       toast.success("Password berhasil diubah");
       setPasswordForm({
         currentPassword: "",
         newPassword: "",
         confirmPassword: ""
       });
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Gagal mengganti password");
+    } catch (error: any) {
+      toast.error(error.message || "Gagal mengganti password");
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -171,11 +190,11 @@ export default function ProfilePage() {
           ))}
 
           <button
-            className="rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 disabled:opacity-60"
-            disabled={passwordMutation.isPending}
+            className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 disabled:opacity-60"
+            disabled={isChangingPassword}
             type="submit"
           >
-            {passwordMutation.isPending ? "Memproses..." : "Ubah password"}
+            {isChangingPassword ? "Memproses..." : "Ubah password"}
           </button>
         </form>
       </section>

@@ -10,7 +10,7 @@ export interface MockLessonSeed {
   contentType: ContentType;
   contentUrl: string;
   excerpt: string;
-  body: string;
+  content: string;
   durationTargetSeconds: number;
   tips: string[];
 }
@@ -26,7 +26,7 @@ export interface MockQuizSeed {
 
 export interface MockTaskSeed {
   description: string;
-  deadline: string;
+  dueAt: string;
   allowRevision: boolean;
   checklist: string[];
 }
@@ -293,8 +293,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
             contentUrl: "",
             excerpt:
               "Fokus pada langkah mendengarkan komplain, mengklarifikasi akar masalah, dan menawarkan solusi yang realistis.",
-            body:
-              "Service recovery menuntut empati, kecepatan respon, dan dokumentasi insiden. Dalam praktiknya, siswa perlu tahu kapan memberi solusi langsung dan kapan melakukan eskalasi.",
+            content: "Service recovery menuntut empati, kecepatan respon, dan dokumentasi insiden. Dalam praktiknya, siswa perlu tahu kapan memberi solusi langsung dan kapan melakukan eskalasi.",
             durationTargetSeconds: 840,
             tips: [
               "Dengarkan penuh sebelum merespon.",
@@ -572,7 +571,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
           task("cl-t3", "Bab 3", "Spreadsheet Costing Menu", {
             description:
               "Buat spreadsheet costing satu menu lengkap dengan bahan, harga satuan, waste, biaya per porsi, dan estimasi harga jual.",
-            deadline: "2026-05-09T17:00:00+07:00",
+            dueAt: "2026-05-09T17:00:00+07:00",
             allowRevision: false,
             checklist: [
               "Minimal satu menu utama.",
@@ -799,7 +798,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
           task("ds-t3", "Bab 3", "Deck Portfolio Final", {
             description:
               "Susun deck presentasi portfolio final 8-10 slide yang berisi konteks, proses, visual final, dan evaluasi proyek.",
-            deadline: "2026-05-09T17:00:00+07:00",
+            dueAt: "2026-05-09T17:00:00+07:00",
             allowRevision: false,
             checklist: [
               "Minimal 8 slide.",

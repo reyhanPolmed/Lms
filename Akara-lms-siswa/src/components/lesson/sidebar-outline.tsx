@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import { SidebarEntry } from "@/lib/types";
+import { getModuleItemIdentity } from "@/lib/learning-routes";
 
 const typeMeta: Record<
   SidebarEntry["type"],
@@ -31,10 +32,10 @@ const typeMeta: Record<
 
 export function SidebarOutline({
   items,
-  activeItemId
+  activeItemKey
 }: {
   items: SidebarEntry[];
-  activeItemId: string;
+  activeItemKey: string;
 }) {
   const groupedItems = items.reduce<Array<{ chapter: string; items: SidebarEntry[] }>>((acc, item) => {
     const currentGroup = acc[acc.length - 1];
@@ -46,7 +47,9 @@ export function SidebarOutline({
     acc.push({ chapter: item.chapter, items: [item] });
     return acc;
   }, []);
-  const activeBab = groupedItems.find((group) => group.items.some((item) => item.id === activeItemId))?.chapter;
+  const activeBab = groupedItems.find((group) =>
+    group.items.some((item) => getModuleItemIdentity(item) === activeItemKey)
+  )?.chapter;
   const [openBab, setOpenBab] = useState<string | null>(activeBab ?? groupedItems[0]?.chapter ?? null);
 
   useEffect(() => {
@@ -66,11 +69,13 @@ export function SidebarOutline({
         <div className="p-5 text-sm text-slate-500">Belum ada outline dari backend.</div>
       ) : (
         <div className="flex flex-col">
-          {groupedItems.map((group) => {
+          {groupedItems.map((group, index) => {
             const expanded = openBab === group.chapter;
+            // Use chapter + index as key to ensure uniqueness even if chapters repeat
+            const groupKey = `${group.chapter}-${index}`;
 
             return (
-              <div key={group.chapter} className="border-b border-slate-100 last:border-0">
+              <div key={groupKey} className="border-b border-slate-100 last:border-0">
                 <button
                   className="flex w-full items-center justify-between bg-white px-5 py-4 text-left text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
                   onClick={() => setOpenBab((current) => (current === group.chapter ? null : group.chapter))}
@@ -84,12 +89,12 @@ export function SidebarOutline({
 
                 {expanded ? (
                   <div className="bg-[#f6f9ff]">
-                    {group.items.map((item, index) => (
+                    {group.items.map((item, itemIndex) => (
                       <OutlineItem
-                        activeItemId={activeItemId}
-                        index={index}
+                        activeItemKey={activeItemKey}
+                        index={itemIndex}
                         item={item}
-                        key={item.id}
+                        key={getModuleItemIdentity(item)}
                       />
                     ))}
                   </div>
@@ -108,13 +113,13 @@ export function SidebarOutline({
 function OutlineItem({
   item,
   index,
-  activeItemId
+  activeItemKey
 }: {
   item: SidebarEntry;
   index: number;
-  activeItemId: string;
+  activeItemKey: string;
 }) {
-  const selected = item.id === activeItemId;
+  const selected = getModuleItemIdentity(item) === activeItemKey;
   const meta = typeMeta[item.type];
   const MetaIcon = meta.icon;
   const content = (

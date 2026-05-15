@@ -1,1 +1,6 @@
-export { quizSubmitSchema } from "../../../packages/shared/src/schemas/quiz.schemas.js";
+import { z } from "zod";
+
+export const quizSubmitSchema = z.object({
+  answers: z.record(z.string(), z.string()),
+  fullscreenViolation: z.boolean().default(false),
+});

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { LoadingState } from "@/components/ui/loading-state";
 import { useQuizDetailQuery } from "@/hooks/use-lms-data";
+import { getModuleItemIdentity } from "@/lib/learning-routes";
 
 export default function QuizLegacyRedirectPage({
   params
@@ -20,7 +21,9 @@ export default function QuizLegacyRedirectPage({
       return;
     }
 
-    const nextHref = quizQuery.data.sidebar.find((item) => item.id === quizQuery.data?.id)?.href;
+    const nextHref = quizQuery.data.sidebar.find(
+      (item) => getModuleItemIdentity(item) === getModuleItemIdentity({ id: quizQuery.data.id, type: "quiz" })
+    )?.href;
     if (nextHref) {
       router.replace(nextHref);
     }

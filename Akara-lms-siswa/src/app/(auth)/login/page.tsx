@@ -1,85 +1,223 @@
 "use client";
 
+import Image from "next/image";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { AlertCircle, ArrowRight, BookOpen, CheckCircle2, Loader2, Lock, Mail } from "lucide-react";
 
-import { useLoginMutation } from "@/hooks/use-lms-data";
+import { signIn } from "@/lib/auth-client";
+
+import backgroundLogin from "../../../../backgroundlogin.png";
+
+function getLoginErrorMessage(error: unknown) {
+  const fallbackMessage = "Email atau kata sandi tidak valid.";
+
+  if (!(error instanceof Error)) {
+    return fallbackMessage;
+  }
+
+  const normalizedMessage = error.message.toLowerCase();
+
+  if (
+    normalizedMessage.includes("invalid") ||
+    normalizedMessage.includes("credential") ||
+    normalizedMessage.includes("password") ||
+    normalizedMessage.includes("email")
+  ) {
+    return fallbackMessage;
+  }
+
+  return "Login gagal. Coba lagi.";
+}
 
 export default function LoginPage() {
   const router = useRouter();
-  const loginMutation = useLoginMutation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setError("");
+    setSuccess(false);
+    setLoading(true);
 
     try {
-      await loginMutation.mutateAsync({ email: email.trim(), password: password.trim() });
-      toast.success("Login berhasil");
+      const { error: signInError } = await signIn.email({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        throw new Error(signInError.message || "Login gagal. Periksa kembali kredensial Anda.");
+      }
+
+      setSuccess(true);
+
       const nextPath = new URLSearchParams(window.location.search).get("next");
-      router.push(nextPath?.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/dashboard");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Gagal login");
+
+      setTimeout(() => {
+        router.push(nextPath?.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/dashboard");
+        router.refresh();
+      }, 1500);
+    } catch (err) {
+      setError(getLoginErrorMessage(err));
+      setLoading(false);
     }
   };
 
+  const feedback = success
+    ? {
+        tone: "success" as const,
+        icon: CheckCircle2,
+        message: "Login berhasil. Anda sedang diarahkan ke dashboard.",
+      }
+    : error
+      ? {
+          tone: "error" as const,
+          icon: AlertCircle,
+          message: error,
+        }
+      : null;
+
   return (
-    <main className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-[#f6f3ed] px-5 py-10 text-slate-950">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,rgba(8,18,37,0.05)_0,transparent_35%),radial-gradient(circle_at_50%_0,rgba(247,181,0,0.14),transparent_28%)]"
+    <main
+      className="relative isolate h-screen overflow-hidden bg-[#f5f0e8] text-slate-900"
+      style={{ fontFamily: '"Bahnschrift", "Aptos", "Segoe UI", sans-serif' }}
+    >
+      <Image
+        alt="Ilustrasi kampus untuk halaman login siswa"
+        className="object-cover object-center"
+        fill
+        placeholder="blur"
+        priority
+        sizes="100vw"
+        src={backgroundLogin}
       />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-10 h-px w-[min(520px,calc(100vw-48px))] -translate-x-1/2 bg-slate-950/10"
-      />
 
-      <section className="relative w-full max-w-sm">
-        <div className="mb-7 text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-slate-500">Akara LMS</p>
-          <h1 className="mt-3 font-heading text-4xl font-semibold tracking-[-0.04em]">Masuk</h1>
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(250,246,240,0.96)_0%,rgba(250,246,240,0.82)_30%,rgba(250,246,240,0.38)_55%,rgba(250,246,240,0.12)_100%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.72),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.28),transparent_28%)]" />
+
+      <div className="relative z-10 flex h-full min-h-0 items-center px-4 sm:px-8 lg:px-12">
+        <div className="flex w-full min-h-0 max-w-[370px] flex-col justify-center py-[50px]">
+          <div className="mb-3 flex shrink-0 items-center gap-2.5 text-slate-900">
+            <div className="flex h-9 w-9 items-center justify-center rounded-[18px] border border-slate-900/10 bg-white/72 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur-sm">
+              <BookOpen className="h-4 w-4 text-slate-800" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                Akara LMS Siswa
+              </p>
+              <h1
+                className="text-[15px] font-semibold tracking-[-0.02em] text-slate-900"
+                style={{ fontFamily: '"Georgia", "Cambria", "Times New Roman", serif' }}
+              >
+                Portal Belajar
+              </h1>
+            </div>
+          </div>
+
+          <div className="max-w-[500px] shrink-0 space-y-1">
+            <p className="text-[clamp(1.2rem,2.6vw,1.7rem)] font-semibold leading-[1.05] tracking-[-0.04em] text-slate-900">
+              Lanjutkan belajar dari satu ruang yang rapi.
+            </p>
+            <p className="max-w-[420px] text-[11px] leading-4 text-slate-600 sm:text-[12px]">
+              Masuk untuk membuka Bab, materi, kuis, tugas, dan progres belajar terbaru.
+            </p>
+          </div>
+
+          <section className="mt-3.5 flex w-full max-w-[500px] min-h-0 shrink-0 flex-col overflow-hidden rounded-[22px] border border-white/65 bg-white/72 p-3 shadow-[0_24px_80px_rgba(15,23,42,0.16)] backdrop-blur-xl sm:p-3.5">
+            <div className="mb-2.5 shrink-0">
+              <h2
+                className="text-[15px] font-semibold tracking-[-0.03em] text-slate-900"
+                style={{ fontFamily: '"Georgia", "Cambria", "Times New Roman", serif' }}
+              >
+                Masuk ke akun siswa
+              </h2>
+              <p className="mt-1 text-[11px] text-slate-500">
+                Gunakan email siswa yang sudah terdaftar.
+              </p>
+            </div>
+
+            {feedback ? (
+              <div className="mb-2.5 shrink-0" aria-live="polite">
+                <div
+                  className={
+                    feedback.tone === "error"
+                      ? "flex items-start gap-2 rounded-[18px] border border-red-200 bg-red-50 px-2.5 py-2 text-[11px] leading-4 text-red-700"
+                      : "flex items-start gap-2 rounded-[18px] border border-emerald-200 bg-emerald-50 px-2.5 py-2 text-[11px] leading-4 text-emerald-700"
+                  }
+                >
+                  <feedback.icon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <span>{feedback.message}</span>
+                </div>
+              </div>
+            ) : null}
+
+            <form className="shrink-0 space-y-2.5" onSubmit={handleSubmit}>
+              <label className="block">
+                <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  Email
+                </span>
+                <span className="relative block">
+                  <Mail className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                  <input
+                    autoComplete="email"
+                    className="h-10 w-full rounded-[18px] border border-slate-200/90 bg-white/90 pl-9 pr-3 text-[12px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:ring-4 focus:ring-slate-900/5"
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="siswa@akara.edu"
+                    required
+                    type="email"
+                    value={email}
+                  />
+                </span>
+              </label>
+
+              <label className="block">
+                <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  Kata sandi
+                </span>
+                <span className="relative block">
+                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                  <input
+                    autoComplete="current-password"
+                    className="h-10 w-full rounded-[18px] border border-slate-200/90 bg-white/90 pl-9 pr-3 text-[12px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:ring-4 focus:ring-slate-900/5"
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="Masukkan kata sandi"
+                    required
+                    type="password"
+                    value={password}
+                  />
+                </span>
+              </label>
+
+              <button
+                className="flex h-10 w-full items-center justify-center gap-1.5 rounded-[18px] bg-slate-900 px-4 text-[12px] font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-900/15 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={loading}
+                type="submit"
+              >
+                {loading ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <>
+                    <span>Masuk</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </>
+                )}
+              </button>
+            </form>
+
+            <div className="mt-2.5 flex shrink-0 items-center gap-2 text-[10px] text-slate-500">
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-900/5 text-slate-700">
+                <CheckCircle2 className="h-3 w-3" />
+              </span>
+              <p>Akses dibatasi untuk siswa yang sudah terdaftar.</p>
+            </div>
+          </section>
         </div>
-
-        <div className="rounded-[2rem] border border-slate-950/10 bg-[#fffdf8]/95 p-6 shadow-[0_28px_80px_-56px_rgba(8,18,37,0.45)] backdrop-blur-xl sm:p-8">
-          <form className="space-y-5" onSubmit={handleSubmit}>
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-700">Email</span>
-              <input
-                autoComplete="email"
-                className="w-full rounded-2xl border border-slate-950/10 bg-white px-4 py-3 text-slate-950 outline-none transition placeholder:text-slate-300 focus:border-slate-950 focus:ring-4 focus:ring-slate-950/5"
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="nama@email.com"
-                required
-                type="email"
-                value={email}
-              />
-            </label>
-
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-700">Password</span>
-              <input
-                autoComplete="current-password"
-                className="w-full rounded-2xl border border-slate-950/10 bg-white px-4 py-3 text-slate-950 outline-none transition placeholder:text-slate-300 focus:border-slate-950 focus:ring-4 focus:ring-slate-950/5"
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="Password"
-                required
-                type="password"
-                value={password}
-              />
-            </label>
-
-            <button
-              className="inline-flex w-full items-center justify-center rounded-2xl bg-slate-950 px-4 py-3.5 font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
-              disabled={loginMutation.isPending || !email.trim() || !password.trim()}
-              type="submit"
-            >
-              {loginMutation.isPending ? "Memproses..." : "Masuk"}
-            </button>
-          </form>
-        </div>
-      </section>
+      </div>
     </main>
   );
 }

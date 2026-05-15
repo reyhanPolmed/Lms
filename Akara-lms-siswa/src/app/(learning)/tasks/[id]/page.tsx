@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { LoadingState } from "@/components/ui/loading-state";
 import { useTaskDetailQuery } from "@/hooks/use-lms-data";
+import { getModuleItemIdentity } from "@/lib/learning-routes";
 
 export default function TaskLegacyRedirectPage({
   params
@@ -20,7 +21,9 @@ export default function TaskLegacyRedirectPage({
       return;
     }
 
-    const nextHref = taskQuery.data.sidebar.find((item) => item.id === taskQuery.data?.id)?.href;
+    const nextHref = taskQuery.data.sidebar.find(
+      (item) => getModuleItemIdentity(item) === getModuleItemIdentity({ id: taskQuery.data.id, type: "task" })
+    )?.href;
     if (nextHref) {
       router.replace(nextHref);
     }

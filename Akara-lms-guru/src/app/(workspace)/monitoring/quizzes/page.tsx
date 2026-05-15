@@ -2,282 +2,142 @@
 
 import Link from "next/link";
 import { Eye, Plus, SquarePen, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState, useCallback } from "react";
 
 import { Badge, MiniSelect, PageHeader, Surface } from "@/components/workspace/ui";
 import { useToast } from "@/components/workspace/toast";
-import { type AuthoredQuizQuestion, deleteAuthoredQuiz, getAuthoredQuizzes, upsertAuthoredQuiz } from "@/lib/quiz-authoring";
-import { defaultMonitoringQuizzes, mapAuthoredQuizToMonitoringRecord, type MonitoringQuizRecord } from "@/lib/quiz-monitoring-data";
-import { quizMonitoring, modules } from "@/lib/teacher-mocks";
-
-type MonitoringQuizRow = MonitoringQuizRecord & {
-  source: "authored" | "seeded";
-};
+import { teacherApi, type QuizItem } from "@/lib/api-client";
 
 type EditDraft = {
   id: string;
-  source: "authored" | "seeded";
   title: string;
   moduleName: string;
   passScore: string;
   durationMinutes: string;
-  deadline: string;
-  status: "draft" | "published";
-  questions: AuthoredQuizQuestion[];
+  isAktif: boolean;
+  questions: {
+    id: string;
+    pertanyaan: string;
+    opsiA: string;
+    opsiB: string;
+    opsiC: string;
+    opsiD: string;
+    opsiBenar: "A" | "B" | "C" | "D";
+  }[];
 };
-
-function buildQuestion(index: number): AuthoredQuizQuestion {
-  return {
-    id: `q-${Date.now()}-${index}`,
-    prompt: "",
-    options: ["", "", "", ""],
-    correctOptionIndex: 0,
-  };
-}
-
-function formatDateTime(value?: string) {
-  if (!value) return "-";
-  return value.replace("T", " ");
-}
 
 export default function QuizMonitoringPage() {
   const { toast } = useToast();
-  const searchParams = useSearchParams();
-  const [rows, setRows] = useState<MonitoringQuizRow[]>([]);
+  const [quizzes, setQuizzes] = useState<QuizItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [editDraft, setEditDraft] = useState<EditDraft | null>(null);
-  const [previewDraft, setPreviewDraft] = useState<EditDraft | null>(null);
+  const [previewDraft, setPreviewDraft] = useState<QuizItem | null>(null);
   const [editError, setEditError] = useState("");
+  const [saving, setSaving] = useState(false);
   const [subjectFilter, setSubjectFilter] = useState("");
 
-  useEffect(() => {
-    const authoredRows = getAuthoredQuizzes().map((item) => ({
-      ...mapAuthoredQuizToMonitoringRecord(item),
-      source: "authored" as const,
-    }));
-    const seededRows = defaultMonitoringQuizzes.map((item) => ({ ...item, source: "seeded" as const }));
-    setRows([...authoredRows, ...seededRows].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)));
+  const loadQuizzes = useCallback(() => {
+    setLoading(true);
+    teacherApi
+      .getQuizzes()
+      .then(setQuizzes)
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : "Gagal memuat data"))
+      .finally(() => setLoading(false));
   }, []);
 
-  const created = searchParams.get("created") === "1";
+  useEffect(() => {
+    loadQuizzes();
+  }, [loadQuizzes]);
 
-  const filteredRows = useMemo(() => {
-    if (!subjectFilter) return rows;
-    return rows.filter((r) => r.moduleName === subjectFilter);
-  }, [rows, subjectFilter]);
+  const subjects = useMemo(
+    () => Array.from(new Set(quizzes.map((q) => q.moduleName ?? "").filter(Boolean))),
+    [quizzes]
+  );
 
-  const rowCount = filteredRows.length;
-  const publishedCount = useMemo(() => filteredRows.filter((row) => row.status === "published").length, [filteredRows]);
+  const filtered = useMemo(
+    () => (subjectFilter ? quizzes.filter((q) => q.moduleName === subjectFilter) : quizzes),
+    [quizzes, subjectFilter]
+  );
 
-  const openEdit = (row: MonitoringQuizRow) => {
+  const publishedCount = useMemo(() => filtered.filter((q) => q.isActive).length, [filtered]);
+
+  const openEdit = (quiz: QuizItem) => {
     setEditError("");
-    
-    let draftQuestions: AuthoredQuizQuestion[] = [];
-    if (row.source === "authored") {
-      const target = getAuthoredQuizzes().find((item) => item.id === row.id);
-      if (target) {
-        draftQuestions = target.questions;
-      }
-    }
-    
-    if (draftQuestions.length === 0) {
-      draftQuestions = Array.from({ length: row.questionCount || 1 }).map((_, i) => ({
-        id: `seed-q-${Date.now()}-${i}`,
-        prompt: `Pertanyaan ke-${i + 1} (Mock)`,
-        options: ["Opsi A", "Opsi B", "Opsi C", "Opsi D"],
-        correctOptionIndex: 0,
-      }));
-    }
-
     setEditDraft({
-      id: row.id,
-      source: row.source,
-      title: row.title,
-      moduleName: row.moduleName,
-      passScore: String(row.passScore),
-      durationMinutes: String(row.durationMinutes),
-      deadline: row.deadline ?? "",
-      status: row.status,
-      questions: draftQuestions,
+      id: quiz.id,
+      title: quiz.title,
+      moduleName: quiz.moduleName ?? "",
+      passScore: String(quiz.passScore),
+      durationMinutes: String(quiz.durationMinutes ?? ""),
+      isAktif: quiz.isActive,
+      questions: quiz.questions.map((q) => ({
+        id: q.id,
+        pertanyaan: q.pertanyaan,
+        opsiA: q.opsiA,
+        opsiB: q.opsiB,
+        opsiC: q.opsiC,
+        opsiD: q.opsiD,
+        opsiBenar: q.opsiBenar as "A" | "B" | "C" | "D",
+      })),
     });
   };
 
-  const openPreview = (row: MonitoringQuizRow) => {
-    let draftQuestions: AuthoredQuizQuestion[] = [];
-    if (row.source === "authored") {
-      const target = getAuthoredQuizzes().find((item) => item.id === row.id);
-      if (target) {
-        draftQuestions = target.questions;
-      }
+  const removeQuiz = async (quiz: QuizItem) => {
+    try {
+      await teacherApi.deleteQuiz(quiz.id);
+      setQuizzes((prev) => prev.filter((q) => q.id !== quiz.id));
+      if (editDraft?.id === quiz.id) setEditDraft(null);
+      toast.delete("Kuis berhasil dihapus");
+    } catch (e: unknown) {
+      toast.error?.(e instanceof Error ? e.message : "Gagal menghapus kuis");
     }
-    
-    if (draftQuestions.length === 0) {
-      draftQuestions = Array.from({ length: row.questionCount || 1 }).map((_, i) => ({
-        id: `seed-q-${Date.now()}-${i}`,
-        prompt: `Pertanyaan ke-${i + 1} (Mock)`,
-        options: ["Opsi A", "Opsi B", "Opsi C", "Opsi D"],
-        correctOptionIndex: 0,
-      }));
-    }
-
-    setPreviewDraft({
-      id: row.id,
-      source: row.source,
-      title: row.title,
-      moduleName: row.moduleName,
-      passScore: String(row.passScore),
-      durationMinutes: String(row.durationMinutes),
-      deadline: row.deadline ?? "",
-      status: row.status,
-      questions: draftQuestions,
-    });
   };
 
-  const updateQuestionPrompt = (questionId: string, value: string) => {
-    setEditDraft((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        questions: prev.questions.map((q) => (q.id === questionId ? { ...q, prompt: value } : q)),
-      };
-    });
-  };
+  const saveEdit = async () => {
+    if (!editDraft) return;
+    const score = Number(editDraft.passScore);
+    const duration = Number(editDraft.durationMinutes);
+    if (!editDraft.title.trim()) return setEditError("Judul wajib diisi.");
+    if (Number.isNaN(score) || score < 0 || score > 100) return setEditError("Pass score harus 0-100.");
+    if (editDraft.durationMinutes && (Number.isNaN(duration) || duration < 1))
+      return setEditError("Durasi tidak valid.");
 
-  const updateQuestionOption = (questionId: string, optionIndex: number, value: string) => {
-    setEditDraft((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        questions: prev.questions.map((q) => {
-          if (q.id !== questionId) return q;
-          const nextOptions = [...q.options];
-          nextOptions[optionIndex] = value;
-          return { ...q, options: nextOptions };
-        }),
-      };
-    });
-  };
-
-  const updateCorrectOption = (questionId: string, correctOptionIndex: number) => {
-    setEditDraft((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        questions: prev.questions.map((q) => (q.id === questionId ? { ...q, correctOptionIndex } : q)),
-      };
-    });
-  };
-
-  const addQuestion = () => {
-    setEditDraft((prev) => {
-      if (!prev) return prev;
-      return { ...prev, questions: [...prev.questions, buildQuestion(prev.questions.length + 1)] };
-    });
-  };
-
-  const removeQuestion = (questionId: string) => {
-    setEditDraft((prev) => {
-      if (!prev) return prev;
-      if (prev.questions.length <= 1) return prev;
-      return { ...prev, questions: prev.questions.filter((q) => q.id !== questionId) };
-    });
-  };
-
-  const removeRow = (row: MonitoringQuizRow) => {
-    setRows((prev) => prev.filter((item) => item.id !== row.id));
-
-    if (row.source === "authored") {
-      deleteAuthoredQuiz(row.id);
-    }
-
-    if (editDraft?.id === row.id) {
+    setSaving(true);
+    try {
+      const updated = await teacherApi.updateQuiz(editDraft.id, {
+        judul: editDraft.title.trim(),
+        skorLulus: score,
+        durasiMenit: editDraft.durationMinutes ? duration : undefined,
+        isAktif: editDraft.isAktif,
+        questions: editDraft.questions.map((q) => ({
+          pertanyaan: q.pertanyaan,
+          opsiA: q.opsiA,
+          opsiB: q.opsiB,
+          opsiC: q.opsiC,
+          opsiD: q.opsiD,
+          opsiBenar: q.opsiBenar,
+        })),
+      });
+      setQuizzes((prev) => prev.map((q) => (q.id === updated.id ? { ...updated, moduleName: q.moduleName } : q)));
       setEditDraft(null);
       setEditError("");
+      toast.success("Perubahan kuis disimpan");
+    } catch (e: unknown) {
+      setEditError(e instanceof Error ? e.message : "Gagal menyimpan");
+    } finally {
+      setSaving(false);
     }
-    toast.delete("Kuis berhasil dihapus dari monitoring");
   };
 
-  const saveEdit = () => {
-    if (!editDraft) return;
-
-    if (!editDraft.title.trim() || !editDraft.moduleName.trim()) {
-      setEditError("Judul dan modul wajib diisi.");
-      return;
+  const toggleStatus = async (quiz: QuizItem) => {
+    try {
+      const updated = await teacherApi.updateQuizStatus(quiz.id, !quiz.isActive);
+      setQuizzes((prev) => prev.map((q) => (q.id === updated.id ? { ...updated, moduleName: q.moduleName } : q)));
+      toast.success(`Kuis ${updated.isActive ? "dipublish" : "dijadikan draft"}`);
+    } catch (e: unknown) {
+      toast.error?.(e instanceof Error ? e.message : "Gagal mengubah status");
     }
-
-    const score = Number(editDraft.passScore);
-    if (Number.isNaN(score) || score < 0 || score > 100) {
-      setEditError("Pass score harus angka 0-100.");
-      return;
-    }
-
-    const duration = Number(editDraft.durationMinutes);
-    if (Number.isNaN(duration) || duration < 20 || duration > 90) {
-      setEditError("Durasi kuis harus antara 20 sampai 90 menit.");
-      return;
-    }
-
-    if (editDraft.questions.length === 0) {
-      setEditError("Minimal harus ada 1 soal.");
-      return;
-    }
-
-    for (let index = 0; index < editDraft.questions.length; index += 1) {
-      const question = editDraft.questions[index];
-      if (!question.prompt.trim()) {
-        setEditError(`Soal ${index + 1} belum diisi.`);
-        return;
-      }
-      if (question.options.some((option) => !option.trim())) {
-        setEditError(`Semua opsi pada soal ${index + 1} harus diisi.`);
-        return;
-      }
-    }
-
-    const updatedAt = new Date().toISOString();
-
-    setRows((prev) =>
-      prev
-        .map((row) =>
-          row.id === editDraft.id
-            ? {
-                ...row,
-                title: editDraft.title.trim(),
-                moduleName: editDraft.moduleName.trim(),
-                passScore: score,
-                durationMinutes: duration,
-                deadline: editDraft.deadline || undefined,
-                status: editDraft.status,
-                questionCount: editDraft.questions.length,
-                updatedAt,
-              }
-            : row,
-        )
-        .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
-    );
-
-    if (editDraft.source === "authored") {
-      const authoredList = getAuthoredQuizzes();
-      const target = authoredList.find((item) => item.id === editDraft.id);
-
-      if (target) {
-        upsertAuthoredQuiz({
-          ...target,
-          title: editDraft.title.trim(),
-          moduleName: editDraft.moduleName.trim(),
-          passScore: score,
-          durationMinutes: duration,
-          deadline: editDraft.deadline || undefined,
-          status: editDraft.status,
-          questions: editDraft.questions,
-          updatedAt,
-        });
-      }
-    }
-
-    setEditError("");
-    setEditDraft(null);
-    toast.success("Perubahan kuis berhasil disimpan");
   };
 
   return (
@@ -299,24 +159,24 @@ export default function QuizMonitoringPage() {
         }
       >
         <div className="grid gap-2 md:grid-cols-4">
-          <MiniSelect 
-            label="Mata Pelajaran" 
-            options={Array.from(new Set(rows.map(r => r.moduleName)))} 
-            placeholder="Semua mapel" 
+          <MiniSelect
+            label="Mata Pelajaran"
+            options={subjects}
+            placeholder="Semua mapel"
             value={subjectFilter}
             onChange={(e) => setSubjectFilter(e.target.value)}
           />
         </div>
       </Surface>
 
-      <Surface title={`Daftar Kuis Monitoring (${rowCount} kuis, ${publishedCount} published)`}>
-        <div className="space-y-2">
-          {created ? (
-            <p className="rounded-[10px] border border-[#cfe9d9] bg-[#eefaf3] px-3 py-2 text-[10px] text-[#2f8c57]">
-              Kuis berhasil ditambahkan dan langsung tampil di daftar monitoring.
-            </p>
-          ) : null}
-
+      <Surface title={`Daftar Kuis (${filtered.length} kuis, ${publishedCount} published)`}>
+        {loading ? (
+          <p className="py-6 text-center text-[11px] text-[#7e84a8]">Memuat kuis...</p>
+        ) : error ? (
+          <p className="rounded-[9px] border border-[#f5c4cd] bg-[#fff2f5] px-3 py-2 text-[10px] text-[#ba4b64]">
+            {error}
+          </p>
+        ) : (
           <div className="min-h-0 overflow-auto rounded-[12px] border border-[rgba(113,94,215,0.1)]">
             <table className="w-full text-left text-[10px] text-[#7e84a8]">
               <thead className="bg-[#faf8ff] text-[8.5px] uppercase tracking-[0.16em] text-[#60658e]">
@@ -331,61 +191,80 @@ export default function QuizMonitoringPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[rgba(113,94,215,0.1)]">
-                {filteredRows.map((row) => (
-                  <tr key={row.id}>
-                    <td className="px-3 py-2.5 font-semibold text-[#4e5378]">{row.title}</td>
-                    <td className="px-2 py-2.5">{row.moduleName}</td>
-                    <td className="px-2 py-2.5">{row.questionCount}</td>
-                    <td className="px-2 py-2.5">{row.passScore}</td>
-                    <td className="px-2 py-2.5">{row.durationMinutes} menit</td>
-                    <td className="px-2 py-2.5">
-                      <Badge status={row.status} />
-                    </td>
-                    <td className="px-2 py-2.5">
-                      <div className="flex gap-1">
-                        <button
-                          type="button"
-                          onClick={() => openPreview(row)}
-                          className="inline-flex cursor-pointer items-center gap-1 rounded-[7px] border border-[rgba(113,94,215,0.2)] bg-[#faf8ff] px-2 py-1 text-[9px] text-[#6d5dfc] transition-colors hover:bg-[#f0eaff]"
-                        >
-                          <Eye className="h-3 w-3" /> Preview
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openEdit(row)}
-                          className="inline-flex cursor-pointer items-center gap-1 rounded-[7px] border border-[rgba(113,94,215,0.2)] bg-white px-2 py-1 text-[9px] text-[#5b6191] transition-colors hover:bg-[#faf9ff]"
-                        >
-                          <SquarePen className="h-3 w-3" /> Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => removeRow(row)}
-                          className="inline-flex cursor-pointer items-center gap-1 rounded-[7px] border border-[rgba(233,84,116,0.24)] bg-[#fff5f7] px-2 py-1 text-[9px] text-[#c54564] transition-colors hover:bg-[#ffeef1]"
-                        >
-                          <Trash2 className="h-3 w-3" /> Hapus
-                        </button>
-                      </div>
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-3 py-6 text-center text-[10px] text-[#7e84a8]">
+                      Belum ada kuis. Tambah kuis baru dengan tombol di atas.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  filtered.map((quiz) => (
+                    <tr key={quiz.id}>
+                      <td className="px-3 py-2.5 font-semibold text-[#4e5378]">{quiz.title}</td>
+                      <td className="px-2 py-2.5">{quiz.moduleName ?? "—"}</td>
+                      <td className="px-2 py-2.5">{quiz.questionCount}</td>
+                      <td className="px-2 py-2.5">{quiz.passScore}</td>
+                      <td className="px-2 py-2.5">{quiz.durationMinutes ? `${quiz.durationMinutes} mnt` : "—"}</td>
+                      <td className="px-2 py-2.5">
+                        <Badge status={quiz.isActive ? "published" : "draft"} />
+                      </td>
+                      <td className="px-2 py-2.5">
+                        <div className="flex gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setPreviewDraft(quiz)}
+                            className="inline-flex cursor-pointer items-center gap-1 rounded-[7px] border border-[rgba(113,94,215,0.2)] bg-[#faf8ff] px-2 py-1 text-[9px] text-[#6d5dfc] transition-colors hover:bg-[#f0eaff]"
+                          >
+                            <Eye className="h-3 w-3" /> Preview
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openEdit(quiz)}
+                            className="inline-flex cursor-pointer items-center gap-1 rounded-[7px] border border-[rgba(113,94,215,0.2)] bg-white px-2 py-1 text-[9px] text-[#5b6191] transition-colors hover:bg-[#faf9ff]"
+                          >
+                            <SquarePen className="h-3 w-3" /> Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => toggleStatus(quiz)}
+                            className={`inline-flex cursor-pointer items-center gap-1 rounded-[7px] px-2 py-1 text-[9px] transition-colors ${
+                              quiz.isActive
+                                ? "border border-[rgba(113,94,215,0.2)] bg-white text-[#5b6191] hover:bg-[#faf9ff]"
+                                : "border border-[rgba(47,140,87,0.3)] bg-[#eaf6ee] text-[#2f8c57] hover:bg-[#d5f0e0]"
+                            }`}
+                          >
+                            {quiz.isActive ? "Draft" : "Publish"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removeQuiz(quiz)}
+                            className="inline-flex cursor-pointer items-center gap-1 rounded-[7px] border border-[rgba(233,84,116,0.24)] bg-[#fff5f7] px-2 py-1 text-[9px] text-[#c54564] transition-colors hover:bg-[#ffeef1]"
+                          >
+                            <Trash2 className="h-3 w-3" /> Hapus
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
-        </div>
+        )}
       </Surface>
 
-      {previewDraft ? (
+      {/* Preview Modal */}
+      {previewDraft && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
           <div className="flex max-h-full w-full max-w-2xl flex-col overflow-hidden rounded-[18px] border border-[rgba(113,94,215,0.12)] bg-white shadow-2xl">
             <header className="flex items-center justify-between border-b border-[rgba(113,94,215,0.1)] bg-[#faf8ff] px-5 py-4">
               <div>
                 <h2 className="text-[14px] font-semibold text-[#2c315b]">{previewDraft.title}</h2>
-                <p className="mt-0.5 text-[10px] text-[#6f759a]">Mata Pelajaran: {previewDraft.moduleName} • Durasi: {previewDraft.durationMinutes} menit</p>
+                <p className="mt-0.5 text-[10px] text-[#6f759a]">
+                  {previewDraft.moduleName} • {previewDraft.durationMinutes ?? "—"} menit
+                </p>
               </div>
-              <button
-                onClick={() => setPreviewDraft(null)}
-                className="cursor-pointer rounded-full p-1.5 text-[#5b6191] hover:bg-[#f0edff]"
-              >
+              <button onClick={() => setPreviewDraft(null)} className="cursor-pointer rounded-full p-1.5 text-[#5b6191] hover:bg-[#f0edff]">
                 Tutup
               </button>
             </header>
@@ -393,14 +272,18 @@ export default function QuizMonitoringPage() {
               <div className="space-y-4">
                 {previewDraft.questions.map((q, idx) => (
                   <article key={q.id} className="rounded-[12px] border border-[rgba(113,94,215,0.1)] p-4">
-                    <p className="text-[11px] font-semibold text-[#4e5378]">{idx + 1}. {q.prompt}</p>
+                    <p className="text-[11px] font-semibold text-[#4e5378]">{idx + 1}. {q.pertanyaan}</p>
                     <div className="mt-3 space-y-1.5">
-                      {q.options.map((opt, oIdx) => (
+                      {(["A", "B", "C", "D"] as const).map((opt) => (
                         <div
-                          key={oIdx}
-                          className={`rounded-[8px] border p-2 text-[10px] ${oIdx === q.correctOptionIndex ? "border-[#c1e6d1] bg-[#f0fcf5] text-[#2f8c57] font-semibold" : "border-[rgba(113,94,215,0.1)] text-[#6f759a]"}`}
+                          key={opt}
+                          className={`rounded-[8px] border p-2 text-[10px] ${
+                            opt === q.opsiBenar
+                              ? "border-[#c1e6d1] bg-[#f0fcf5] font-semibold text-[#2f8c57]"
+                              : "border-[rgba(113,94,215,0.1)] text-[#6f759a]"
+                          }`}
                         >
-                          {String.fromCharCode(65 + oIdx)}. {opt}
+                          {opt}. {q[`opsi${opt}` as keyof typeof q]}
                         </div>
                       ))}
                     </div>
@@ -410,9 +293,10 @@ export default function QuizMonitoringPage() {
             </div>
           </div>
         </div>
-      ) : null}
+      )}
 
-      {editDraft ? (
+      {/* Edit Modal */}
+      {editDraft && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
           <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-[18px] border border-[rgba(113,94,215,0.12)] bg-[#fbfaff] shadow-2xl">
             <header className="flex items-center justify-between border-b border-[rgba(113,94,215,0.1)] bg-white px-5 py-4">
@@ -420,72 +304,33 @@ export default function QuizMonitoringPage() {
                 <h2 className="text-[14px] font-semibold text-[#2c315b]">Edit Kuis</h2>
                 <p className="mt-0.5 text-[10px] text-[#6f759a]">Ubah detail dan daftar soal kuis</p>
               </div>
-              <button
-                onClick={() => {
-                  setEditDraft(null);
-                  setEditError("");
-                }}
-                className="cursor-pointer rounded-full p-1.5 text-[#5b6191] hover:bg-[#f0edff]"
-              >
+              <button onClick={() => { setEditDraft(null); setEditError(""); }} className="cursor-pointer rounded-full p-1.5 text-[#5b6191] hover:bg-[#f0edff]">
                 Tutup
               </button>
             </header>
-            
-            <div className="flex-1 overflow-y-auto p-5">
+
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
+                {[
+                  { label: "Judul Kuis", key: "title", type: "text" },
+                  { label: "Pass Score", key: "passScore", type: "number" },
+                  { label: "Durasi (Menit)", key: "durationMinutes", type: "number" },
+                ].map(({ label, key, type }) => (
+                  <label key={key} className="block">
+                    <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7e84a8]">{label}</span>
+                    <input
+                      type={type}
+                      value={editDraft[key as keyof EditDraft] as string}
+                      onChange={(e) => setEditDraft((prev) => prev ? { ...prev, [key]: e.target.value } : prev)}
+                      className="h-9 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 text-[11px] text-[#4f5678] outline-none"
+                    />
+                  </label>
+                ))}
                 <label className="block">
-                  <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7e84a8]">Judul Kuis</span>
-                  <input
-                    value={editDraft.title}
-                    onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, title: event.target.value } : prev))}
-                    placeholder="Judul kuis"
-                    className="h-9 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 text-[11px] text-[#4f5678] outline-none"
-                  />
-                </label>
-                <label className="block">
-                  <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7e84a8]">Modul</span>
-                  <input
-                    value={editDraft.moduleName}
-                    onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, moduleName: event.target.value } : prev))}
-                    placeholder="Modul"
-                    className="h-9 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 text-[11px] text-[#4f5678] outline-none"
-                  />
-                </label>
-                <label className="block">
-                  <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7e84a8]">Pass Score</span>
-                  <input
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={editDraft.passScore}
-                    onChange={(event) => setEditDraft((prev) => (prev ? { ...prev, passScore: event.target.value } : prev))}
-                    placeholder="Pass score"
-                    className="h-9 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 text-[11px] text-[#4f5678] outline-none"
-                  />
-                </label>
-                <label className="block">
-                  <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7e84a8]">Durasi (Menit)</span>
-                  <input
-                    type="number"
-                    min={20}
-                    max={90}
-                    value={editDraft.durationMinutes}
-                    onChange={(event) =>
-                      setEditDraft((prev) => (prev ? { ...prev, durationMinutes: event.target.value } : prev))
-                    }
-                    placeholder="Durasi menit"
-                    className="h-9 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 text-[11px] text-[#4f5678] outline-none"
-                  />
-                </label>
-                <label className="block md:col-span-2">
                   <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7e84a8]">Status</span>
                   <select
-                    value={editDraft.status}
-                    onChange={(event) =>
-                      setEditDraft((prev) =>
-                        prev ? { ...prev, status: event.target.value as "draft" | "published" } : prev,
-                      )
-                    }
+                    value={editDraft.isAktif ? "published" : "draft"}
+                    onChange={(e) => setEditDraft((prev) => prev ? { ...prev, isAktif: e.target.value === "published" } : prev)}
                     className="h-9 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 text-[11px] text-[#4f5678] outline-none"
                   >
                     <option value="draft">draft</option>
@@ -494,93 +339,74 @@ export default function QuizMonitoringPage() {
                 </label>
               </div>
 
-              <div className="mt-6 space-y-3">
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#7e84a8] border-b border-[rgba(113,94,215,0.1)] pb-2">Daftar Soal</p>
-                {editDraft.questions.map((question, idx) => (
-                  <article key={question.id} className="rounded-[12px] border border-[rgba(113,94,215,0.12)] bg-white p-4 shadow-sm">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#5b4aab]">Soal {idx + 1}</p>
-                      <button
-                        type="button"
-                        onClick={() => removeQuestion(question.id)}
-                        disabled={editDraft.questions.length <= 1}
-                        className="inline-flex cursor-pointer items-center gap-1.5 rounded-[8px] border border-[rgba(233,84,116,0.2)] bg-[#fff5f7] px-2.5 py-1 text-[10px] font-semibold text-[#c54564] transition-colors hover:bg-[#ffeef1] disabled:opacity-50"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" /> Hapus
-                      </button>
-                    </div>
-
-                    <label className="mt-3 block">
-                      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7e84a8]">Pertanyaan</span>
-                      <textarea
-                        value={question.prompt}
-                        onChange={(event) => updateQuestionPrompt(question.id, event.target.value)}
-                        className="h-20 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-[#faf9ff] p-3 text-[11px] text-[#4f5678] outline-none focus:border-[#715ed7]"
-                      />
-                    </label>
-
-                    <div className="mt-3 grid gap-2">
-                      {question.options.map((option, optionIndex) => (
-                        <div key={`${question.id}-option-${optionIndex}`} className="grid grid-cols-[1fr_auto] gap-2">
+              <div className="space-y-3">
+                <p className="border-b border-[rgba(113,94,215,0.1)] pb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[#7e84a8]">Daftar Soal</p>
+                {editDraft.questions.map((q, idx) => (
+                  <article key={q.id} className="rounded-[12px] border border-[rgba(113,94,215,0.12)] bg-white p-4">
+                    <p className="mb-2 text-[10px] font-bold text-[#5b4aab]">Soal {idx + 1}</p>
+                    <textarea
+                      value={q.pertanyaan}
+                      onChange={(e) => setEditDraft((prev) => {
+                        if (!prev) return prev;
+                        return { ...prev, questions: prev.questions.map((x) => x.id === q.id ? { ...x, pertanyaan: e.target.value } : x) };
+                      })}
+                      className="h-16 w-full rounded-[8px] border border-[rgba(113,94,215,0.12)] bg-[#faf9ff] p-2 text-[11px] text-[#4f5678] outline-none"
+                    />
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      {(["A", "B", "C", "D"] as const).map((opt) => (
+                        <div key={opt} className="flex items-center gap-2">
                           <input
-                            value={option}
-                            onChange={(event) => updateQuestionOption(question.id, optionIndex, event.target.value)}
-                            placeholder={`Opsi ${String.fromCharCode(65 + optionIndex)}`}
-                            className="h-9 w-full rounded-[8px] border border-[rgba(113,94,215,0.12)] bg-[#faf8ff] px-3 text-[10px] text-[#616a92] outline-none focus:border-[#715ed7]"
+                            value={q[`opsi${opt}` as keyof typeof q] as string}
+                            onChange={(e) => setEditDraft((prev) => {
+                              if (!prev) return prev;
+                              return { ...prev, questions: prev.questions.map((x) => x.id === q.id ? { ...x, [`opsi${opt}`]: e.target.value } : x) };
+                            })}
+                            placeholder={`Opsi ${opt}`}
+                            className="h-8 flex-1 rounded-[7px] border border-[rgba(113,94,215,0.12)] bg-[#faf8ff] px-2 text-[10px] text-[#616a92] outline-none"
                           />
                           <button
                             type="button"
-                            onClick={() => updateCorrectOption(question.id, optionIndex)}
-                            className={`cursor-pointer rounded-[8px] px-3 text-[10px] font-semibold transition-all ${
-                              question.correctOptionIndex === optionIndex
-                                ? "bg-[#eaf6ee] text-[#2f8c57] border border-[#c1e6d1]"
-                                : "border border-[rgba(113,94,215,0.2)] bg-white text-[#5b6191] hover:bg-[#f0edff]"
-                            }`}
+                            onClick={() => setEditDraft((prev) => prev ? { ...prev, questions: prev.questions.map((x) => x.id === q.id ? { ...x, opsiBenar: opt } : x) } : prev)}
+                            className={`rounded-[6px] px-2 py-1 text-[9px] font-semibold ${q.opsiBenar === opt ? "bg-[#eaf6ee] text-[#2f8c57]" : "border border-[rgba(113,94,215,0.2)] bg-white text-[#5b6191]"}`}
                           >
-                            {question.correctOptionIndex === optionIndex ? "Jawaban Benar" : "Pilih Benar"}
+                            {q.opsiBenar === opt ? "✓" : opt}
                           </button>
                         </div>
                       ))}
                     </div>
                   </article>
                 ))}
-
-                <button
-                  type="button"
-                  onClick={addQuestion}
-                  className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-[10px] border border-dashed border-[#bcb5f4] bg-[#faf7ff] px-3 py-3 text-[11px] font-bold text-[#6d5dfc] transition-colors hover:bg-[#f0eaff]"
-                >
-                  <Plus className="h-4 w-4" /> Tambah Soal
-                </button>
               </div>
 
-              {editError ? <p className="mt-4 rounded-[10px] border border-[#f5c4cd] bg-[#fff2f5] px-3 py-2 text-[10px] text-[#ba4b64]">{editError}</p> : null}
+              {editError && (
+                <p className="rounded-[10px] border border-[#f5c4cd] bg-[#fff2f5] px-3 py-2 text-[10px] text-[#ba4b64]">
+                  {editError}
+                </p>
+              )}
             </div>
 
             <footer className="border-t border-[rgba(113,94,215,0.1)] bg-white px-5 py-4">
-              <div className="flex justify-end gap-2 text-[11px] font-bold">
+              <div className="flex justify-end gap-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    setEditDraft(null);
-                    setEditError("");
-                  }}
-                  className="cursor-pointer rounded-[10px] border border-[rgba(113,94,215,0.2)] bg-white px-5 py-2.5 text-[#5b6191] hover:bg-[#faf9ff]"
+                  onClick={() => { setEditDraft(null); setEditError(""); }}
+                  className="cursor-pointer rounded-[10px] border border-[rgba(113,94,215,0.2)] bg-white px-5 py-2.5 text-[11px] font-bold text-[#5b6191] hover:bg-[#faf9ff]"
                 >
                   Batal
                 </button>
                 <button
                   type="button"
                   onClick={saveEdit}
-                  className="cursor-pointer rounded-[10px] bg-gradient-to-r from-[#765df5] to-[#5b50dc] px-5 py-2.5 text-white hover:opacity-90 shadow-[0_4px_12px_rgba(113,94,215,0.25)]"
+                  disabled={saving}
+                  className="cursor-pointer rounded-[10px] bg-gradient-to-r from-[#765df5] to-[#5b50dc] px-5 py-2.5 text-[11px] font-bold text-white hover:opacity-90 disabled:opacity-50"
                 >
-                  Simpan Perubahan
+                  {saving ? "Menyimpan..." : "Simpan Perubahan"}
                 </button>
               </div>
             </footer>
           </div>
         </div>
-      ) : null}
+      )}
     </div>
   );
 }

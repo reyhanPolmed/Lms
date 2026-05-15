@@ -3,6 +3,7 @@ import { ModuleDetail, SidebarEntry, SidebarItemType } from "@/lib/types";
 type RouteableItem = Pick<SidebarEntry, "id" | "type">;
 
 export interface ModuleItemRouteEntry extends RouteableItem {
+  identity: string;
   slug: string;
   href: string;
 }
@@ -14,6 +15,10 @@ const routePrefixByType: Record<SidebarItemType, string> = {
   assignment: "assignment",
   material: "material"
 };
+
+export function getModuleItemIdentity(item: RouteableItem): string {
+  return `${item.type}:${item.id}`;
+}
 
 export function buildModuleItemRoutes(
   moduleId: string,
@@ -33,6 +38,7 @@ export function buildModuleItemRoutes(
 
     return {
       ...item,
+      identity: getModuleItemIdentity(item),
       slug,
       href: `/modules/${moduleId}/${slug}`
     };
@@ -41,12 +47,12 @@ export function buildModuleItemRoutes(
 
 export function normalizeSidebarRoutes(moduleId: string, items: SidebarEntry[]): SidebarEntry[] {
   const routeMap = new Map(
-    buildModuleItemRoutes(moduleId, items).map((item) => [item.id, item.href])
+    buildModuleItemRoutes(moduleId, items).map((item) => [item.identity, item.href])
   );
 
   return items.map((item) => ({
     ...item,
-    href: routeMap.get(item.id) ?? item.href
+    href: routeMap.get(getModuleItemIdentity(item)) ?? item.href
   }));
 }
 
@@ -55,7 +61,7 @@ export function normalizeModuleDetailRoutes(module: ModuleDetail): ModuleDetail 
     buildModuleItemRoutes(
       module.id,
       module.sections.flatMap((section) => section.items)
-    ).map((item) => [item.id, item.href])
+    ).map((item) => [item.identity, item.href])
   );
 
   return {
@@ -64,7 +70,7 @@ export function normalizeModuleDetailRoutes(module: ModuleDetail): ModuleDetail 
       ...section,
       items: section.items.map((item) => ({
         ...item,
-        href: routeMap.get(item.id) ?? item.href
+        href: routeMap.get(getModuleItemIdentity(item)) ?? item.href
       }))
     }))
   };

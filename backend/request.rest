@@ -2,17 +2,17 @@
 @contentType = application/json
 @csrfToken = dev-csrf-token
 
-# Data seed: andi@akara.test / Password123!
+# Data seed: student@akara.sch.id / Password123!
 # Token ini berasal dari prisma/seed.sql agar endpoint protected bisa dites langsung.
-@sessionToken = token-andi-active
-@email = andi@akara.test
+@sessionToken = token-student-active
+@email = student@akara.sch.id
 @password = Password123!
 
-# ID seed yang aman untuk user Andi.
+# ID seed yang aman untuk user student@akara.sch.id.
 @moduleId = 1
 @lessonId = 1
 @quizId = 1
-@taskId = 1
+@taskId = 3
 
 # Catatan pemakaian:
 # 1. Jalankan server dengan `npm run dev` sebelum menjalankan request.

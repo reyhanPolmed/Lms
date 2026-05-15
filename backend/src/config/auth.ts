@@ -6,9 +6,8 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { env, getTrustedOrigins } from "./env.js";
 import { prisma } from "../lib/prisma.js";
 
-export const auth = betterAuth({
+const commonConfig = {
   appName: "Akara LMS",
-  baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
   trustedOrigins: getTrustedOrigins(),
   database: prismaAdapter(prisma, {
@@ -16,13 +15,11 @@ export const auth = betterAuth({
   }),
   advanced: {
     database: {
-      generateId: ({ model }) => {
+      generateId: ({ model }: { model: string }) => {
         const normalizedModel = model.toLowerCase();
-
         if (normalizedModel === "user" || normalizedModel === "users") {
           return false;
         }
-
         return randomUUID();
       }
     }
@@ -33,4 +30,27 @@ export const auth = betterAuth({
   telemetry: {
     enabled: false
   }
+};
+
+export const studentAuth = betterAuth({
+  ...commonConfig,
+  baseURL: env.BETTER_AUTH_URL,
+  basePath: "/api/auth/siswa",
+  advanced: {
+    ...commonConfig.advanced,
+    cookiePrefix: "akara-siswa"
+  }
 });
+
+export const teacherAuth = betterAuth({
+  ...commonConfig,
+  baseURL: env.BETTER_AUTH_URL,
+  basePath: "/api/auth/guru",
+  advanced: {
+    ...commonConfig.advanced,
+    cookiePrefix: "akara-guru"
+  }
+});
+
+// For backward compatibility or internal use
+export const auth = studentAuth;

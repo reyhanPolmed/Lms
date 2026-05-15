@@ -1,11 +1,10 @@
 "use client";
 
 import { BookOpen, ClipboardList, GripVertical, HelpCircle, Plus } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { PageHeader, Surface } from "@/components/workspace/ui";
 import { useToast } from "@/components/workspace/toast";
-import { getAuthoredQuizzes } from "@/lib/quiz-authoring";
-import { defaultMonitoringQuizzes, mapAuthoredQuizToMonitoringRecord, type MonitoringQuizRecord } from "@/lib/quiz-monitoring-data";
+import { teacherApi } from "@/lib/api-client";
 
 type ChapterItemKind = "Materi" | "Kuis" | "Tugas";
 
@@ -65,6 +64,16 @@ type DraftItemForm = {
   taskDeadline: string;
   submitMethod: string;
   questionFile: string;
+};
+
+type MonitoringQuizRecord = {
+  id: string;
+  title: string;
+  moduleName: string;
+  questionCount: number;
+  passScore: number;
+  durationMinutes: number;
+  updatedAt: string;
 };
 
 const CONTENT_TYPE_OPTIONS = ["Link", "PDF"];
@@ -324,16 +333,90 @@ function buildItemFromDraft(draft: DraftItemForm, quizOptions: MonitoringQuizRec
 
 export default function ModuleBuilderPage({ params }: { params: { moduleId: string } }) {
   const { toast } = useToast();
-  const [chapters, setChapters] = useState<Chapter[]>(initialChapters);
+  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  
   const [activeDraft, setActiveDraft] = useState<DraftItemForm | null>(null);
   const [activeChapterDraft, setActiveChapterDraft] = useState<DraftChapterForm | null>(null);
   const [draftError, setDraftError] = useState<string>("");
-  const [quizOptions, setQuizOptions] = useState<MonitoringQuizRecord[]>(defaultMonitoringQuizzes);
+  const [quizOptions, setQuizOptions] = useState<MonitoringQuizRecord[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  const loadModuleData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [moduleDetail, quizzes] = await Promise.all([
+        teacherApi.getModuleDetail(params.moduleId),
+        teacherApi.getQuizzes(params.moduleId),
+      ]);
+
+      // Map sections to chapters
+      const mappedChapters: Chapter[] = moduleDetail.sections.map((s) => ({
+        id: s.id,
+        title: s.title,
+        summary: "", // summary not in schema, using empty
+        items: [
+          ...moduleDetail.lessons
+            .filter((l) => l.sectionId === s.id)
+            .map((l) => ({
+              id: l.id,
+              kind: "Materi" as const,
+              title: l.title,
+              description: "",
+              details: { contentType: l.contentType, contentUrl: "" },
+            })),
+          ...moduleDetail.quizzes
+            .filter((q) => q.sectionId === s.id)
+            .map((q) => ({
+              id: q.id,
+              kind: "Kuis" as const,
+              title: q.title,
+              description: "",
+              details: {
+                sourceQuizId: q.id,
+                passScore: q.passScore,
+                quizDurationMinutes: q.durationMinutes ?? 0,
+                quizStartAt: q.availableAt ?? "",
+                quizDeadline: q.deadline ?? "",
+              },
+            })),
+          ...moduleDetail.tasks
+            .filter((t) => t.sectionId === s.id)
+            .map((t) => ({
+              id: t.id,
+              kind: "Tugas" as const,
+              title: t.title,
+              description: "",
+              details: {
+                taskDeadline: t.deadline,
+              },
+            })),
+        ],
+      }));
+
+      setChapters(mappedChapters);
+      setQuizOptions(
+        quizzes.map((q) => ({
+          id: q.id,
+          title: q.title,
+          moduleName: q.moduleName ?? "",
+          questionCount: q.questionCount,
+          passScore: q.passScore,
+          durationMinutes: q.durationMinutes ?? 0,
+          updatedAt: new Date().toISOString(),
+        }))
+      );
+    } catch (e: any) {
+      setError(e.message || "Gagal memuat data modul");
+    } finally {
+      setLoading(false);
+    }
+  }, [params.moduleId]);
 
   useEffect(() => {
-    const authored = getAuthoredQuizzes().map(mapAuthoredQuizToMonitoringRecord);
-    setQuizOptions(dedupeQuizOptions([...authored, ...defaultMonitoringQuizzes]));
-  }, []);
+    loadModuleData();
+  }, [loadModuleData]);
 
   const nextBabNumber = useMemo(() => chapters.length + 1, [chapters.length]);
 
@@ -342,7 +425,7 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
     setActiveDraft(null);
     setActiveChapterDraft({
       mode: "create",
-      chapterId: `bab-${Date.now()}`,
+      chapterId: "", // will be assigned by server
       title: `Bab ${nextBabNumber} - `,
       summary: "",
     });
@@ -357,6 +440,50 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
       title: chapter.title,
       summary: chapter.summary,
     });
+  };
+
+  const handleSaveChapter = async () => {
+    if (!activeChapterDraft) return;
+    if (!activeChapterDraft.title.trim()) {
+      setDraftError("Judul bab wajib diisi");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      if (activeChapterDraft.mode === "create") {
+        await teacherApi.createSection({
+          offeringId: params.moduleId,
+          judul: activeChapterDraft.title.trim(),
+        });
+        toast.success("Bab baru berhasil ditambahkan");
+      } else {
+        await teacherApi.updateSection(activeChapterDraft.chapterId, {
+          judul: activeChapterDraft.title.trim(),
+        });
+        toast.success("Bab berhasil diupdate");
+      }
+      setActiveChapterDraft(null);
+      loadModuleData();
+    } catch (e: any) {
+      setDraftError(e.message || "Gagal menyimpan bab");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteChapter = async (chapterId: string) => {
+    if (!confirm("Hapus bab ini beserta seluruh isinya?")) return;
+    setSaving(true);
+    try {
+      await teacherApi.deleteSection(chapterId);
+      toast.delete("Bab berhasil dihapus");
+      loadModuleData();
+    } catch (e: any) {
+      toast.error?.(e.message || "Gagal menghapus bab");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleOpenCreate = (chapterId: string, kind: ChapterItemKind) => {
@@ -397,28 +524,28 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
     });
   };
 
-  const handleDeleteItem = (chapterId: string, itemId: string) => {
-    setChapters((prev) =>
-      prev.map((chapter) =>
-        chapter.id === chapterId
-          ? { ...chapter, items: chapter.items.filter((item) => item.id !== itemId) }
-          : chapter,
-      ),
-    );
-
-    if (activeDraft?.itemId === itemId) {
-      setActiveDraft(null);
-      setDraftError("");
+  const handleDeleteItem = async (chapterId: string, itemId: string, kind: ChapterItemKind) => {
+    if (!confirm(`Hapus ${kind} ini?`)) return;
+    setSaving(true);
+    try {
+      if (kind === "Materi") await teacherApi.deleteLesson(itemId);
+      else if (kind === "Kuis") await teacherApi.deleteQuiz(itemId);
+      else if (kind === "Tugas") await teacherApi.deleteTask(itemId);
+      
+      toast.delete("Item berhasil dihapus");
+      loadModuleData();
+    } catch (e: any) {
+      toast.error?.(e.message || "Gagal menghapus item");
+    } finally {
+      setSaving(false);
     }
-    
-    toast.delete("Item berhasil dihapus dari bab");
   };
 
   const handleDraftChange = (field: keyof DraftItemForm, value: string) => {
     setActiveDraft((prev) => (prev ? { ...prev, [field]: value } : prev));
   };
 
-  const handleSaveItem = () => {
+  const handleSaveItem = async () => {
     if (!activeDraft) return;
 
     const validation = validateDraft(activeDraft, quizOptions);
@@ -427,29 +554,66 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
       return;
     }
 
-    const nextItem = buildItemFromDraft(activeDraft, quizOptions);
-
-    setChapters((prev) =>
-      prev.map((chapter) => {
-        if (chapter.id !== activeDraft.chapterId) return chapter;
-
-        if (activeDraft.mode === "edit" && activeDraft.itemId) {
-          return {
-            ...chapter,
-            items: chapter.items.map((item) => (item.id === activeDraft.itemId ? nextItem : item)),
-          };
+    setSaving(true);
+    try {
+      if (activeDraft.kind === "Materi") {
+        if (activeDraft.mode === "create") {
+          await teacherApi.createLesson({
+            moduleStudentClassId: params.moduleId,
+            sectionId: activeDraft.chapterId,
+            judul: activeDraft.title.trim(),
+            tipeKonten: activeDraft.contentType.toLowerCase(),
+            konten: activeDraft.description.trim(),
+            urlKonten: activeDraft.contentUrl,
+            status: "published",
+          });
+        } else {
+          await teacherApi.updateLesson(activeDraft.itemId!, {
+            title: activeDraft.title.trim(),
+            contentType: activeDraft.contentType.toLowerCase(),
+            body: activeDraft.description.trim(),
+            contentUrl: activeDraft.contentUrl,
+            sectionId: activeDraft.chapterId,
+          });
         }
+      } else if (activeDraft.kind === "Kuis") {
+        // Link existing quiz to this section
+        const quizId = activeDraft.selectedQuizId;
+        await teacherApi.updateQuiz(quizId, {
+          sectionId: activeDraft.chapterId,
+          availableAt: activeDraft.quizStartAt,
+          deadline: activeDraft.quizDeadline,
+          isAktif: true,
+        });
+      } else if (activeDraft.kind === "Tugas") {
+        if (activeDraft.mode === "create") {
+          await teacherApi.createTask({
+            moduleStudentClassId: params.moduleId,
+            sectionId: activeDraft.chapterId,
+            judul: activeDraft.title.trim(),
+            deskripsi: activeDraft.description.trim(),
+            deadline: activeDraft.taskDeadline,
+            status: "published",
+            isAktif: true,
+          });
+        } else {
+          await teacherApi.updateTask(activeDraft.itemId!, {
+            title: activeDraft.title.trim(),
+            deskripsi: activeDraft.description.trim(),
+            deadline: activeDraft.taskDeadline,
+            sectionId: activeDraft.chapterId,
+          });
+        }
+      }
 
-        return {
-          ...chapter,
-          items: [...chapter.items, nextItem],
-        };
-      }),
-    );
-
-    setDraftError("");
-    setActiveDraft(null);
-    toast.success(`Item ${activeDraft.kind} berhasil disimpan`);
+      toast.success(`Item ${activeDraft.kind} berhasil disimpan`);
+      setActiveDraft(null);
+      loadModuleData();
+    } catch (e: any) {
+      setDraftError(e.message || "Gagal menyimpan item");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const selectedQuiz = activeDraft?.kind === "Kuis" ? getQuizById(quizOptions, activeDraft.selectedQuizId) : undefined;
@@ -461,7 +625,16 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
         description="Mata pelajaran berasal dari admin. Guru dapat menambah Bab, materi, tugas, kuis, lalu mengelola tiap item."
       />
 
-      <section className="grid min-h-0 gap-2 xl:grid-cols-[1.4fr_1fr]">
+      {loading ? (
+        <div className="flex h-64 items-center justify-center">
+          <p className="text-[12px] text-[#7e84a8]">Memuat data modul...</p>
+        </div>
+      ) : error ? (
+        <div className="rounded-[10px] border border-[#f5c4cd] bg-[#fff2f5] px-4 py-3 text-[11px] text-[#ba4b64]">
+          {error}
+        </div>
+      ) : (
+        <section className="grid min-h-0 gap-2 xl:grid-cols-[1.4fr_1fr]">
         <Surface
           title="Outline Bab & Item"
           action={
@@ -490,6 +663,13 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
                     >
                       Edit Bab
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteChapter(chapter.id)}
+                      className="cursor-pointer text-[9.5px] font-semibold text-[#c54564] hover:underline"
+                    >
+                      Hapus
+                    </button>
                     <GripVertical className="h-4 w-4 text-[#8a92ba]" />
                   </div>
                 </div>
@@ -516,7 +696,7 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
                             </button>
                             <button
                               type="button"
-                              onClick={() => handleDeleteItem(chapter.id, item.id)}
+                              onClick={() => handleDeleteItem(chapter.id, item.id, item.kind)}
                               className="cursor-pointer rounded-[6px] border border-[rgba(233,84,116,0.24)] bg-[#fff5f7] px-1.5 py-0.5 text-[#c54564] transition-all hover:bg-[#ffeef1] active:scale-95"
                             >
                               Hapus
@@ -808,12 +988,13 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
                   >
                     Batal
                   </button>
-                  <button
+                   <button
                     type="button"
                     onClick={handleSaveItem}
-                    className="cursor-pointer rounded-[9px] bg-gradient-to-r from-[#765df5] to-[#5b50dc] px-2 py-2 text-white transition-all hover:opacity-90 active:scale-[0.98]"
+                    disabled={saving}
+                    className="cursor-pointer rounded-[9px] bg-gradient-to-r from-[#765df5] to-[#5b50dc] px-2 py-2 text-white transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
                   >
-                    {activeDraft.mode === "edit" ? "Simpan Perubahan" : "Simpan ke Bab"}
+                    {saving ? "Menyimpan..." : activeDraft.mode === "edit" ? "Simpan Perubahan" : "Simpan ke Bab"}
                   </button>
                 </div>
               </div>
@@ -850,7 +1031,7 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
                   </p>
                 )}
 
-                <div className="mt-2 grid grid-cols-2 gap-2 text-[10px] font-semibold">
+                 <div className="mt-2 grid grid-cols-2 gap-2 text-[10px] font-semibold">
                   <button
                     type="button"
                     onClick={() => {
@@ -863,37 +1044,11 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      if (!activeChapterDraft.title.trim() || !activeChapterDraft.summary.trim()) {
-                        setDraftError("Judul dan Deskripsi bab wajib diisi");
-                        return;
-                      }
-                      
-                      if (activeChapterDraft.mode === "create") {
-                        setChapters(prev => [
-                          ...prev,
-                          {
-                            id: activeChapterDraft.chapterId,
-                            title: activeChapterDraft.title,
-                            summary: activeChapterDraft.summary,
-                            items: [],
-                          }
-                        ]);
-                      } else {
-                        setChapters(prev => prev.map(ch => 
-                          ch.id === activeChapterDraft.chapterId 
-                            ? { ...ch, title: activeChapterDraft.title, summary: activeChapterDraft.summary }
-                            : ch
-                        ));
-                      }
-                      
-                      setActiveChapterDraft(null);
-                      setDraftError("");
-                      toast.success(`Bab berhasil ${activeChapterDraft.mode === 'create' ? 'ditambahkan' : 'diperbarui'}`);
-                    }}
-                    className="cursor-pointer rounded-[9px] bg-gradient-to-r from-[#765df5] to-[#5b50dc] px-2 py-2 text-white transition-all hover:opacity-90 active:scale-[0.98]"
+                    onClick={handleSaveChapter}
+                    disabled={saving}
+                    className="cursor-pointer rounded-[9px] bg-gradient-to-r from-[#765df5] to-[#5b50dc] px-2 py-2 text-white transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
                   >
-                    {activeChapterDraft.mode === "edit" ? "Simpan Perubahan" : "Simpan Bab"}
+                    {saving ? "Menyimpan..." : activeChapterDraft.mode === "edit" ? "Simpan Perubahan" : "Simpan Bab"}
                   </button>
                 </div>
               </div>
@@ -912,6 +1067,7 @@ export default function ModuleBuilderPage({ params }: { params: { moduleId: stri
           )}
         </div>
       </section>
+      )}
     </div>
   );
 }

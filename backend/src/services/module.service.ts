@@ -86,7 +86,7 @@ function mapOfferingToModuleSummary(offering: Awaited<ReturnType<typeof getOffer
     sections: offering.sections.map((section) => ({
       id: section.id,
       title: section.judul,
-      description: null,
+      description: "",
       order: section.urutan
     })),
     lessons: offering.lessons.map((lesson) => ({
@@ -129,9 +129,9 @@ function mapOfferingToModuleSummary(offering: Awaited<ReturnType<typeof getOffer
     id: String(offering.id),
     title: offering.module.judul,
     department: offering.module.department.namaJurusan,
-    teacher: offering.teacher?.nama ?? "-",
+    teacherName: offering.teacher?.nama ?? "-",
     totalItems: sidebar.length,
-    completionPercent: computeCompletionPercent(sidebar),
+    completionRate: computeCompletionPercent(sidebar),
     nextItemTitle: getNextItemTitle(sidebar),
     accent: "#0E5BFF",
     bannerLabel: `${lessonCount} lesson | ${quizCount} quiz | ${taskCount} task`

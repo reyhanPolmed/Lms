@@ -61,6 +61,7 @@ export function Badge({ status }: { status: string }) {
     submitted: "bg-[#e7f1ff] text-[#488de2]",
     returned: "bg-[#fff1d8] text-[#e69a2a]",
     graded: "bg-[#e5f8ee] text-[#39b16a]",
+    retake: "bg-[#fff1d8] text-[#e69a2a]",
     revision: "bg-[#fff1d8] text-[#e69a2a]",
     approved: "bg-[#e5f8ee] text-[#39b16a]",
     late: "bg-[#ffe9ef] text-[#ea5570]",
@@ -82,10 +83,14 @@ export function MiniInput({
   label,
   placeholder,
   type = "text",
+  value,
+  onChange,
 }: {
   label: string;
   placeholder: string;
   type?: string;
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }) {
   return (
     <label className="block">
@@ -95,6 +100,8 @@ export function MiniInput({
       <input
         type={type}
         placeholder={placeholder}
+        value={value}
+        onChange={onChange}
         className="h-9 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 text-[11px] text-[#4f5678] outline-none"
       />
     </label>

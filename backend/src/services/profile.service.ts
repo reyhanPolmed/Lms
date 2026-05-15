@@ -8,7 +8,7 @@ export async function getStudentProfile(userId: string) {
   const modules = await listStudentModules(userId);
   const weeklyProgress = modules.length > 0
     ? Math.round(
-        modules.reduce((total, item) => total + item.completionPercent, 0) / modules.length
+        modules.reduce((total, item) => total + (item.completionRate ?? 0), 0) / modules.length
       )
     : 0;
 

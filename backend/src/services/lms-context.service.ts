@@ -117,7 +117,7 @@ export function buildSequentialSidebar(input: {
       href: item.href,
       isLocked,
       isCompleted: item.isCompleted,
-      section: section?.title ?? "Tanpa section"
+      chapter: section?.title ?? "Tanpa section"
     };
   });
 
@@ -127,7 +127,7 @@ export function buildSequentialSidebar(input: {
       id: String(section.id),
       title: section.title,
       description: section.description ?? "",
-      items: sidebar.filter((item) => item.section === section.title)
+      items: sidebar.filter((item) => item.chapter === section.title)
     }));
 
   return {

@@ -16,6 +16,7 @@ import {
 import { LoadingState } from "@/components/ui/loading-state";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { useModuleDetailQuery } from "@/hooks/use-lms-data";
+import { getModuleItemIdentity } from "@/lib/learning-routes";
 import { SidebarEntry } from "@/lib/types";
 
 const typeMeta: Record<
@@ -123,7 +124,7 @@ export default function ModuleDetailPage({
                 ) : (
                   section.items.map((item) => (
                     <LessonRouteCard
-                      key={item.id}
+                      key={getModuleItemIdentity(item)}
                       item={item}
                     />
                   ))
