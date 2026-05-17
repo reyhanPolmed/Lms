@@ -15,9 +15,16 @@ const rubricSchema = z.object({
   urutan: z.number().int().positive().optional(),
 });
 
-const createTaskSchema = z.object({
+const attachmentSchema = z.object({
+  fileName: z.string().min(1),
+  mimeType: z.string().min(1),
+  base64Data: z.string().min(1),
+});
+
+const taskPayloadSchema = z.object({
   moduleStudentClassId: z.string(),
-  lessonId: z.string(),
+  lessonId: z.string().optional(),
+  sectionId: z.string().optional(),
   judul: z.string().min(1),
   deskripsi: z.string().optional(),
   deadline: z.string(),
@@ -25,11 +32,18 @@ const createTaskSchema = z.object({
   allowRevision: z.boolean().optional(),
   isAktif: z.boolean().optional(),
   status: z.enum(["draft", "published"]).optional(),
+  submitMethod: z.enum(["link", "file", "file_link"]).optional(),
+  attachment: attachmentSchema.optional(),
   rubrics: z.array(rubricSchema).optional(),
 });
 
-const updateTaskSchema = createTaskSchema
-  .omit({ moduleStudentClassId: true, lessonId: true })
+const createTaskSchema = taskPayloadSchema.refine((payload) => Boolean(payload.lessonId || payload.sectionId), {
+  message: "lessonId atau sectionId wajib diisi",
+  path: ["sectionId"],
+});
+
+const updateTaskSchema = taskPayloadSchema
+  .omit({ moduleStudentClassId: true })
   .partial();
 
 const statusSchema = z.object({

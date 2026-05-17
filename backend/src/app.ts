@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import express from "express";
@@ -39,7 +41,8 @@ export function createApp() {
   app.all("/api/auth/siswa/*splat", toNodeHandler(studentAuth));
   app.all("/api/auth/guru/*splat", toNodeHandler(teacherAuth));
 
-  app.use(express.json());
+  app.use(express.json({ limit: "10mb" }));
+  app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
   app.use(csrfMiddleware);
 
   app.post("/login", asyncHandler(loginController));

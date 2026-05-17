@@ -14,6 +14,7 @@ type ContentInput = {
   type: "lesson" | "quiz" | "task";
   sectionId: bigint | string | null;
   position: number;
+  createdAt?: Date | null;
   href: string;
   availableAt?: Date | null;
   isCompleted: boolean;
@@ -91,6 +92,14 @@ export function buildSequentialSidebar(input: {
 
     if (leftSectionOrder !== rightSectionOrder) {
       return leftSectionOrder - rightSectionOrder;
+    }
+
+    const leftCreatedAt = left.createdAt?.getTime() ?? Number.NaN;
+    const rightCreatedAt = right.createdAt?.getTime() ?? Number.NaN;
+    const hasComparableCreatedAt = Number.isFinite(leftCreatedAt) && Number.isFinite(rightCreatedAt);
+
+    if (hasComparableCreatedAt && leftCreatedAt !== rightCreatedAt) {
+      return leftCreatedAt - rightCreatedAt;
     }
 
     if (left.position !== right.position) {

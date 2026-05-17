@@ -1,5 +1,5 @@
 import { prisma } from "../lib/prisma.js";
-import { requireTeacherOwnsOffering } from "./teacher-context.service.js";
+import { requireTeacherContext, requireTeacherOwnsOffering } from "./teacher-context.service.js";
 import { toBigIntId } from "./lms-context.service.js";
 import { AppError } from "../utils/app-error.js";
 
@@ -33,6 +33,7 @@ export async function createSection(userId: string, payload: { offeringId: strin
 
 export async function updateSection(userId: string, sectionId: string, payload: { judul?: string; urutan?: number }) {
   const bigId = toBigIntId(sectionId, "Section ID");
+  const teacher = await requireTeacherContext(userId);
   
   // Verify teacher owns the offering this section belongs to
   const section = await prisma.section.findUnique({
@@ -40,7 +41,7 @@ export async function updateSection(userId: string, sectionId: string, payload: 
     include: { moduleStudentClass: true }
   });
 
-  if (!section || section.moduleStudentClass.teacherId !== BigInt(userId)) {
+  if (!section || section.moduleStudentClass.teacherId !== teacher.id) {
     throw new AppError("Section tidak ditemukan atau tidak bisa diakses", 404);
   }
 
@@ -61,13 +62,14 @@ export async function updateSection(userId: string, sectionId: string, payload: 
 
 export async function deleteSection(userId: string, sectionId: string) {
   const bigId = toBigIntId(sectionId, "Section ID");
+  const teacher = await requireTeacherContext(userId);
   
   const section = await prisma.section.findUnique({
     where: { id: bigId },
     include: { moduleStudentClass: true }
   });
 
-  if (!section || section.moduleStudentClass.teacherId !== BigInt(userId)) {
+  if (!section || section.moduleStudentClass.teacherId !== teacher.id) {
     throw new AppError("Section tidak ditemukan atau tidak bisa diakses", 404);
   }
 

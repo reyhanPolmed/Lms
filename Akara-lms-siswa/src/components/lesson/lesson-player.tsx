@@ -12,6 +12,65 @@ const contentTypeLabel: Record<LessonDetail["contentType"], string> = {
   link: "Link"
 };
 
+function normalizeYouTubeUrl(rawUrl?: string | null) {
+  if (!rawUrl) return null;
+
+  try {
+    const url = new URL(rawUrl);
+    const host = url.hostname.replace(/^www\./, "");
+    let videoId = "";
+
+    if (host === "youtu.be") {
+      videoId = url.pathname.split("/").filter(Boolean)[0] ?? "";
+    } else if (
+      host === "youtube.com" ||
+      host === "m.youtube.com" ||
+      host === "music.youtube.com" ||
+      host === "youtube-nocookie.com"
+    ) {
+      if (url.pathname === "/watch") {
+        videoId = url.searchParams.get("v") ?? "";
+      } else {
+        const segments = url.pathname.split("/").filter(Boolean);
+        const marker = segments[0];
+
+        if (marker === "embed" || marker === "shorts" || marker === "live") {
+          videoId = segments[1] ?? "";
+        }
+      }
+    }
+
+    if (!videoId) return null;
+
+    const startParam = url.searchParams.get("start") ?? url.searchParams.get("t") ?? "";
+    const startSeconds = parseYouTubeTimeToSeconds(startParam);
+    const embedUrl = new URL(`https://www.youtube-nocookie.com/embed/${videoId}`);
+
+    embedUrl.searchParams.set("rel", "0");
+    if (startSeconds > 0) {
+      embedUrl.searchParams.set("start", String(startSeconds));
+    }
+
+    return embedUrl.toString();
+  } catch {
+    return null;
+  }
+}
+
+function parseYouTubeTimeToSeconds(value: string) {
+  if (!value) return 0;
+  if (/^\d+$/.test(value)) return Number(value);
+
+  const parts = value.match(/(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?/);
+  if (!parts) return 0;
+
+  const hours = Number(parts[1] ?? 0);
+  const minutes = Number(parts[2] ?? 0);
+  const seconds = Number(parts[3] ?? 0);
+
+  return hours * 3600 + minutes * 60 + seconds;
+}
+
 export function LessonPlayer({
   lesson,
   onComplete,
@@ -29,6 +88,7 @@ export function LessonPlayer({
 }) {
   const subtitle = babLabel ? `${babLabel} - Materi LMS` : "Materi LMS";
   const showExternalAction = lesson.contentType !== "text" && Boolean(lesson.contentUrl);
+  const youtubeEmbedUrl = normalizeYouTubeUrl(lesson.contentUrl);
 
   return (
     <section className="space-y-4">
@@ -39,11 +99,19 @@ export function LessonPlayer({
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               className="aspect-video w-full"
-              src={lesson.contentUrl || undefined}
+              src={youtubeEmbedUrl ?? lesson.contentUrl ?? undefined}
               title={lesson.title}
             />
           ) : lesson.contentType === "pdf" ? (
             <iframe className="h-[720px] w-full bg-white" src={lesson.contentUrl || undefined} title={lesson.title} />
+          ) : lesson.contentType === "link" && youtubeEmbedUrl ? (
+            <iframe
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="aspect-video w-full"
+              src={youtubeEmbedUrl}
+              title={lesson.title}
+            />
           ) : lesson.contentType === "link" ? (
             <div className="flex aspect-video items-end bg-[linear-gradient(145deg,#dce7ff_0%,#eef4fd_44%,#ffffff_100%)] p-6">
               <div className="max-w-2xl rounded-[24px] border border-white/70 bg-white/85 p-6 shadow-[0_18px_50px_-36px_rgba(15,23,42,0.35)] backdrop-blur">

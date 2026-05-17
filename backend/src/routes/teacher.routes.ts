@@ -13,8 +13,11 @@ import {
 } from "../controllers/teacher-lesson.controller.js";
 import {
   createQuizController,
+  createQuizBankController,
   deleteQuizController,
   getQuizTeacherController,
+  instantiateQuizFromBankController,
+  listTeacherQuizBanksController,
   listTeacherQuizzesController,
   patchQuizStatusController,
   updateQuizController,
@@ -76,6 +79,9 @@ export function createTeacherRouter() {
   router.put("/quizzes/:id", asyncHandler(updateQuizController));
   router.patch("/quizzes/:id/status", asyncHandler(patchQuizStatusController));
   router.delete("/quizzes/:id", asyncHandler(deleteQuizController));
+  router.get("/quiz-banks", asyncHandler(listTeacherQuizBanksController));
+  router.post("/quiz-banks", asyncHandler(createQuizBankController));
+  router.post("/quizzes/from-bank", asyncHandler(instantiateQuizFromBankController));
 
   // Quiz submissions / review
   router.get("/quizzes/:id/submissions", asyncHandler(listQuizSubmissionsController));

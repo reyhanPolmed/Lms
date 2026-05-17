@@ -15,7 +15,10 @@ export async function getTeacherDashboard(userId: string) {
         select: { id: true, status: true },
       }),
       prisma.quiz.findMany({
-        where: { modulesStudentClassId: { in: offeringIds } },
+        where: {
+          modulesStudentClassId: { in: offeringIds },
+          sectionId: { not: null }
+        },
         select: { id: true, isAktif: true },
       }),
       prisma.task.findMany({
@@ -27,7 +30,9 @@ export async function getTeacherDashboard(userId: string) {
           taskId: {
             in: await prisma.task
               .findMany({
-                where: { modulesStudentClassId: { in: offeringIds } },
+                where: {
+                  modulesStudentClassId: { in: offeringIds }
+                },
                 select: { id: true },
               })
               .then((t) => t.map((x) => x.id)),
@@ -41,7 +46,10 @@ export async function getTeacherDashboard(userId: string) {
           quizId: {
             in: await prisma.quiz
               .findMany({
-                where: { modulesStudentClassId: { in: offeringIds } },
+                where: {
+                  modulesStudentClassId: { in: offeringIds },
+                  sectionId: { not: null }
+                },
                 select: { id: true },
               })
               .then((q) => q.map((x) => x.id)),
@@ -100,7 +108,12 @@ export async function getTeacherDashboard(userId: string) {
       const [lessonCount, quizCount, taskCount, submissionCountAll] =
         await Promise.all([
           prisma.lesson.count({ where: { moduleStudentClassId: mc.id } }),
-          prisma.quiz.count({ where: { modulesStudentClassId: mc.id } }),
+          prisma.quiz.count({
+            where: {
+              modulesStudentClassId: mc.id,
+              sectionId: { not: null }
+            }
+          }),
           prisma.task.count({ where: { modulesStudentClassId: mc.id } }),
           prisma.lessonUser.count({
             where: { lesson: { moduleStudentClassId: mc.id } },

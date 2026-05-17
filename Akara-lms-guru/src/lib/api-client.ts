@@ -7,6 +7,28 @@ const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 type FetchOptions = RequestInit & { params?: Record<string, string | undefined> };
 
+function extractApiErrorMessage(payload: unknown) {
+  if (!payload || typeof payload !== "object") return null;
+
+  const maybePayload = payload as {
+    message?: string;
+    errors?: {
+      formErrors?: string[];
+      fieldErrors?: Record<string, string[] | undefined>;
+    };
+  };
+
+  const formError = maybePayload.errors?.formErrors?.find(Boolean);
+  if (formError) return formError;
+
+  const fieldError = Object.values(maybePayload.errors?.fieldErrors ?? {})
+    .flat()
+    .find(Boolean);
+  if (fieldError) return fieldError;
+
+  return maybePayload.message ?? null;
+}
+
 async function apiFetch<T>(path: string, options: FetchOptions = {}): Promise<T> {
   const { params, ...init } = options;
 
@@ -29,7 +51,7 @@ async function apiFetch<T>(path: string, options: FetchOptions = {}): Promise<T>
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error(err.message ?? `API error ${res.status}`);
+    throw new Error(extractApiErrorMessage(err) ?? `API error ${res.status}`);
   }
 
   // 204 No Content
@@ -58,6 +80,7 @@ export type TeacherProfile = {
 
 export type ModuleSummary = {
   id: string;
+  moduleId?: string;
   title: string;
   department: string;
   gradeLevel: string;
@@ -90,6 +113,7 @@ export type DashboardData = {
 
 export type QuizItem = {
   id: string;
+  moduleId?: string;
   title: string;
   position: number;
   passScore: number;
@@ -140,6 +164,11 @@ export type TaskSubmissionDetail = {
   status: string;
   score: number | null;
   submissionLink: string;
+  submissionFile: {
+    fileName: string;
+    mimeType: string;
+    url: string;
+  } | null;
   teacherFeedback: string;
   teacherNote: string;
   rubrics: RubricScore[];
@@ -147,6 +176,7 @@ export type TaskSubmissionDetail = {
 
 export type QuizSubmissionSummary = {
   id: string;
+  attemptNumber: number;
   studentName: string;
   className: string;
   courseTitle: string;
@@ -170,6 +200,7 @@ export type QuizReviewQuestion = {
 
 export type QuizAttemptDetail = {
   id: string;
+  attemptNumber: number;
   studentName: string;
   className: string;
   courseTitle: string;
@@ -177,6 +208,14 @@ export type QuizAttemptDetail = {
   status: string;
   score: number | null;
   submittedAt: string | null;
+  attemptHistory: {
+    id: string;
+    attemptNumber: number;
+    score: number | null;
+    status: string;
+    submittedAt: string | null;
+    isLatest: boolean;
+  }[];
   questions: QuizReviewQuestion[];
 };
 
@@ -215,6 +254,7 @@ export type StudentProgressDetail = {
 
 export type ModuleDetail = {
   id: string;
+  moduleId?: string;
   title: string;
   description: string;
   department: string;
@@ -223,8 +263,11 @@ export type ModuleDetail = {
   sections: { id: string; title: string; order: number }[];
   lessons: {
     id: string;
+    createdAt: string | null;
     title: string;
     contentType: string;
+    body: string;
+    contentUrl: string;
     position: number;
     status: string;
     availableAt: string | null;
@@ -233,6 +276,7 @@ export type ModuleDetail = {
   }[];
   quizzes: {
     id: string;
+    createdAt: string | null;
     title: string;
     position: number;
     isActive: boolean;
@@ -245,13 +289,22 @@ export type ModuleDetail = {
   }[];
   tasks: {
     id: string;
+    createdAt: string | null;
     title: string;
+    description: string;
+    availableAt: string | null;
     deadline: string;
     status: string;
+    submitMethod: "link" | "file" | "file_link";
     isActive: boolean;
     allowRevision: boolean;
     submissionCount: number;
     sectionId: string | null;
+    attachment: {
+      fileName: string;
+      mimeType: string;
+      url: string;
+    } | null;
   }[];
 };
 
@@ -272,15 +325,27 @@ export type LessonDetail = {
 export type TaskDetail = {
   id: string;
   title: string;
-  deskripsi: string;
+  description: string;
   deadline: string;
+  availableAt: string | null;
   status: string;
-  isAktif: boolean;
+  isActive: boolean;
   allowRevision: boolean;
-  fileTugas: string | null;
+  submitMethod: "link" | "file" | "file_link";
   lessonId: string | null;
   sectionId: string | null;
   moduleStudentClassId: string;
+  attachment: {
+    fileName: string;
+    mimeType: string;
+    url: string;
+  } | null;
+  rubrics?: {
+    id: string;
+    name: string;
+    maxScore: number;
+    order: number;
+  }[];
 };
 
 // ────────────────────────────────────────────────────────────────────────────────
@@ -322,6 +387,11 @@ export const teacherApi = {
     tipeKonten: string;
     konten: string;
     urlKonten?: string;
+    contentFile?: {
+      fileName: string;
+      mimeType: string;
+      base64Data: string;
+    };
     durasi?: number;
     tersediaPada?: string;
     status?: string;
@@ -331,10 +401,36 @@ export const teacherApi = {
       body: JSON.stringify(data),
     }),
 
-  updateLesson: (id: string, data: Partial<LessonDetail>) =>
+  updateLesson: (
+    id: string,
+      data: Partial<LessonDetail> & {
+        title?: string;
+        contentType?: string;
+        body?: string;
+        contentUrl?: string;
+        contentFile?: {
+          fileName: string;
+          mimeType: string;
+          base64Data: string;
+        };
+        durationMinutes?: number | null;
+        availableAt?: string | null;
+      }
+  ) =>
     apiFetch<LessonDetail>(`/api/teacher/lessons/${id}`, {
       method: "PUT",
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        ...(data.title !== undefined && { judul: data.title }),
+        ...(data.contentType !== undefined && { tipeKonten: data.contentType }),
+        ...(data.body !== undefined && { konten: data.body }),
+        ...(data.contentUrl !== undefined && { urlKonten: data.contentUrl }),
+        ...(data.contentFile !== undefined && { contentFile: data.contentFile }),
+        ...(data.durationMinutes !== undefined && { durasi: data.durationMinutes ?? undefined }),
+        ...(data.availableAt !== undefined && { tersediaPada: data.availableAt ?? undefined }),
+        ...(data.position !== undefined && { posisi: data.position }),
+        ...(data.status !== undefined && { status: data.status }),
+        ...(data.sectionId !== undefined && { sectionId: data.sectionId ?? "" }),
+      }),
     }),
 
   deleteLesson: (id: string) =>
@@ -343,9 +439,14 @@ export const teacherApi = {
     }),
 
   // ─── Quizzes ───────────────────────────────────────────────────────────────
-  getQuizzes: (offeringId?: string) =>
+  getQuizzes: (offeringId?: string, scope: "assigned" | "all" = "assigned") =>
     apiFetch<QuizItem[]>("/api/teacher/quizzes", {
-      params: { offeringId },
+      params: { offeringId, scope },
+    }),
+
+  getQuizBanks: (moduleId?: string) =>
+    apiFetch<QuizItem[]>("/api/teacher/quiz-banks", {
+      params: { moduleId },
     }),
 
   getQuiz: (id: string) => apiFetch<QuizItem>(`/api/teacher/quizzes/${id}`),
@@ -366,6 +467,26 @@ export const teacherApi = {
     }[];
   }) =>
     apiFetch<QuizItem>("/api/teacher/quizzes", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  createQuizBank: (data: {
+    moduleId: string;
+    judul: string;
+    skorLulus?: number;
+    durasiMenit?: number;
+    isAktif?: boolean;
+    questions: {
+      pertanyaan: string;
+      opsiA: string;
+      opsiB: string;
+      opsiC: string;
+      opsiD: string;
+      opsiBenar: "A" | "B" | "C" | "D";
+    }[];
+  }) =>
+    apiFetch<QuizItem>("/api/teacher/quiz-banks", {
       method: "POST",
       body: JSON.stringify(data),
     }),
@@ -401,6 +522,19 @@ export const teacherApi = {
       body: JSON.stringify({ isAktif }),
     }),
 
+  instantiateQuizFromBank: (data: {
+    sourceQuizId: string;
+    moduleStudentClassId: string;
+    sectionId?: string;
+    availableAt?: string;
+    deadline?: string;
+    isAktif?: boolean;
+  }) =>
+    apiFetch<QuizItem>("/api/teacher/quizzes/from-bank", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
   deleteQuiz: (id: string) =>
     apiFetch<{ success: boolean }>(`/api/teacher/quizzes/${id}`, {
       method: "DELETE",
@@ -411,20 +545,47 @@ export const teacherApi = {
 
   createTask: (data: {
     moduleStudentClassId: string;
+    lessonId?: string;
     sectionId?: string;
     judul: string;
     deskripsi: string;
     deadline: string;
+    availableAt?: string;
     isAktif?: boolean;
     status?: string;
     allowRevision?: boolean;
+    submitMethod?: "link" | "file" | "file_link";
+    attachment?: {
+      fileName: string;
+      mimeType: string;
+      base64Data: string;
+    };
   }) =>
     apiFetch<TaskDetail>("/api/teacher/tasks", {
       method: "POST",
       body: JSON.stringify(data),
     }),
 
-  updateTask: (id: string, data: Partial<TaskDetail>) =>
+  updateTask: (
+    id: string,
+    data: Partial<{
+      judul: string;
+      deskripsi: string;
+      deadline: string;
+      availableAt: string;
+      isAktif: boolean;
+      status: string;
+      allowRevision: boolean;
+      submitMethod: "link" | "file" | "file_link";
+      lessonId: string;
+      sectionId: string;
+      attachment: {
+        fileName: string;
+        mimeType: string;
+        base64Data: string;
+      };
+    }>
+  ) =>
     apiFetch<TaskDetail>(`/api/teacher/tasks/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
@@ -447,7 +608,8 @@ export const teacherApi = {
   gradeTaskSubmission: (
     submissionId: string,
     data: {
-      rubricScores: { rubricId: string; score: number }[];
+      score?: number;
+      rubricScores?: { rubricId: string; score: number }[];
       teacherFeedback?: string;
       action: "draft" | "revision" | "publish";
     }
@@ -458,7 +620,7 @@ export const teacherApi = {
     }),
 
   // ─── Quiz Reviews ──────────────────────────────────────────────────────────
-  getQuizSubmissions: (quizId: string, filters?: { status?: string }) =>
+  getQuizSubmissions: (quizId: string, filters?: { status?: string; scope?: "latest" | "all" }) =>
     apiFetch<QuizSubmissionSummary[]>(`/api/teacher/quizzes/${quizId}/submissions`, {
       params: filters,
     }),

@@ -28,6 +28,12 @@ export interface MockTaskSeed {
   description: string;
   dueAt: string;
   allowRevision: boolean;
+  submitMethod?: "link" | "file" | "file_link";
+  attachment?: {
+    fileName: string;
+    mimeType: string;
+    url: string;
+  };
   checklist: string[];
 }
 
@@ -147,7 +153,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
             contentUrl: "https://www.youtube-nocookie.com/embed/M7lc1UVf-VE",
             excerpt:
               "Materi pembuka tentang peran front office dalam membangun first impression dan ritme pelayanan tamu.",
-            body:
+            content:
               "Bab ini membahas titik kontak pertama dengan tamu, standar komunikasi, bahasa tubuh profesional, dan urutan check-in dasar agar pelayanan terasa konsisten.",
             durationTargetSeconds: 900,
             tips: [
@@ -200,7 +206,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
           task("fo-t1", "Bab 1", "Tugas Simulasi Greeting", {
             description:
               "Rekam simulasi greeting dan check-in awal selama 2-3 menit. Unggah video ke drive dan pastikan link dapat diakses guru.",
-            deadline: "2026-05-04T17:00:00+07:00",
+            dueAt: "2026-05-04T17:00:00+07:00",
             allowRevision: false,
             checklist: [
               "Sebutkan salam pembuka dan nama petugas.",
@@ -220,7 +226,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
             contentUrl: "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
             excerpt:
               "Materi ini menekankan pentingnya akurasi input data reservasi, kebutuhan khusus tamu, dan validasi sebelum check-in.",
-            body:
+            content:
               "Siswa belajar membaca reservation note, memeriksa permintaan khusus, menyelaraskan tipe kamar, serta menghindari mismatch data yang memicu komplain.",
             durationTargetSeconds: 780,
             tips: [
@@ -273,7 +279,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
           task("fo-t2", "Bab 2", "Tugas Form Reservasi", {
             description:
               "Buat template pengecekan reservasi berisi nama tamu, tipe kamar, special request, dan status pembayaran.",
-            deadline: "2026-05-07T17:00:00+07:00",
+            dueAt: "2026-05-07T17:00:00+07:00",
             allowRevision: false,
             checklist: [
               "Gunakan format tabel yang mudah dibaca.",
@@ -344,7 +350,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
           task("fo-t3", "Bab 3", "Tugas Script Recovery", {
             description:
               "Tulis script service recovery untuk tiga skenario: kamar belum siap, AC bermasalah, dan tamu meminta kompensasi ringan.",
-            deadline: "2026-05-10T17:00:00+07:00",
+            dueAt: "2026-05-10T17:00:00+07:00",
             allowRevision: false,
             checklist: [
               "Setiap skenario punya pembuka, klarifikasi, dan solusi.",
@@ -375,7 +381,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
             contentUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
             excerpt:
               "Memahami alur kerja station kitchen, sanitasi alat, dan pemetaan tugas saat service dimulai.",
-            body:
+            content:
               "Siswa mempelajari pembagian station, urutan mise en place, prosedur sanitasi dasar, dan koordinasi antar anggota tim di dapur produksi.",
             durationTargetSeconds: 720,
             tips: [
@@ -427,7 +433,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
           task("cl-t1", "Bab 1", "Checklist Mise en Place", {
             description:
               "Susun checklist mise en place untuk practical cooking session lengkap dengan alat, bahan, dan sanitation check.",
-            deadline: "2026-05-03T17:00:00+07:00",
+            dueAt: "2026-05-03T17:00:00+07:00",
             allowRevision: false,
             checklist: [
               "Pisahkan bahan, alat, dan sanitation check.",
@@ -447,7 +453,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
             contentUrl: "",
             excerpt:
               "Mengenal saute, boil, steam, dan cara memilih teknik panas sesuai karakter bahan.",
-            body:
+            content:
               "Teknik panas menentukan tekstur, rasa, dan konsistensi hasil akhir. Siswa perlu mengenali kapan memakai dry heat, moist heat, atau kombinasi keduanya.",
             durationTargetSeconds: 840,
             tips: [
@@ -499,7 +505,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
           task("cl-t2", "Bab 2", "Laporan Praktik Memasak", {
             description:
               "Buat laporan singkat hasil praktik satu menu yang memuat teknik panas, durasi, dan evaluasi hasil rasa.",
-            deadline: "2026-05-06T17:00:00+07:00",
+            dueAt: "2026-05-06T17:00:00+07:00",
             allowRevision: false,
             checklist: [
               "Cantumkan nama menu dan teknik utama.",
@@ -519,7 +525,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
             contentUrl: "https://www.fao.org",
             excerpt:
               "Belajar menghitung biaya bahan per porsi, waste sederhana, dan margin dasar sebelum menentukan harga jual.",
-            body:
+            content:
               "Food costing membantu siswa memahami hubungan antara bahan baku, porsi, waste, dan target harga jual agar menu tetap efisien namun layak dijual.",
             durationTargetSeconds: 900,
             tips: [
@@ -602,7 +608,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
             contentUrl: "https://www.youtube-nocookie.com/embed/ysz5S6PUM-U",
             excerpt:
               "Materi pengantar tentang riset audiens, benchmark visual, dan penyusunan moodboard proyek desain.",
-            body:
+            content:
               "Siswa diminta memahami siapa target audiensnya, gaya visual referensi, serta bagaimana menyaring insight riset menjadi arah konsep desain.",
             durationTargetSeconds: 780,
             tips: [
@@ -654,7 +660,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
           task("ds-t1", "Bab 1", "Moodboard Identitas Brand", {
             description:
               "Susun moodboard digital berisi warna, tipografi, reference image, dan kata kunci brand.",
-            deadline: "2026-05-03T17:00:00+07:00",
+            dueAt: "2026-05-03T17:00:00+07:00",
             allowRevision: false,
             checklist: [
               "Minimal 8 referensi visual.",
@@ -674,7 +680,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
             contentUrl: "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
             excerpt:
               "Mempelajari penyusunan logo, sistem warna, grid, dan elemen visual pendukung agar identitas brand konsisten.",
-            body:
+            content:
               "Bab ini mendorong siswa menyusun pilihan visual yang bisa dipertanggungjawabkan, bukan sekadar menarik secara estetika namun lemah secara konsep.",
             durationTargetSeconds: 840,
             tips: [
@@ -726,7 +732,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
           task("ds-t2", "Bab 2", "Style Guide Ringkas", {
             description:
               "Buat style guide singkat berisi logo utama, warna, tipografi, dan contoh aplikasi identitas.",
-            deadline: "2026-05-06T17:00:00+07:00",
+            dueAt: "2026-05-06T17:00:00+07:00",
             allowRevision: false,
             checklist: [
               "Masukkan logo, warna, dan tipografi.",
@@ -746,7 +752,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
             contentUrl: "https://www.behance.net",
             excerpt:
               "Belajar menyusun urutan presentasi, menjelaskan proses, dan menutup portfolio dengan hasil yang kuat.",
-            body:
+            content:
               "Portfolio yang baik tidak hanya menampilkan hasil akhir, tetapi juga menjelaskan konteks, problem, proses eksplorasi, dan alasan desain final dipilih.",
             durationTargetSeconds: 900,
             tips: [

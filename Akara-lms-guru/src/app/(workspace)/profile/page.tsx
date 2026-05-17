@@ -84,7 +84,7 @@ export default function ProfilePage() {
               <span className="text-[40px] font-bold">{initials}</span>
             </div>
             <h3 className="text-[22px] font-extrabold text-[#2b325b]">{data?.teacher?.name || "Memuat..."}</h3>
-            <p className="mb-6 mt-1 rounded-full bg-[#f0edff] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[#6d5dfc]">{data?.teacher?.department || "Guru"}</p>
+            <p className="mb-6 mt-1 rounded-full bg-[#f0edff] px-3 py-1.5 text-[12px] font-bold uppercase tracking-wider text-[#6d5dfc]">{data?.teacher?.department || "Guru"}</p>
             
             <div className="w-full space-y-4 rounded-[16px] border border-[rgba(113,94,215,0.08)] bg-[#faf9ff] p-5 text-[12px] text-[#4e5378] shadow-sm">
               <div className="flex items-center gap-4 border-b border-[rgba(113,94,215,0.08)] pb-4">
@@ -92,7 +92,7 @@ export default function ProfilePage() {
                   <Mail className="h-4 w-4 text-[#715ed7]" />
                 </div>
                 <div>
-                  <p className="text-[9px] font-semibold uppercase tracking-wider text-[#a5aecf] mb-0.5">NIP</p>
+                  <p className="text-[13px] font-semibold uppercase tracking-wider text-[#a5aecf] mb-0.5">NIP</p>
                   <p className="font-bold text-[#2b325b]">{data?.teacher?.nip || "-"}</p>
                 </div>
               </div>
@@ -101,7 +101,7 @@ export default function ProfilePage() {
                   <BookOpen className="h-4 w-4 text-[#715ed7]" />
                 </div>
                 <div>
-                  <p className="text-[9px] font-semibold uppercase tracking-wider text-[#a5aecf] mb-0.5">Mata Pelajaran</p>
+                  <p className="text-[13px] font-semibold uppercase tracking-wider text-[#a5aecf] mb-0.5">Mata Pelajaran</p>
                   <p className="font-bold text-[#2b325b]">{data?.teacher?.department || "-"}</p>
                 </div>
               </div>
@@ -116,7 +116,7 @@ export default function ProfilePage() {
         >
           <div className="flex h-full flex-col p-2">
             <div className="mb-6 rounded-[12px] border border-[#f0b16b]/30 bg-[#fff8ef] p-4 text-[#c1782c]">
-              <p className="text-[11px] font-medium leading-relaxed">
+              <p className="text-[13px] font-medium leading-relaxed">
                 Untuk menjaga keamanan akun Anda, pastikan password baru memiliki minimal 8 karakter, kombinasi angka, dan huruf kapital.
               </p>
             </div>
@@ -149,7 +149,7 @@ export default function ProfilePage() {
               <button 
                 onClick={handleChangePassword}
                 disabled={isChangingPassword}
-                className="cursor-pointer rounded-[10px] bg-gradient-to-r from-[#765df5] to-[#5b50dc] px-6 py-2.5 text-[11px] font-bold tracking-wide text-white transition-all hover:opacity-90 hover:shadow-[0_4px_12px_rgba(113,94,215,0.25)] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center"
+                className="cursor-pointer rounded-[10px] bg-gradient-to-r from-[#765df5] to-[#5b50dc] px-6 py-2.5 text-[13px] font-bold tracking-wide text-white transition-all hover:opacity-90 hover:shadow-[0_4px_12px_rgba(113,94,215,0.25)] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center"
               >
                 {isChangingPassword ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 {isChangingPassword ? "Memproses..." : "Ganti Password"}

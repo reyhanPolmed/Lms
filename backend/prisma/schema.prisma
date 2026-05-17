@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  engineType = "binary"
 }
 
 datasource db {
@@ -309,6 +310,7 @@ model Section {
   urutan               Int
   id                   BigInt             @id @default(autoincrement())
   lessons              Lesson[]
+  tasks                Task[]
   quizzes              Quiz[]
   moduleStudentClass   ModuleStudentClass @relation(fields: [moduleStudentClassId], references: [id], onDelete: Cascade)
 
@@ -489,20 +491,26 @@ model Task {
   judul                 String             @db.VarChar(255)
   modulesStudentClassId BigInt             @map("modules_student_class_id")
   id                    BigInt             @id @default(autoincrement())
-  lessonId              BigInt             @map("lesson_id")
+  lessonId              BigInt?            @map("lesson_id")
+  sectionId             BigInt?            @map("section_id")
   status                String             @default("draft") @db.VarChar(20)
+  submitMethod          String             @default("link") @map("submit_method") @db.VarChar(20)
   rubrics               TaskRubric[]
   submissions           TaskSubmission[]
-  lesson                Lesson             @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  lesson                Lesson?            @relation(fields: [lessonId], references: [id], onDelete: SetNull)
   moduleStudentClass    ModuleStudentClass @relation(fields: [modulesStudentClassId], references: [id], onDelete: Cascade)
+  section               Section?           @relation(fields: [sectionId], references: [id], onDelete: SetNull)
 
   @@index([modulesStudentClassId], map: "tasks_module_id_index")
   @@index([lessonId], map: "tasks_lesson_id_index")
+  @@index([sectionId], map: "tasks_section_id_index")
   @@map("tasks")
 }
 
 model TaskSubmission {
-  submissionLink  String                      @map("submission_link") @db.VarChar(255)
+  submissionLink      String?                     @map("submission_link") @db.VarChar(255)
+  submissionFilePath  String?                     @map("submission_file_path") @db.VarChar(255)
+  submissionFileType  String?                     @map("submission_file_type") @db.VarChar(100)
   submittedAt     DateTime?                   @map("submitted_at") @db.Timestamp(0)
   teacherNote     String?                     @map("teacher_note")
   createdAt       DateTime?                   @map("created_at") @db.Timestamp(0)

@@ -13,16 +13,18 @@ export function PageHeader({
   actionLabel?: string;
 }) {
   return (
-    <header className="panel-surface rounded-[18px] px-4 py-3">
+    <header className="panel-surface rounded-[18px] px-5 py-4">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-[28px] leading-[1.05] text-[#1f2548]">{title}</h1>
-          <p className="mt-1 text-[11px] text-[#6f759a]">{description}</p>
+          <h1 className="text-[32px] font-bold leading-[1.02] tracking-[-0.03em] text-[#1b2342]">
+            {title}
+          </h1>
+          <p className="mt-2 text-[14px] leading-6 text-[#505978]">{description}</p>
         </div>
         {actionHref && actionLabel ? (
           <Link
             href={actionHref}
-            className="rounded-[10px] border border-[#6d5dfc]/50 bg-white px-3 py-2 text-[11px] font-semibold text-[#6d5dfc]"
+            className="rounded-[12px] border border-[#6d5dfc]/50 bg-white px-4 py-2.5 text-[13px] font-semibold text-[#5f52d4]"
           >
             {actionLabel}
           </Link>
@@ -42,9 +44,9 @@ export function Surface({
   children: ReactNode;
 }) {
   return (
-    <section className="panel-surface flex h-full flex-col min-h-0 overflow-hidden rounded-[18px] bg-white p-3.5">
-      <div className="mb-3 shrink-0 flex items-center justify-between gap-3">
-        <h2 className="text-[16px] text-[#23284a]">{title}</h2>
+    <section className="panel-surface flex h-full min-h-0 flex-col overflow-hidden rounded-[18px] bg-white p-4">
+      <div className="mb-4 shrink-0 flex items-center justify-between gap-3">
+        <h2 className="text-[19px] font-semibold tracking-[-0.02em] text-[#1f2747]">{title}</h2>
         {action}
       </div>
       {children}
@@ -72,7 +74,7 @@ export function Badge({ status }: { status: string }) {
 
   return (
     <span
-      className={`rounded-md px-2 py-1 text-[9px] font-semibold ${toneMap[status] ?? "bg-[#eceef4] text-[#70789c]"}`}
+      className={`rounded-full px-3 py-1.5 text-[13px] font-semibold ${toneMap[status] ?? "bg-[#eceef4] text-[#70789c]"}`}
     >
       {status}
     </span>
@@ -94,7 +96,7 @@ export function MiniInput({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7e84a8]">
+      <span className="mb-1.5 block text-[13px] font-semibold uppercase tracking-[0.16em] text-[#66708f]">
         {label}
       </span>
       <input
@@ -102,7 +104,7 @@ export function MiniInput({
         placeholder={placeholder}
         value={value}
         onChange={onChange}
-        className="h-9 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 text-[11px] text-[#4f5678] outline-none"
+        className="h-10 w-full rounded-[12px] border border-[rgba(113,94,215,0.12)] bg-white px-3.5 text-[13px] text-[#37405f] outline-none"
       />
     </label>
   );
@@ -123,13 +125,13 @@ export function MiniSelect({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7e84a8]">
+      <span className="mb-1.5 block text-[13px] font-semibold uppercase tracking-[0.16em] text-[#66708f]">
         {label}
       </span>
       <select
         value={value}
         onChange={onChange}
-        className="h-9 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 text-[11px] text-[#4f5678] outline-none"
+        className="h-10 w-full rounded-[12px] border border-[rgba(113,94,215,0.12)] bg-white px-3.5 text-[13px] text-[#37405f] outline-none"
       >
         <option value="">{placeholder}</option>
         {options.map((opt) => (

@@ -21,6 +21,7 @@ import {
   ProfileDetail,
   ProfilePayload,
   QuizAttempt,
+  QuizAttemptSavePayload,
   QuizDetail,
   QuizSubmitPayload,
   SidebarEntry,
@@ -66,6 +67,7 @@ let itemCompletionState = clone(initialItemCompletionState);
 let lessonProgressState = clone(initialLessonProgressState);
 let quizScoreState = clone(initialQuizScoreState);
 let taskSubmissionState = clone(initialTaskSubmissionState);
+let quizAttemptState: Record<string, QuizAttempt[]> = {};
 
 function sleep(ms = 250) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -210,6 +212,64 @@ function buildQuizDetail(id: string): QuizDetail {
   }
 
   const quiz = entry.item.quiz;
+  const attempts = [...(quizAttemptState[id] ?? [])].sort((left, right) =>
+    new Date(right.startedAt).getTime() - new Date(left.startedAt).getTime()
+  );
+  const activeAttempt = attempts.find((attempt) => attempt.status === "in_progress") ?? null;
+  const latestSubmittedAttempt = attempts.find((attempt) => attempt.status === "submitted") ?? null;
+  const attemptsUsed = attempts.length;
+  const attemptsRemaining = Math.max(0, 2 - attemptsUsed);
+
+  return {
+    id,
+    courseId: entry.module.id,
+    title: entry.item.title,
+    intro: quiz.intro,
+    passScore: quiz.passScore,
+    durationMinutes: quiz.durationMinutes,
+    serverNow: new Date().toISOString(),
+    maxAttempts: 2,
+    attemptsUsed,
+    attemptsRemaining,
+    questionOrder: quiz.questions.map((question) => question.id),
+    questions: quiz.questions,
+    penaltyNote: quiz.penaltyNote,
+    sidebar: normalizeSidebarRoutes(entry.module.id, buildSidebar(entry.module.id)),
+    lastScore: latestSubmittedAttempt?.score ?? quizScoreState[id],
+    activeAttempt,
+    latestSubmittedAttempt
+  };
+}
+
+function buildMockQuizAttempt(id: string, attemptNumber: number): QuizAttempt {
+  const quiz = buildQuizDetailWithoutAttempts(id);
+  const questionOrder = quiz.questionOrder;
+
+  return {
+    id: `attempt-${id}-${attemptNumber}`,
+    quizId: id,
+    attemptNumber,
+    status: "in_progress",
+    questionOrder,
+    answers: {},
+    startedAt: new Date().toISOString(),
+    submittedAt: null,
+    durationSeconds: quiz.durationMinutes * 60,
+    elapsedSeconds: 0,
+    remainingSeconds: quiz.durationMinutes * 60,
+    isExpired: false,
+    submissionTiming: null,
+    serverNow: new Date().toISOString()
+  };
+}
+
+function buildQuizDetailWithoutAttempts(id: string) {
+  const entry = itemLookup[id];
+  if (!entry || entry.item.type !== "quiz" || !entry.item.quiz) {
+    throw new Error("Quiz tidak ditemukan");
+  }
+
+  const quiz = entry.item.quiz;
 
   return {
     id,
@@ -221,8 +281,7 @@ function buildQuizDetail(id: string): QuizDetail {
     questionOrder: quiz.questions.map((question) => question.id),
     questions: quiz.questions,
     penaltyNote: quiz.penaltyNote,
-    sidebar: normalizeSidebarRoutes(entry.module.id, buildSidebar(entry.module.id)),
-    lastScore: quizScoreState[id]
+    sidebar: normalizeSidebarRoutes(entry.module.id, buildSidebar(entry.module.id))
   };
 }
 
@@ -241,6 +300,8 @@ function buildTaskDetail(id: string): TaskDetail {
     description: task.description,
     dueAt: task.dueAt,
     allowRevision: task.allowRevision,
+    submitMethod: task.submitMethod ?? "link",
+    attachment: task.attachment,
     currentSubmission: taskSubmissionState[id],
     sidebar: normalizeSidebarRoutes(entry.module.id, buildSidebar(entry.module.id)),
     checklist: task.checklist
@@ -320,7 +381,7 @@ function buildDashboardData(): DashboardData {
             id: item.id,
             title: item.title,
             type: "task" as const,
-            dueAt: item.task.deadline,
+            dueAt: item.task.dueAt,
             courseTitle: module.title,
             status: "due-soon" as const,
             href:
@@ -496,13 +557,21 @@ export const lmsClient = {
   async startQuiz(id: string) {
     if (useMockApi) {
       await sleep();
-      const quiz = buildQuizDetail(id);
-      return {
-        id: `attempt-${id}-${Date.now()}`,
-        quizId: id,
-        status: "in_progress",
-        questionOrder: quiz.questionOrder
-      } satisfies QuizAttempt;
+      const attempts = [...(quizAttemptState[id] ?? [])].sort(
+        (left, right) => new Date(left.startedAt).getTime() - new Date(right.startedAt).getTime()
+      );
+      const activeAttempt = attempts.find((attempt) => attempt.status === "in_progress");
+      if (activeAttempt) {
+        return activeAttempt;
+      }
+
+      if (attempts.length >= 2) {
+        throw new Error("Batas maksimal attempt quiz adalah 2 kali");
+      }
+
+      const nextAttempt = buildMockQuizAttempt(id, attempts.length + 1);
+      quizAttemptState[id] = [...attempts, nextAttempt];
+      return nextAttempt;
     }
 
     await ensureCsrfCookie();
@@ -510,10 +579,52 @@ export const lmsClient = {
     return unwrapApiData<QuizAttempt>(response.data);
   },
 
+  async saveQuizAttempt(id: string, payload: QuizAttemptSavePayload) {
+    if (useMockApi) {
+      await sleep();
+      const attempts = quizAttemptState[id] ?? [];
+      const targetAttempt = attempts.find((attempt) => attempt.id === payload.attemptId);
+
+      if (!targetAttempt) {
+        throw new Error("Attempt quiz tidak ditemukan");
+      }
+
+      if (targetAttempt.status === "submitted") {
+        return targetAttempt;
+      }
+
+      const updatedAttempt = {
+        ...targetAttempt,
+        answers: payload.answers,
+        serverNow: new Date().toISOString()
+      } satisfies QuizAttempt;
+
+      quizAttemptState[id] = attempts.map((attempt) =>
+        attempt.id === targetAttempt.id ? updatedAttempt : attempt
+      );
+
+      return updatedAttempt;
+    }
+
+    await ensureCsrfCookie();
+    const response = await http.put(`/api/quizzes/${id}/attempt`, payload);
+    return unwrapApiData<QuizAttempt>(response.data);
+  },
+
   async submitQuiz(id: string, payload: QuizSubmitPayload) {
     if (useMockApi) {
       await sleep();
-      const quiz = buildQuizDetail(id);
+      const quiz = buildQuizDetailWithoutAttempts(id);
+      const attempts = quizAttemptState[id] ?? [];
+      const targetAttempt = attempts.find((attempt) => attempt.id === payload.attemptId);
+
+      if (!targetAttempt) {
+        throw new Error("Attempt quiz tidak ditemukan");
+      }
+
+      if (targetAttempt.status === "submitted") {
+        return targetAttempt;
+      }
 
       const correctAnswers = quiz.questions.reduce((count, question) => {
         return count + (payload.answers[question.id] === question.correctOption ? 1 : 0);
@@ -529,15 +640,34 @@ export const lmsClient = {
         markModuleItemComplete(quiz.courseId, id);
       }
 
-      return {
+      const submittedAt = new Date().toISOString();
+      const updatedAttempt = {
+        ...targetAttempt,
+        status: "submitted",
+        answers: payload.answers,
+        submittedAt,
+        elapsedSeconds: Math.max(
+          0,
+          Math.floor((Date.now() - new Date(targetAttempt.startedAt).getTime()) / 1000)
+        ),
+        remainingSeconds: 0,
         score,
-        isPassed
-      };
+        isPassed,
+        isExpired: false,
+        submissionTiming: "on_time",
+        serverNow: submittedAt
+      } satisfies QuizAttempt;
+
+      quizAttemptState[id] = attempts.map((attempt) =>
+        attempt.id === targetAttempt.id ? updatedAttempt : attempt
+      );
+
+      return updatedAttempt;
     }
 
     await ensureCsrfCookie();
     const response = await http.post(`/api/quizzes/${id}/submit`, payload);
-    return unwrapApiData<{ score: number; isPassed: boolean }>(response.data);
+    return unwrapApiData<QuizAttempt>(response.data);
   },
 
   async getTaskById(id: string) {
@@ -554,20 +684,45 @@ export const lmsClient = {
     };
   },
 
-  async submitTask(id: string, submissionLink: string) {
+  async submitTask(
+    id: string,
+    payload: {
+      submissionLink?: string;
+      submissionFile?: {
+        fileName: string;
+        mimeType: string;
+        base64Data: string;
+      };
+    }
+  ) {
     if (useMockApi) {
       await sleep();
       const task = buildTaskDetail(id);
+      const submitMethod = task.submitMethod ?? "link";
+      const trimmedLink = payload.submissionLink?.trim();
 
-      if (!submissionLink.trim()) {
+      if (submitMethod === "link" && !trimmedLink) {
         throw new Error("Link submission wajib diisi");
+      }
+      if (submitMethod === "file" && !payload.submissionFile) {
+        throw new Error("File submission wajib diunggah");
+      }
+      if (submitMethod === "file_link" && (!trimmedLink || !payload.submissionFile)) {
+        throw new Error("Link dan file submission wajib diisi");
       }
       if (task.currentSubmission) {
         throw new Error("Tugas sudah dikumpulkan");
       }
 
       taskSubmissionState[id] = {
-        link: submissionLink,
+        link: trimmedLink,
+        file: payload.submissionFile
+          ? {
+              fileName: payload.submissionFile.fileName,
+              mimeType: payload.submissionFile.mimeType,
+              url: `data:${payload.submissionFile.mimeType};base64,${payload.submissionFile.base64Data}`,
+            }
+          : undefined,
         status: "submitted",
         submittedAt: new Date().toISOString()
       } satisfies CurrentSubmission;
@@ -576,9 +731,7 @@ export const lmsClient = {
     }
 
     await ensureCsrfCookie();
-    const response = await http.post(`/api/tasks/${id}/submit`, {
-      submissionLink
-    });
+    const response = await http.post(`/api/tasks/${id}/submit`, payload);
     return unwrapApiData<TaskDetail>(response.data);
   },
 

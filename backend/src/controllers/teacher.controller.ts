@@ -65,14 +65,18 @@ export async function getTaskSubmissionDetailController(
 }
 
 const gradeTaskSchema = z.object({
+  score: z.number().int().min(0).max(100).optional(),
   rubricScores: z.array(
     z.object({
       rubricId: z.string(),
       score: z.number().int().min(0),
     })
-  ),
+  ).optional(),
   teacherFeedback: z.string().optional(),
   action: z.enum(["draft", "revision", "publish"]),
+}).refine((payload) => payload.score !== undefined || (payload.rubricScores?.length ?? 0) > 0, {
+  message: "Nilai wajib diisi",
+  path: ["score"],
 });
 
 export async function gradeTaskSubmissionController(
@@ -92,9 +96,10 @@ export async function listQuizSubmissionsController(
   response: Response
 ) {
   const { id } = idParamSchema.parse(request.params);
-  const { status } = request.query as { status?: string };
+  const { status, scope } = request.query as { status?: string; scope?: string };
   const submissions = await listQuizSubmissions(id, request.authUser!.id, {
     status,
+    scope,
   });
   response.json(submissions);
 }

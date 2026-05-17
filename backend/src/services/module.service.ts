@@ -13,7 +13,10 @@ async function getOfferingGraph(offeringId: string, userId: string) {
   const offering = await prisma.moduleStudentClass.findFirst({
     where: {
       id: toBigIntId(offeringId, "Modul ID"),
-      studentClassId: student.kelas.id
+      studentClassId: student.kelas.id,
+      module: {
+        isAktif: true
+      }
     },
     include: {
       module: {
@@ -28,6 +31,9 @@ async function getOfferingGraph(offeringId: string, userId: string) {
         }
       },
       lessons: {
+        where: {
+          status: "published"
+        },
         orderBy: {
           posisi: "asc"
         },
@@ -40,6 +46,12 @@ async function getOfferingGraph(offeringId: string, userId: string) {
         }
       },
       quizzes: {
+        where: {
+          isAktif: true,
+          sectionId: {
+            not: null
+          }
+        },
         orderBy: {
           posisi: "asc"
         },
@@ -59,6 +71,10 @@ async function getOfferingGraph(offeringId: string, userId: string) {
         }
       },
       tasks: {
+        where: {
+          isAktif: true,
+          status: "published"
+        },
         orderBy: {
           id: "asc"
         },
@@ -95,6 +111,7 @@ function mapOfferingToModuleSummary(offering: Awaited<ReturnType<typeof getOffer
       type: "lesson" as const,
       sectionId: lesson.sectionId,
       position: lesson.posisi,
+      createdAt: lesson.createdAt,
       href: `/lessons/${lesson.id}`,
       availableAt: lesson.tersediaPada,
       isCompleted: lesson.lessonUsers.some((progress) => progress.isCompleted)
@@ -105,6 +122,7 @@ function mapOfferingToModuleSummary(offering: Awaited<ReturnType<typeof getOffer
       type: "quiz" as const,
       sectionId: quiz.sectionId,
       position: quiz.posisi,
+      createdAt: quiz.createdAt,
       href: `/quizzes/${quiz.id}`,
       availableAt: quiz.availableAt,
       isCompleted: quiz.attempts.length > 0
@@ -113,8 +131,9 @@ function mapOfferingToModuleSummary(offering: Awaited<ReturnType<typeof getOffer
       id: task.id,
       title: task.judul,
       type: "task" as const,
-      sectionId: task.lessonId,
+      sectionId: task.sectionId,
       position: Number(task.id),
+      createdAt: task.createdAt,
       href: `/tasks/${task.id}`,
       availableAt: task.availableAt,
       isCompleted: task.submissions.length > 0
@@ -159,6 +178,9 @@ export async function listStudentModules(userId: string) {
       teacher: true,
       sections: true,
       lessons: {
+        where: {
+          status: "published"
+        },
         include: {
           lessonUsers: {
             where: {
@@ -168,6 +190,12 @@ export async function listStudentModules(userId: string) {
         }
       },
       quizzes: {
+        where: {
+          isAktif: true,
+          sectionId: {
+            not: null
+          }
+        },
         include: {
           attempts: {
             where: {
@@ -184,6 +212,10 @@ export async function listStudentModules(userId: string) {
         }
       },
       tasks: {
+        where: {
+          isAktif: true,
+          status: "published"
+        },
         include: {
           submissions: {
             where: {
@@ -215,6 +247,7 @@ export async function getStudentModuleDetail(offeringId: string, userId: string)
       type: "lesson" as const,
       sectionId: lesson.sectionId,
       position: lesson.posisi,
+      createdAt: lesson.createdAt,
       href: `/lessons/${lesson.id}`,
       availableAt: lesson.tersediaPada,
       isCompleted: lesson.lessonUsers.some((progress) => progress.isCompleted)
@@ -225,6 +258,7 @@ export async function getStudentModuleDetail(offeringId: string, userId: string)
       type: "quiz" as const,
       sectionId: quiz.sectionId,
       position: quiz.posisi,
+      createdAt: quiz.createdAt,
       href: `/quizzes/${quiz.id}`,
       availableAt: quiz.availableAt,
       isCompleted: quiz.attempts.length > 0
@@ -233,8 +267,9 @@ export async function getStudentModuleDetail(offeringId: string, userId: string)
       id: task.id,
       title: task.judul,
       type: "task" as const,
-      sectionId: task.lessonId,
+      sectionId: task.sectionId,
       position: Number(task.id),
+      createdAt: task.createdAt,
       href: `/tasks/${task.id}`,
       availableAt: task.availableAt,
       isCompleted: task.submissions.length > 0

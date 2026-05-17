@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { BookOpen, Users } from "lucide-react";
 import Link from "next/link";
 
-import { Badge, MiniSelect, PageHeader, Surface } from "@/components/workspace/ui";
 import { teacherApi, type DashboardData } from "@/lib/api-client";
 
 const KPI_ICONS = [
@@ -14,6 +13,44 @@ const KPI_ICONS = [
   { bg: "bg-[#efeaff]", color: "text-[#6d5dfc]" },
   { bg: "bg-[#ffe5ec]", color: "text-[#f57182]" },
 ];
+
+function getStatusBadgeClass(status: string) {
+  const toneMap: Record<string, string> = {
+    draft: "bg-[#fff1d8] text-[#a86409]",
+    published: "bg-[#e7f7ee] text-[#1f7a47]",
+    scheduled: "bg-[#e9f3ff] text-[#2f72ba]",
+    archived: "bg-[#eef0f5] text-[#58617d]",
+    submitted: "bg-[#e9f3ff] text-[#2f72ba]",
+    returned: "bg-[#fff1d8] text-[#a86409]",
+    graded: "bg-[#e7f7ee] text-[#1f7a47]",
+    retake: "bg-[#fff1d8] text-[#a86409]",
+    revision: "bg-[#fff1d8] text-[#a86409]",
+    approved: "bg-[#e7f7ee] text-[#1f7a47]",
+    late: "bg-[#ffe9ef] text-[#b73a58]",
+  };
+
+  return toneMap[status] ?? "bg-[#eef0f5] text-[#58617d]";
+}
+
+function DashboardSection({
+  title,
+  action,
+  children,
+}: {
+  title: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="panel-surface flex min-h-0 flex-col overflow-hidden rounded-[20px] bg-white px-4 py-4">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h2 className="text-[19px] font-semibold tracking-[-0.02em] text-[#1f2747]">{title}</h2>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -30,54 +67,58 @@ export default function DashboardPage() {
 
   const kpiItems = data
     ? [
-        { label: "Modul Aktif", value: String(data.kpi.activeModules), delta: null },
-        { label: "Kelas Aktif", value: String(data.kpi.activeClasses), delta: null },
-        { label: "Draft Item", value: String(data.kpi.draftItems), delta: null },
-        { label: "Need Review", value: String(data.kpi.needReview), delta: null },
-        { label: "Menunggu Revisi", value: String(data.kpi.pendingRevision), delta: null },
+        { label: "Modul Aktif", value: String(data.kpi.activeModules) },
+        { label: "Kelas Aktif", value: String(data.kpi.activeClasses) },
+        { label: "Draft Item", value: String(data.kpi.draftItems) },
+        { label: "Need Review", value: String(data.kpi.needReview) },
+        { label: "Menunggu Revisi", value: String(data.kpi.pendingRevision) },
       ]
     : [];
 
-  const departments = data
-    ? Array.from(new Set(data.modules.map((m) => m.department).filter(Boolean)))
-    : [];
-
   return (
-    <div className="grid min-h-full grid-rows-[auto_auto_auto_minmax(0,1fr)] gap-2">
-      <PageHeader
-        title={data ? `Selamat datang, ${data.teacher.name}` : "Dashboard Guru"}
-        description="Ringkasan operasional hari ini: authoring, publish, review, dan monitoring siswa."
-      />
-
-      <Surface title="Filter Cepat">
-        <div className="grid gap-2 md:grid-cols-4">
-          <MiniSelect label="Mapel" options={departments} placeholder="Semua mapel" />
-          <MiniSelect label="Rentang Waktu" options={["Hari ini", "Minggu ini", "Bulan ini"]} placeholder="Semua waktu" />
+    <div className="grid min-h-full grid-rows-[auto_auto_minmax(0,1fr)] gap-3">
+      <header className="panel-surface rounded-[20px] px-5 py-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="max-w-3xl">
+            <h1 className="text-[34px] font-bold leading-[1.02] tracking-[-0.04em] text-[#18203f]">
+              {data ? `Selamat datang, ${data.teacher.name}` : "Dashboard Guru"}
+            </h1>
+            <p className="mt-2 text-[14px] leading-6 text-[#4f5878]">
+              Ringkasan operasional hari ini: authoring, publish, review, dan monitoring siswa.
+            </p>
+          </div>
         </div>
-      </Surface>
+      </header>
 
       {loading ? (
-        <div className="col-span-5 py-8 text-center text-[11px] text-[#7e84a8]">
+        <div className="col-span-5 rounded-[18px] border border-[rgba(113,94,215,0.10)] bg-white px-4 py-10 text-center text-[14px] font-medium text-[#5c6485]">
           Memuat data dashboard...
         </div>
       ) : error ? (
-        <div className="rounded-[10px] border border-[#f5c4cd] bg-[#fff2f5] px-3 py-2 text-[10px] text-[#ba4b64]">
+        <div className="rounded-[16px] border border-[#f1c2cd] bg-[#fff4f7] px-4 py-3 text-[13px] font-medium text-[#b24762]">
           {error}
         </div>
       ) : (
         <>
-          <section className="grid grid-cols-5 gap-2">
+          <section className="grid grid-cols-5 gap-3">
             {kpiItems.map((item, idx) => {
               const { bg, color } = KPI_ICONS[idx] ?? KPI_ICONS[0]!;
               return (
-                <article key={item.label} className="panel-surface rounded-[14px] bg-white px-3 py-2.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-[10px] font-medium text-[#555b7f]">{item.label}</p>
-                    <span className={`grid h-7 w-7 place-items-center rounded-[10px] ${bg} ${color}`}>
-                      {idx < 2 ? <Users className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />}
+                <article
+                  key={item.label}
+                  className="panel-surface rounded-[18px] bg-white px-4 py-3.5"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#56607f]">
+                      {item.label}
+                    </p>
+                    <span
+                      className={`grid h-10 w-10 place-items-center rounded-[14px] ${bg} ${color}`}
+                    >
+                      {idx < 2 ? <Users className="h-5 w-5" /> : <BookOpen className="h-5 w-5" />}
                     </span>
                   </div>
-                  <p className="mt-1.5 text-[20px] font-semibold tracking-[-0.05em] text-[#1f2548]">
+                  <p className="mt-3 text-[28px] font-bold tracking-[-0.06em] text-[#161d38]">
                     {item.value}
                   </p>
                 </article>
@@ -85,46 +126,64 @@ export default function DashboardPage() {
             })}
           </section>
 
-          <section className="grid min-h-0 gap-2">
-            <Surface
+          <section className="grid min-h-0 gap-3">
+            <DashboardSection
               title="Mata Pelajaran Aktif"
               action={
-                <Link href="/modules" className="text-[10px] font-semibold text-[#8684c7]">
+                <Link
+                  href="/modules"
+                  className="text-[12px] font-semibold text-[#6758d6] transition-colors hover:text-[#5646cc]"
+                >
                   Buka daftar modul
                 </Link>
               }
             >
-              <div className="min-h-0 overflow-auto rounded-[12px] border border-[rgba(113,94,215,0.1)]">
-                <table className="w-full text-left text-[10px] text-[#7e84a8]">
-                  <thead className="bg-[#faf8ff] text-[8.5px] uppercase tracking-[0.16em] text-[#60658e]">
+              <div className="min-h-0 overflow-auto rounded-[14px] border border-[rgba(113,94,215,0.10)]">
+                <table className="w-full text-left text-[13px] text-[#4d5677]">
+                  <thead className="bg-[#faf8ff] text-[12px] uppercase tracking-[0.14em] text-[#596182]">
                     <tr>
-                      <th className="px-3 py-2">Modul</th>
-                      <th className="px-2 py-2">Bab</th>
-                      <th className="px-2 py-2">L/Q/T</th>
-                      <th className="px-2 py-2">Status</th>
-                      <th className="px-2 py-2">Progress</th>
+                      <th className="px-4 py-3 font-semibold">Modul</th>
+                      <th className="px-3 py-3 font-semibold">Bab</th>
+                      <th className="px-3 py-3 font-semibold">L/Q/T</th>
+                      <th className="px-3 py-3 font-semibold">Status</th>
+                      <th className="px-3 py-3 font-semibold">Progress</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[rgba(113,94,215,0.1)]">
+                  <tbody className="divide-y divide-[rgba(113,94,215,0.10)]">
                     {data?.modules.map((row) => (
-                      <tr key={row.id}>
-                        <td className="px-3 py-2.5">
-                          <p className="font-semibold text-[#4e5378]">{row.title}</p>
-                          <p>{row.department} — {row.gradeLevel}</p>
+                      <tr key={row.id} className="align-top">
+                        <td className="px-4 py-3.5">
+                          <p className="text-[14px] font-semibold text-[#202844]">{row.title}</p>
+                          <p className="mt-1 text-[12px] text-[#58617f]">
+                            {row.department} • {row.gradeLevel}
+                          </p>
                         </td>
-                        <td className="px-2 py-2.5">{row.chapters}</td>
-                        <td className="px-2 py-2.5">
+                        <td className="px-3 py-3.5 text-[14px] font-semibold text-[#28304d]">
+                          {row.chapters}
+                        </td>
+                        <td className="px-3 py-3.5 text-[14px] font-semibold text-[#28304d]">
                           {row.lessons}/{row.quizzes}/{row.tasks}
                         </td>
-                        <td className="px-2 py-2.5">
-                          <Badge status={row.status} />
+                        <td className="px-3 py-3.5">
+                          <span
+                            className={`inline-flex rounded-full px-3 py-1.5 text-[13px] font-semibold ${getStatusBadgeClass(
+                              row.status
+                            )}`}
+                          >
+                            {row.status}
+                          </span>
                         </td>
-                        <td className="px-2 py-2.5">{row.completionRate}%</td>
+                        <td className="px-3 py-3.5 text-[14px] font-semibold text-[#28304d]">
+                          {row.completionRate}%
+                        </td>
                       </tr>
                     ))}
                     {data?.modules.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="px-3 py-6 text-center text-[10px] text-[#7e84a8]">
+                        <td
+                          colSpan={5}
+                          className="px-4 py-8 text-center text-[13px] font-medium text-[#66708f]"
+                        >
                           Belum ada mata pelajaran yang di-assign.
                         </td>
                       </tr>
@@ -132,45 +191,62 @@ export default function DashboardPage() {
                   </tbody>
                 </table>
               </div>
-            </Surface>
+            </DashboardSection>
 
             {(data?.recentSubmissions.length ?? 0) > 0 && (
-              <Surface
+              <DashboardSection
                 title="Submission Terbaru"
                 action={
-                  <Link href="/review-tugas" className="text-[10px] font-semibold text-[#8684c7]">
+                  <Link
+                    href="/review-tugas"
+                    className="text-[12px] font-semibold text-[#6758d6] transition-colors hover:text-[#5646cc]"
+                  >
                     Review semua
                   </Link>
                 }
               >
-                <div className="min-h-0 overflow-auto rounded-[12px] border border-[rgba(113,94,215,0.1)]">
-                  <table className="w-full text-left text-[10px] text-[#7e84a8]">
-                    <thead className="bg-[#faf8ff] text-[8.5px] uppercase tracking-[0.16em] text-[#60658e]">
+                <div className="min-h-0 overflow-auto rounded-[14px] border border-[rgba(113,94,215,0.10)]">
+                  <table className="w-full text-left text-[13px] text-[#4d5677]">
+                    <thead className="bg-[#faf8ff] text-[12px] uppercase tracking-[0.14em] text-[#596182]">
                       <tr>
-                        <th className="px-3 py-2">Siswa</th>
-                        <th className="px-2 py-2">Mapel</th>
-                        <th className="px-2 py-2">Tugas</th>
-                        <th className="px-2 py-2">Status</th>
-                        <th className="px-2 py-2">Skor</th>
+                        <th className="px-4 py-3 font-semibold">Siswa</th>
+                        <th className="px-3 py-3 font-semibold">Mapel</th>
+                        <th className="px-3 py-3 font-semibold">Tugas</th>
+                        <th className="px-3 py-3 font-semibold">Status</th>
+                        <th className="px-3 py-3 font-semibold">Skor</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[rgba(113,94,215,0.1)]">
+                    <tbody className="divide-y divide-[rgba(113,94,215,0.10)]">
                       {data?.recentSubmissions.map((sub) => (
-                        <tr key={sub.id}>
-                          <td className="px-3 py-2.5">
-                            <p className="font-semibold text-[#4e5378]">{sub.studentName}</p>
-                            <p>{sub.className}</p>
+                        <tr key={sub.id} className="align-top">
+                          <td className="px-4 py-3.5">
+                            <p className="text-[14px] font-semibold text-[#202844]">{sub.studentName}</p>
+                            <p className="mt-1 text-[12px] font-medium text-[#58617f]">{sub.className}</p>
                           </td>
-                          <td className="px-2 py-2.5">{sub.courseTitle}</td>
-                          <td className="px-2 py-2.5">{sub.assignmentTitle}</td>
-                          <td className="px-2 py-2.5"><Badge status={sub.status} /></td>
-                          <td className="px-2 py-2.5">{sub.score ?? "—"}</td>
+                          <td className="px-3 py-3.5 text-[13px] font-medium text-[#2f3755]">
+                            {sub.courseTitle}
+                          </td>
+                          <td className="px-3 py-3.5 text-[13px] font-medium text-[#2f3755]">
+                            {sub.assignmentTitle}
+                          </td>
+                          <td className="px-3 py-3.5">
+                            <span
+                              className={`inline-flex rounded-full px-3 py-1.5 text-[13px] font-semibold ${getStatusBadgeClass(
+                                sub.status
+                              )}`}
+                            >
+                              {sub.status}
+                            </span>
+                          </td>
+                          <td className="px-3 py-3.5 text-[15px] font-bold text-[#1f2747]">
+                            {sub.score ?? "—"}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-              </Surface>
+              </DashboardSection>
             )}
           </section>
         </>

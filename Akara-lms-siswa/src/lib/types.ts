@@ -1,9 +1,11 @@
 import type {
   ChangePasswordPayload,
   LoginPayload,
+  QuizAttemptSavePayload,
   ProfileUpdatePayload,
   QuizSubmitPayload,
   StudentProfileView,
+  TaskSubmitPayload,
   TaskSubmissionView,
   TrackDurationPayload,
   DashboardMetricView,
@@ -53,4 +55,10 @@ export type ProfileDetail = StudentProfileView;
 export type ProfilePayload = ProfileUpdatePayload;
 export type PasswordPayload = ChangePasswordPayload;
 
-export type { LoginPayload, QuizSubmitPayload, TrackDurationPayload };
+export type {
+  LoginPayload,
+  QuizAttemptSavePayload,
+  QuizSubmitPayload,
+  TaskSubmitPayload,
+  TrackDurationPayload
+};

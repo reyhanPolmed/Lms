@@ -23,7 +23,7 @@ export default function SettingsPage() {
             <Link
               key={item.href}
               href={item.href}
-              className="rounded-[12px] border border-[rgba(113,94,215,0.12)] bg-white px-3 py-3 text-[11px] font-semibold text-[#505987] hover:bg-[#f9f7ff]"
+              className="rounded-[12px] border border-[rgba(113,94,215,0.12)] bg-white px-3 py-3 text-[13px] font-semibold text-[#505987] hover:bg-[#f9f7ff]"
             >
               {item.label}
             </Link>

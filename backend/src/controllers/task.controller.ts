@@ -13,10 +13,6 @@ export async function getTaskController(request: Request, response: Response) {
 export async function submitTaskController(request: Request, response: Response) {
   const params = idParamSchema.parse(request.params);
   const payload = taskSubmitSchema.parse(request.body);
-  const task = await submitTaskSubmission(
-    params.id,
-    request.authUser!.id,
-    payload.submissionLink
-  );
+  const task = await submitTaskSubmission(params.id, request.authUser!.id, payload);
   response.json(task);
 }

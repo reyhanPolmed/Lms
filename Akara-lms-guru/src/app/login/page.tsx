@@ -107,10 +107,10 @@ export default function LoginPage() {
               <BookOpen className="h-4 w-4 text-slate-800" />
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-600">
                 Akara LMS Guru
               </p>
-              <h1 className="text-[15px] font-semibold tracking-[-0.02em] text-slate-900">
+              <h1 className="text-[17px] font-bold tracking-[-0.02em] text-slate-900">
                 Portal Pengajar
               </h1>
             </div>
@@ -120,17 +120,17 @@ export default function LoginPage() {
             <p className="text-[clamp(1.2rem,2.6vw,1.7rem)] leading-[1.05] font-semibold tracking-[-0.04em] text-slate-900">
               Kelola kelas dan materi dari satu ruang kerja.
             </p>
-            <p className="max-w-[420px] text-[11px] leading-4.5 text-slate-600 sm:text-[12px]">
+            <p className="max-w-[420px] text-[12px] leading-5 text-slate-700 sm:text-[13px]">
               Masuk untuk membuka modul, tugas, kuis, dan pemantauan progres siswa.
             </p>
           </div>
 
           <section className="mt-3.5 flex w-full max-w-[500px] min-h-0 shrink-0 flex-col overflow-hidden rounded-[22px] border border-white/65 bg-white/72 p-3 shadow-[0_24px_80px_rgba(15,23,42,0.16)] backdrop-blur-xl sm:p-3.5">
             <div className="mb-2.5 shrink-0">
-              <h2 className="text-[15px] font-semibold tracking-[-0.03em] text-slate-900">
+              <h2 className="text-[17px] font-bold tracking-[-0.03em] text-slate-900">
                 Masuk ke akun guru
               </h2>
-              <p className="mt-1 text-[11px] text-slate-500">
+              <p className="mt-1 text-[12px] text-slate-600">
                 Gunakan email institusi yang sudah terdaftar.
               </p>
             </div>
@@ -140,8 +140,8 @@ export default function LoginPage() {
                 <div
                   className={
                     feedback.tone === "error"
-                      ? "flex items-start gap-2 rounded-[18px] border border-red-200 bg-red-50 px-2.5 py-2 text-[11px] leading-4.5 text-red-700"
-                      : "flex items-start gap-2 rounded-[18px] border border-emerald-200 bg-emerald-50 px-2.5 py-2 text-[11px] leading-4.5 text-emerald-700"
+                      ? "flex items-start gap-2 rounded-[18px] border border-red-200 bg-red-50 px-2.5 py-2 text-[12px] leading-5 text-red-700"
+                      : "flex items-start gap-2 rounded-[18px] border border-emerald-200 bg-emerald-50 px-2.5 py-2 text-[12px] leading-5 text-emerald-700"
                   }
                 >
                   <feedback.icon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
@@ -152,7 +152,7 @@ export default function LoginPage() {
 
             <form onSubmit={handleLogin} className="shrink-0 space-y-2.5">
               <label className="block">
-                <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">
                   Email
                 </span>
                 <span className="relative block">
@@ -169,7 +169,7 @@ export default function LoginPage() {
               </label>
 
               <label className="block">
-                <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">
                   Kata sandi
                 </span>
                 <span className="relative block">
@@ -201,7 +201,7 @@ export default function LoginPage() {
               </button>
             </form>
 
-            <div className="mt-2.5 flex shrink-0 items-center gap-2 text-[10px] text-slate-500">
+            <div className="mt-2.5 flex shrink-0 items-center gap-2 text-[11px] text-slate-600">
               <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-900/5 text-slate-700">
                 <CheckCircle2 className="h-3 w-3" />
               </span>

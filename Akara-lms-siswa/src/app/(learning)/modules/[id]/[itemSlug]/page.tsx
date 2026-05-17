@@ -14,6 +14,7 @@ import { useModuleDetailQuery } from "@/hooks/use-lms-data";
 import {
   useLessonCompleteMutation,
   useLessonDetailQuery,
+  useQuizAutosaveMutation,
   useQuizDetailQuery,
   useQuizStartMutation,
   useQuizSubmitMutation,
@@ -43,6 +44,9 @@ export default function ModuleItemDetailPage({
     routeEntry?.type === "quiz"
   );
   const startMutation = useQuizStartMutation(routeEntry?.type === "quiz" ? routeEntry.id : "");
+  const autosaveMutation = useQuizAutosaveMutation(
+    routeEntry?.type === "quiz" ? routeEntry.id : ""
+  );
   const submitQuizMutation = useQuizSubmitMutation(
     routeEntry?.type === "quiz" ? routeEntry.id : ""
   );
@@ -151,9 +155,11 @@ export default function ModuleItemDetailPage({
           sidebar={<SidebarOutline activeItemKey={activeItemKey} items={quiz.sidebar} />}
         >
           <QuizRunner
+            isAutosaving={autosaveMutation.isPending}
             isStarting={startMutation.isPending}
             isSubmitting={submitQuizMutation.isPending}
             nextItem={nextItem}
+            onAutosave={(payload) => autosaveMutation.mutateAsync(payload)}
             onStart={() => startMutation.mutateAsync()}
             onSubmit={(payload) => submitQuizMutation.mutateAsync(payload)}
             previousItem={previousItem}
@@ -195,7 +201,7 @@ export default function ModuleItemDetailPage({
         <TaskSubmissionForm
           isSubmitting={submitTaskMutation.isPending}
           nextItem={nextItem}
-          onSubmit={(submissionLink) => submitTaskMutation.mutateAsync({ submissionLink })}
+          onSubmit={(payload) => submitTaskMutation.mutateAsync(payload)}
           previousItem={previousItem}
           task={task}
         />

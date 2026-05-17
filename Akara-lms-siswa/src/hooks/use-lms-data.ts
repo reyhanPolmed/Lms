@@ -6,7 +6,9 @@ import { lmsClient } from "@/lib/api/client";
 import {
   PasswordPayload,
   ProfilePayload,
+  QuizAttemptSavePayload,
   QuizSubmitPayload,
+  TaskSubmitPayload,
   TrackDurationPayload
 } from "@/lib/types";
 
@@ -127,6 +129,12 @@ export function useQuizStartMutation(id: string) {
   });
 }
 
+export function useQuizAutosaveMutation(id: string) {
+  return useMutation({
+    mutationFn: (payload: QuizAttemptSavePayload) => lmsClient.saveQuizAttempt(id, payload)
+  });
+}
+
 export function useQuizSubmitMutation(id: string) {
   const queryClient = useQueryClient();
 
@@ -144,8 +152,7 @@ export function useTaskSubmitMutation(id: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ submissionLink }: { submissionLink: string }) =>
-      lmsClient.submitTask(id, submissionLink),
+    mutationFn: (payload: TaskSubmitPayload) => lmsClient.submitTask(id, payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.taskDetail(id) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });

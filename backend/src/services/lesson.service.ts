@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma.js";
+import { env } from "../config/env.js";
 import {
   buildSequentialSidebar,
   ensureStringArray,
@@ -11,14 +12,26 @@ function mapContentType(type: string) {
   return type.toLowerCase();
 }
 
+function buildPublicContentUrl(value: string | null | undefined) {
+  if (!value) {
+    return "";
+  }
+
+  return new URL(value, env.BETTER_AUTH_URL).toString();
+}
+
 async function getLessonGraph(lessonId: string, userId: string) {
   const student = await requireStudentContext(userId);
   const normalizedLessonId = toBigIntId(lessonId, "Lesson ID");
   const lesson = await prisma.lesson.findFirst({
     where: {
       id: normalizedLessonId,
+      status: "published",
       moduleStudentClass: {
-        studentClassId: student.kelas.id
+        studentClassId: student.kelas.id,
+        module: {
+          isAktif: true
+        }
       }
     },
     include: {
@@ -40,6 +53,9 @@ async function getLessonGraph(lessonId: string, userId: string) {
             }
           },
           lessons: {
+            where: {
+              status: "published"
+            },
             orderBy: {
               posisi: "asc"
             },
@@ -52,6 +68,12 @@ async function getLessonGraph(lessonId: string, userId: string) {
             }
           },
           quizzes: {
+            where: {
+              isAktif: true,
+              sectionId: {
+                not: null
+              }
+            },
             orderBy: {
               posisi: "asc"
             },
@@ -68,6 +90,10 @@ async function getLessonGraph(lessonId: string, userId: string) {
             }
           },
           tasks: {
+            where: {
+              isAktif: true,
+              status: "published"
+            },
             orderBy: {
               id: "asc"
             },
@@ -108,6 +134,7 @@ export async function getStudentLessonDetail(lessonId: string, userId: string) {
       type: "lesson" as const,
       sectionId: item.sectionId,
       position: item.posisi,
+      createdAt: item.createdAt,
       href: `/lessons/${item.id}`,
       availableAt: item.tersediaPada,
       isCompleted: item.lessonUsers.some((progress) => progress.isCompleted)
@@ -118,6 +145,7 @@ export async function getStudentLessonDetail(lessonId: string, userId: string) {
       type: "quiz" as const,
       sectionId: item.sectionId,
       position: item.posisi,
+      createdAt: item.createdAt,
       href: `/quizzes/${item.id}`,
       availableAt: item.availableAt,
       isCompleted: item.attempts.length > 0
@@ -126,8 +154,9 @@ export async function getStudentLessonDetail(lessonId: string, userId: string) {
       id: item.id,
       title: item.judul,
       type: "task" as const,
-      sectionId: item.lessonId,
+      sectionId: item.sectionId,
       position: Number(item.id),
+      createdAt: item.createdAt,
       href: `/tasks/${item.id}`,
       availableAt: item.availableAt,
       isCompleted: item.submissions.length > 0
@@ -142,7 +171,7 @@ export async function getStudentLessonDetail(lessonId: string, userId: string) {
     courseId: String(lesson.moduleStudentClass.id),
     title: lesson.judul,
     contentType: mapContentType(lesson.tipeKonten),
-    contentUrl: lesson.urlKonten ?? "",
+    contentUrl: buildPublicContentUrl(lesson.urlKonten),
     excerpt: lesson.konten.slice(0, 160),
     content: lesson.konten,
     durationTargetSeconds,

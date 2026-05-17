@@ -2,8 +2,11 @@ import type { Request, Response } from "express";
 import { z } from "zod";
 import {
   createQuiz,
+  createQuizBank,
   deleteQuiz,
   getQuizById,
+  instantiateQuizFromBank,
+  listTeacherQuizBanks,
   listTeacherQuizzes,
   updateQuiz,
   updateQuizStatus,
@@ -34,6 +37,24 @@ const createQuizSchema = z.object({
   questions: z.array(questionSchema).min(1),
 });
 
+const createQuizBankSchema = z.object({
+  moduleId: z.string(),
+  judul: z.string().min(1),
+  skorLulus: z.number().int().min(0).max(100).optional(),
+  durasiMenit: z.number().int().positive().optional(),
+  isAktif: z.boolean().optional(),
+  questions: z.array(questionSchema).min(1),
+});
+
+const instantiateQuizFromBankSchema = z.object({
+  sourceQuizId: z.string(),
+  moduleStudentClassId: z.string(),
+  sectionId: z.string().optional(),
+  availableAt: z.string().optional(),
+  deadline: z.string().optional(),
+  isAktif: z.boolean().optional(),
+});
+
 const updateQuizSchema = createQuizSchema
   .omit({ moduleStudentClassId: true })
   .extend({ questions: z.array(questionSchema).min(1).optional() })
@@ -47,8 +68,20 @@ export async function listTeacherQuizzesController(
   request: Request,
   response: Response
 ) {
-  const { offeringId } = request.query as { offeringId?: string };
-  const quizzes = await listTeacherQuizzes(request.authUser!.id, offeringId);
+  const { offeringId, scope } = request.query as {
+    offeringId?: string;
+    scope?: "assigned" | "all";
+  };
+  const quizzes = await listTeacherQuizzes(request.authUser!.id, { offeringId, scope });
+  response.json(quizzes);
+}
+
+export async function listTeacherQuizBanksController(
+  request: Request,
+  response: Response
+) {
+  const { moduleId } = request.query as { moduleId?: string };
+  const quizzes = await listTeacherQuizBanks(request.authUser!.id, moduleId);
   response.json(quizzes);
 }
 
@@ -58,6 +91,24 @@ export async function createQuizController(
 ) {
   const payload = createQuizSchema.parse(request.body);
   const quiz = await createQuiz(request.authUser!.id, payload);
+  response.status(201).json(quiz);
+}
+
+export async function createQuizBankController(
+  request: Request,
+  response: Response
+) {
+  const payload = createQuizBankSchema.parse(request.body);
+  const quiz = await createQuizBank(request.authUser!.id, payload);
+  response.status(201).json(quiz);
+}
+
+export async function instantiateQuizFromBankController(
+  request: Request,
+  response: Response
+) {
+  const payload = instantiateQuizFromBankSchema.parse(request.body);
+  const quiz = await instantiateQuizFromBank(request.authUser!.id, payload);
   response.status(201).json(quiz);
 }
 

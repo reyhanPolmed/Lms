@@ -1,7 +1,12 @@
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { randomUUID } from "node:crypto";
+
 import { prisma } from "../lib/prisma.js";
 import { requireTeacherContext, requireTeacherOwnsOffering } from "./teacher-context.service.js";
 import { AppError } from "../utils/app-error.js";
 import { toBigIntId } from "./lms-context.service.js";
+import { env } from "../config/env.js";
 
 export type RubricPayload = {
   name: string;
@@ -9,9 +14,16 @@ export type RubricPayload = {
   urutan?: number;
 };
 
+export type TaskAttachmentPayload = {
+  fileName: string;
+  mimeType: string;
+  base64Data: string;
+};
+
 export type CreateTaskPayload = {
   moduleStudentClassId: string;
-  lessonId: string;
+  lessonId?: string;
+  sectionId?: string;
   judul: string;
   deskripsi?: string;
   deadline: string;
@@ -19,12 +31,124 @@ export type CreateTaskPayload = {
   allowRevision?: boolean;
   isAktif?: boolean;
   status?: "draft" | "published";
+  submitMethod?: "link" | "file" | "file_link";
+  attachment?: TaskAttachmentPayload;
   rubrics?: RubricPayload[];
 };
 
 export type UpdateTaskPayload = Partial<
-  Omit<CreateTaskPayload, "moduleStudentClassId" | "lessonId">
+  Omit<CreateTaskPayload, "moduleStudentClassId">
 >;
+
+async function resolveTaskLessonId(params: {
+  offeringId: bigint;
+  lessonId?: string;
+}) {
+  if (!params.lessonId) {
+    throw new AppError("Materi acuan tugas belum dipilih", 422);
+  }
+
+  const lessonId = toBigIntId(params.lessonId, "Lesson ID");
+  const lesson = await prisma.lesson.findFirst({
+    where: {
+      id: lessonId,
+      moduleStudentClassId: params.offeringId,
+    },
+    select: {
+      id: true,
+      sectionId: true,
+    },
+  });
+
+  if (!lesson) {
+    throw new AppError("Materi acuan tugas tidak ditemukan pada mata pelajaran ini", 404);
+  }
+
+  return lesson;
+}
+
+async function resolveTaskPlacement(params: {
+  offeringId: bigint;
+  lessonId?: string;
+  sectionId?: string;
+}) {
+  if (params.lessonId) {
+    const lesson = await resolveTaskLessonId(params);
+
+    if (params.sectionId) {
+      const sectionId = toBigIntId(params.sectionId, "Section ID");
+      if (lesson.sectionId !== sectionId) {
+        throw new AppError("Materi acuan tidak berada pada bab yang dipilih", 422);
+      }
+    }
+
+    return {
+      lessonId: lesson.id,
+      sectionId: lesson.sectionId,
+    };
+  }
+
+  if (!params.sectionId) {
+    throw new AppError("Bab tugas belum dipilih", 422);
+  }
+
+  const sectionId = toBigIntId(params.sectionId, "Section ID");
+  const section = await prisma.section.findFirst({
+    where: {
+      id: sectionId,
+      moduleStudentClassId: params.offeringId,
+    },
+    select: { id: true },
+  });
+
+  if (!section) {
+    throw new AppError("Bab tidak ditemukan pada mata pelajaran ini", 404);
+  }
+
+  return {
+    lessonId: null,
+    sectionId,
+  };
+}
+
+async function saveTaskAttachment(attachment: TaskAttachmentPayload) {
+  const uploadsDir = path.resolve(process.cwd(), "uploads", "tasks");
+  await mkdir(uploadsDir, { recursive: true });
+
+  const originalExtension = path.extname(attachment.fileName).toLowerCase();
+  const safeExtension = originalExtension || guessExtensionFromMimeType(attachment.mimeType);
+  const storedName = `${Date.now()}-${randomUUID()}${safeExtension}`;
+  const absolutePath = path.join(uploadsDir, storedName);
+  const normalizedBase64 = attachment.base64Data.replace(/^data:.+;base64,/, "");
+
+  await writeFile(absolutePath, Buffer.from(normalizedBase64, "base64"));
+
+  return {
+    attachmentType: attachment.mimeType,
+    attachmentPath: `/uploads/tasks/${storedName}`,
+  };
+}
+
+function guessExtensionFromMimeType(mimeType: string) {
+  switch (mimeType) {
+    case "application/pdf":
+      return ".pdf";
+    case "application/msword":
+      return ".doc";
+    case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+      return ".docx";
+    case "image/jpeg":
+      return ".jpg";
+    case "image/png":
+      return ".png";
+    default:
+      return "";
+  }
+}
+
+function buildPublicAttachmentUrl(attachmentPath: string) {
+  return new URL(attachmentPath, env.BETTER_AUTH_URL).toString();
+}
 
 async function assertTeacherOwnsTask(taskId: bigint, userId: string) {
   const teacher = await requireTeacherContext(userId);
@@ -33,7 +157,11 @@ async function assertTeacherOwnsTask(taskId: bigint, userId: string) {
       id: taskId,
       moduleStudentClass: { teacherId: teacher.id },
     },
-    include: { rubrics: { orderBy: { urutan: "asc" } } },
+    include: {
+      rubrics: { orderBy: { urutan: "asc" } },
+      lesson: { select: { sectionId: true } },
+      section: { select: { id: true } },
+    },
   });
   if (!task) throw new AppError("Tugas tidak ditemukan atau tidak bisa diakses", 404);
   return { teacher, task };
@@ -41,13 +169,18 @@ async function assertTeacherOwnsTask(taskId: bigint, userId: string) {
 
 export async function createTask(userId: string, payload: CreateTaskPayload) {
   const offeringId = toBigIntId(payload.moduleStudentClassId, "ModuleStudentClass ID");
-  const lessonId = toBigIntId(payload.lessonId, "Lesson ID");
   await requireTeacherOwnsOffering(offeringId, userId);
+  const placement = await resolveTaskPlacement({
+    offeringId,
+    lessonId: payload.lessonId,
+    sectionId: payload.sectionId,
+  });
 
   const task = await prisma.task.create({
     data: {
       modulesStudentClassId: offeringId,
-      lessonId,
+      lessonId: placement.lessonId,
+      sectionId: placement.sectionId,
       judul: payload.judul,
       deskripsi: payload.deskripsi ?? null,
       deadline: new Date(payload.deadline),
@@ -55,6 +188,8 @@ export async function createTask(userId: string, payload: CreateTaskPayload) {
       allowRevision: payload.allowRevision ?? false,
       isAktif: payload.isAktif ?? false,
       status: payload.status ?? "draft",
+      submitMethod: payload.submitMethod ?? "link",
+      ...(payload.attachment ? await saveTaskAttachment(payload.attachment) : {}),
       rubrics: payload.rubrics
         ? {
             create: payload.rubrics.map((r, idx) => ({
@@ -65,7 +200,11 @@ export async function createTask(userId: string, payload: CreateTaskPayload) {
           }
         : undefined,
     },
-    include: { rubrics: { orderBy: { urutan: "asc" } } },
+    include: {
+      rubrics: { orderBy: { urutan: "asc" } },
+      lesson: { select: { sectionId: true } },
+      section: { select: { id: true } },
+    },
   });
 
   return formatTask(task, task.rubrics);
@@ -77,11 +216,23 @@ export async function updateTask(
   payload: UpdateTaskPayload
 ) {
   const bigId = toBigIntId(taskId, "Task ID");
-  await assertTeacherOwnsTask(bigId, userId);
+  const { task: currentTask } = await assertTeacherOwnsTask(bigId, userId);
+  const nextPlacement =
+    payload.lessonId !== undefined || payload.sectionId !== undefined
+      ? await resolveTaskPlacement({
+          offeringId: currentTask.modulesStudentClassId,
+          lessonId: payload.lessonId,
+          sectionId: payload.sectionId,
+        })
+      : null;
 
   const task = await prisma.$transaction(async (tx) => {
     const updated = await tx.task.update({
       where: { id: bigId },
+      include: {
+        lesson: { select: { sectionId: true } },
+        section: { select: { id: true } },
+      },
       data: {
         ...(payload.judul !== undefined && { judul: payload.judul }),
         ...(payload.deskripsi !== undefined && { deskripsi: payload.deskripsi }),
@@ -89,9 +240,15 @@ export async function updateTask(
         ...(payload.availableAt !== undefined && {
           availableAt: payload.availableAt ? new Date(payload.availableAt) : null,
         }),
+        ...(nextPlacement !== null && {
+          lessonId: nextPlacement.lessonId,
+          sectionId: nextPlacement.sectionId,
+        }),
         ...(payload.allowRevision !== undefined && { allowRevision: payload.allowRevision }),
         ...(payload.isAktif !== undefined && { isAktif: payload.isAktif }),
         ...(payload.status !== undefined && { status: payload.status }),
+        ...(payload.submitMethod !== undefined && { submitMethod: payload.submitMethod }),
+        ...(payload.attachment ? await saveTaskAttachment(payload.attachment) : {}),
       },
     });
 
@@ -132,11 +289,15 @@ export async function updateTaskStatus(
 
   const updated = await prisma.task.update({
     where: { id: bigId },
+    include: {
+      lesson: { select: { sectionId: true } },
+      section: { select: { id: true } },
+      rubrics: { orderBy: { urutan: "asc" } },
+    },
     data: {
       isAktif,
       ...(status !== undefined && { status }),
     },
-    include: { rubrics: { orderBy: { urutan: "asc" } } },
   });
 
   return formatTask(updated, updated.rubrics);
@@ -165,8 +326,18 @@ function formatTask(
     allowRevision: boolean;
     isAktif: boolean;
     status: string;
+    submitMethod: string;
     modulesStudentClassId: bigint;
-    lessonId: bigint;
+    lessonId: bigint | null;
+    sectionId: bigint | null;
+    attachmentType?: string | null;
+    attachmentPath?: string | null;
+    lesson?: {
+      sectionId: bigint | null;
+    } | null;
+    section?: {
+      id: bigint;
+    } | null;
   },
   rubrics: {
     id: bigint;
@@ -184,8 +355,18 @@ function formatTask(
     allowRevision: task.allowRevision,
     isActive: task.isAktif,
     status: task.status,
+    submitMethod: task.submitMethod,
     moduleStudentClassId: String(task.modulesStudentClassId),
-    lessonId: String(task.lessonId),
+    lessonId: task.lessonId ? String(task.lessonId) : null,
+    sectionId: task.sectionId ? String(task.sectionId) : null,
+    attachment:
+      task.attachmentPath && task.attachmentType
+        ? {
+            fileName: path.basename(task.attachmentPath),
+            mimeType: task.attachmentType,
+            url: buildPublicAttachmentUrl(task.attachmentPath),
+          }
+        : null,
     rubrics: rubrics.map((r) => ({
       id: String(r.id),
       name: r.name,

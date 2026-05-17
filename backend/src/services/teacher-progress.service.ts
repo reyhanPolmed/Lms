@@ -218,10 +218,6 @@ export async function getStudentProgressDetail(
   const sectionTitle = new Map(
     offering.sections.map((section) => [String(section.id), section.judul])
   );
-  const lessonById = new Map(
-    offering.lessons.map((lesson) => [String(lesson.id), lesson])
-  );
-
   const timeline = [
     ...offering.lessons.map((lesson) => {
       const progress = lesson.lessonUsers[0];
@@ -264,8 +260,7 @@ export async function getStudentProgressDetail(
     }),
     ...offering.tasks.map((task) => {
       const submission = task.submissions[0];
-      const lesson = lessonById.get(String(task.lessonId));
-      const chapter = sectionTitle.get(String(lesson?.sectionId ?? "")) ?? "Tanpa Bab";
+      const chapter = sectionTitle.get(String(task.sectionId ?? "")) ?? "Tanpa Bab";
 
       let status = "pending";
       if (submission) {
@@ -287,7 +282,7 @@ export async function getStudentProgressDetail(
         status,
         note,
         timestamp: submission?.updatedAt?.toISOString() ?? submission?.submittedAt?.toISOString() ?? null,
-        sectionRank: sectionOrder.get(String(lesson?.sectionId ?? "")) ?? Number.MAX_SAFE_INTEGER,
+        sectionRank: sectionOrder.get(String(task.sectionId ?? "")) ?? Number.MAX_SAFE_INTEGER,
         itemRank: Number(task.id),
       };
     }),

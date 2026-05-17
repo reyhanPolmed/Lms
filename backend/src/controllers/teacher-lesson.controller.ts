@@ -16,6 +16,13 @@ const createLessonSchema = z.object({
   tipeKonten: z.enum(["text", "video", "pdf", "link"]),
   konten: z.string().default(""),
   urlKonten: z.string().optional(),
+  contentFile: z
+    .object({
+      fileName: z.string().min(1),
+      mimeType: z.string().min(1),
+      base64Data: z.string().min(1)
+    })
+    .optional(),
   durasi: z.number().int().positive().optional(),
   tersediaPada: z.string().optional(),
   posisi: z.number().int().positive().optional(),

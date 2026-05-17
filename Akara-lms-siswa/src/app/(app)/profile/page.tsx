@@ -13,6 +13,7 @@ export default function ProfilePage() {
   const profileQuery = useProfileQuery();
   const updateMutation = useProfileUpdateMutation();
 
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
     newPassword: "",
@@ -49,8 +50,6 @@ export default function ProfilePage() {
       toast.error(error instanceof Error ? error.message : "Gagal memperbarui profil");
     }
   };
-
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const handlePasswordSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

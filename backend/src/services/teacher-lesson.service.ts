@@ -1,7 +1,18 @@
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { randomUUID } from "node:crypto";
+
 import { prisma } from "../lib/prisma.js";
+import { env } from "../config/env.js";
 import { requireTeacherContext, requireTeacherOwnsOffering } from "./teacher-context.service.js";
 import { AppError } from "../utils/app-error.js";
 import { toBigIntId } from "./lms-context.service.js";
+
+type LessonContentFilePayload = {
+  fileName: string;
+  mimeType: string;
+  base64Data: string;
+};
 
 export type CreateLessonPayload = {
   moduleStudentClassId: string;
@@ -10,6 +21,7 @@ export type CreateLessonPayload = {
   tipeKonten: "text" | "video" | "pdf" | "link";
   konten: string;
   urlKonten?: string;
+  contentFile?: LessonContentFilePayload;
   durasi?: number;
   tersediaPada?: string;
   posisi?: number;
@@ -17,6 +29,42 @@ export type CreateLessonPayload = {
 };
 
 export type UpdateLessonPayload = Partial<Omit<CreateLessonPayload, "moduleStudentClassId">>;
+
+function guessExtensionFromMimeType(mimeType: string) {
+  switch (mimeType) {
+    case "application/pdf":
+      return ".pdf";
+    case "application/msword":
+      return ".doc";
+    case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+      return ".docx";
+    default:
+      return "";
+  }
+}
+
+async function saveLessonContentFile(attachment: LessonContentFilePayload) {
+  const uploadsDir = path.resolve(process.cwd(), "uploads", "lessons");
+  await mkdir(uploadsDir, { recursive: true });
+
+  const originalExtension = path.extname(attachment.fileName).toLowerCase();
+  const safeExtension = originalExtension || guessExtensionFromMimeType(attachment.mimeType);
+  const storedName = `${Date.now()}-${randomUUID()}${safeExtension}`;
+  const absolutePath = path.join(uploadsDir, storedName);
+  const normalizedBase64 = attachment.base64Data.replace(/^data:.+;base64,/, "");
+
+  await writeFile(absolutePath, Buffer.from(normalizedBase64, "base64"));
+
+  return `/uploads/lessons/${storedName}`;
+}
+
+function buildPublicContentUrl(value: string | null | undefined) {
+  if (!value) {
+    return "";
+  }
+
+  return new URL(value, env.BETTER_AUTH_URL).toString();
+}
 
 async function assertTeacherOwnsLesson(lessonId: bigint, userId: string) {
   const teacher = await requireTeacherContext(userId);
@@ -44,6 +92,10 @@ export async function createLesson(userId: string, payload: CreateLessonPayload)
     posisi = (maxPos._max.posisi ?? 0) + 1;
   }
 
+  const nextContentUrl = payload.contentFile
+    ? await saveLessonContentFile(payload.contentFile)
+    : payload.urlKonten ?? null;
+
   const lesson = await prisma.lesson.create({
     data: {
       moduleStudentClassId: offeringId,
@@ -51,7 +103,7 @@ export async function createLesson(userId: string, payload: CreateLessonPayload)
       judul: payload.judul,
       tipeKonten: payload.tipeKonten,
       konten: payload.konten,
-      urlKonten: payload.urlKonten ?? null,
+      urlKonten: nextContentUrl,
       durasi: payload.durasi ?? null,
       tersediaPada: payload.tersediaPada ? new Date(payload.tersediaPada) : null,
       posisi,
@@ -70,6 +122,9 @@ export async function updateLesson(
 ) {
   const bigId = toBigIntId(lessonId, "Lesson ID");
   await assertTeacherOwnsLesson(bigId, userId);
+  const nextContentUrl = payload.contentFile
+    ? await saveLessonContentFile(payload.contentFile)
+    : payload.urlKonten;
 
   const updated = await prisma.lesson.update({
     where: { id: bigId },
@@ -77,7 +132,7 @@ export async function updateLesson(
       ...(payload.judul !== undefined && { judul: payload.judul }),
       ...(payload.tipeKonten !== undefined && { tipeKonten: payload.tipeKonten }),
       ...(payload.konten !== undefined && { konten: payload.konten }),
-      ...(payload.urlKonten !== undefined && { urlKonten: payload.urlKonten }),
+      ...(nextContentUrl !== undefined && { urlKonten: nextContentUrl }),
       ...(payload.durasi !== undefined && { durasi: payload.durasi }),
       ...(payload.tersediaPada !== undefined && {
         tersediaPada: payload.tersediaPada ? new Date(payload.tersediaPada) : null,
@@ -108,7 +163,21 @@ export async function publishLesson(lessonId: string, userId: string, status: "d
 export async function deleteLesson(lessonId: string, userId: string) {
   const bigId = toBigIntId(lessonId, "Lesson ID");
   await assertTeacherOwnsLesson(bigId, userId);
-  await prisma.lesson.delete({ where: { id: bigId } });
+
+  await prisma.$transaction(async (tx) => {
+    await tx.task.updateMany({
+      where: { lessonId: bigId },
+      data: { lessonId: null },
+    });
+
+    await tx.quiz.updateMany({
+      where: { lessonId: bigId },
+      data: { lessonId: null },
+    });
+
+    await tx.lesson.delete({ where: { id: bigId } });
+  });
+
   return { success: true };
 }
 
@@ -136,7 +205,7 @@ function formatLesson(lesson: {
     title: lesson.judul,
     contentType: lesson.tipeKonten,
     body: lesson.konten,
-    contentUrl: lesson.urlKonten ?? "",
+    contentUrl: buildPublicContentUrl(lesson.urlKonten),
     durationMinutes: lesson.durasi,
     position: lesson.posisi,
     status: lesson.status,

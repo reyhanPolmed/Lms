@@ -23,16 +23,36 @@ export interface TrackDurationPayload {
 }
 
 export interface QuizSubmitPayload {
+  attemptId: string;
   answers: Record<string, string>;
   fullscreenViolation: boolean;
 }
 
+export interface QuizAttemptSavePayload {
+  attemptId: string;
+  answers: Record<string, string>;
+}
+
 export interface TaskSubmitPayload {
-  submissionLink: string;
+  submissionLink?: string;
+  submissionFile?: {
+    fileName: string;
+    mimeType: string;
+    base64Data: string;
+  };
+}
+
+export type TaskSubmitMethod = "link" | "file" | "file_link";
+
+export interface TaskAttachmentView {
+  fileName: string;
+  mimeType: string;
+  url: string;
 }
 
 export interface TaskSubmissionView {
-  link: string;
+  link?: string;
+  file?: TaskAttachmentView;
   status: SubmissionStatus | "approved" | "revision";
   teacherNote?: string;
   submittedAt: string | null;
@@ -175,18 +195,36 @@ export interface QuizDetailView {
   intro: string;
   passScore: number;
   durationMinutes: number;
+  serverNow: string;
+  maxAttempts: number;
+  attemptsUsed: number;
+  attemptsRemaining: number;
   questionOrder: string[];
   questions: QuizQuestionView[];
   penaltyNote: string;
   sidebar: SidebarEntryView[];
   lastScore?: number;
+  activeAttempt?: QuizAttemptView | null;
+  latestSubmittedAttempt?: QuizAttemptView | null;
 }
 
 export interface QuizAttemptView {
   id: string;
   quizId: string;
+  attemptNumber: number;
   status: "in_progress" | "submitted";
   questionOrder: string[];
+  answers: Record<string, string>;
+  startedAt: string;
+  submittedAt: string | null;
+  durationSeconds: number;
+  elapsedSeconds: number;
+  remainingSeconds: number;
+  isExpired: boolean;
+  submissionTiming: "on_time" | "late" | null;
+  score?: number;
+  isPassed?: boolean;
+  serverNow: string;
 }
 
 export interface AssignmentDetailView {
@@ -196,6 +234,8 @@ export interface AssignmentDetailView {
   description: string;
   dueAt: string;
   allowRevision: boolean;
+  submitMethod?: TaskSubmitMethod;
+  attachment?: TaskAttachmentView;
   currentSubmission?: TaskSubmissionView;
   sidebar: SidebarEntryView[];
   checklist: string[];

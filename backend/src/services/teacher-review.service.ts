@@ -1,8 +1,11 @@
 import { SubmissionStatus } from "@prisma/client";
+import path from "node:path";
+
 import { prisma } from "../lib/prisma.js";
 import { requireTeacherContext } from "./teacher-context.service.js";
 import { AppError } from "../utils/app-error.js";
 import { toBigIntId } from "./lms-context.service.js";
+import { env } from "../config/env.js";
 
 function getQuizReviewStatus(retakeRequested: boolean) {
   return retakeRequested ? "retake" : "graded";
@@ -138,7 +141,15 @@ export async function getTaskSubmissionDetail(
     submittedAt: sub.submittedAt?.toISOString() ?? null,
     status: sub.status.toLowerCase(),
     score: sub.score ?? null,
-    submissionLink: sub.submissionLink,
+    submissionLink: sub.submissionLink ?? "",
+    submissionFile:
+      sub.submissionFilePath && sub.submissionFileType
+        ? {
+            fileName: path.basename(sub.submissionFilePath),
+            mimeType: sub.submissionFileType,
+            url: new URL(sub.submissionFilePath, env.BETTER_AUTH_URL).toString(),
+          }
+        : null,
     teacherFeedback: sub.teacherFeedback ?? "",
     teacherNote: sub.teacherNote ?? "",
     rubrics: sub.task.rubrics.map((r) => {
@@ -159,7 +170,8 @@ export async function gradeTaskSubmission(
   submissionId: string,
   userId: string,
   payload: {
-    rubricScores: { rubricId: string; score: number }[];
+    score?: number;
+    rubricScores?: { rubricId: string; score: number }[];
     teacherFeedback?: string;
     action: "draft" | "revision" | "publish";
   }
@@ -177,10 +189,17 @@ export async function gradeTaskSubmission(
 
   if (!sub) throw new AppError("Submission tidak ditemukan atau tidak bisa diakses", 404);
 
-  // Hitung total score dari rubric
-  const totalScore = payload.rubricScores.reduce((acc, rs) => acc + rs.score, 0);
-  const maxScore = sub.task.rubrics.reduce((acc, r) => acc + r.maxScore, 0);
-  const finalScore = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : null;
+  const hasDirectScore = typeof payload.score === "number";
+  const hasRubricScores = (payload.rubricScores?.length ?? 0) > 0;
+  const finalScore = hasDirectScore
+    ? Math.max(0, Math.min(100, Math.round(payload.score!)))
+    : hasRubricScores
+      ? (() => {
+          const totalScore = payload.rubricScores!.reduce((acc, rs) => acc + rs.score, 0);
+          const maxScore = sub.task.rubrics.reduce((acc, r) => acc + r.maxScore, 0);
+          return maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : null;
+        })()
+      : sub.score;
 
   const newStatus =
     payload.action === "publish"
@@ -201,7 +220,7 @@ export async function gradeTaskSubmission(
     });
 
     // Upsert rubric scores
-    for (const rs of payload.rubricScores) {
+    for (const rs of payload.rubricScores ?? []) {
       const rubricId = toBigIntId(rs.rubricId, "Rubric ID");
       await tx.taskSubmissionRubricScore.upsert({
         where: {
@@ -230,7 +249,7 @@ export async function gradeTaskSubmission(
 export async function listQuizSubmissions(
   quizId: string,
   userId: string,
-  filters?: { status?: string }
+  filters?: { status?: string; scope?: string }
 ) {
   const teacher = await requireTeacherContext(userId);
   const bigQuizId = toBigIntId(quizId, "Quiz ID");
@@ -260,10 +279,36 @@ export async function listQuizSubmissions(
     orderBy: { submittedAt: "desc" },
   });
 
-  return attempts.map((a) => {
+  const attemptsByStudent = new Map<string, typeof attempts[number]>();
+  const orderedAttempts =
+    filters?.scope === "all"
+      ? attempts
+      : attempts.filter((attempt) => {
+          const studentKey = attempt.userId.toString();
+          if (attemptsByStudent.has(studentKey)) {
+            return false;
+          }
+
+          attemptsByStudent.set(studentKey, attempt);
+          return true;
+        });
+  const attemptNumberMap = new Map<string, number>();
+  const perStudentCounters = new Map<string, number>();
+
+  [...attempts]
+    .sort((left, right) => left.startedAt.getTime() - right.startedAt.getTime())
+    .forEach((attempt) => {
+      const studentKey = attempt.userId.toString();
+      const nextAttemptNumber = (perStudentCounters.get(studentKey) ?? 0) + 1;
+      perStudentCounters.set(studentKey, nextAttemptNumber);
+      attemptNumberMap.set(attempt.id.toString(), nextAttemptNumber);
+    });
+
+  return orderedAttempts.map((a) => {
     const student = a.user.students[0];
     return {
       id: String(a.id),
+      attemptNumber: attemptNumberMap.get(a.id.toString()) ?? 1,
       studentName: a.user.name,
       className: student?.kelas?.namaKelas ?? "-",
       courseTitle: a.quiz.moduleStudentClass.module.judul,
@@ -304,9 +349,36 @@ export async function getQuizAttemptDetail(attemptId: string, userId: string) {
 
   const student = attempt.user.students[0];
   const questionWeights = buildQuestionWeights(attempt.quiz.questions.length);
+  const historyRows = await prisma.quizAttempt.findMany({
+    where: {
+      quizId: attempt.quizId,
+      userId: attempt.userId,
+      submittedAt: { not: null },
+    },
+    orderBy: { startedAt: "asc" },
+  });
+  const attemptHistory = historyRows
+    .map((row, index) => ({
+      id: String(row.id),
+      attemptNumber: index + 1,
+      score: row.score ?? null,
+      status: getQuizReviewStatus(row.retakeRequested),
+      submittedAt: row.submittedAt?.toISOString() ?? null,
+      isLatest: row.id === attempt.id,
+    }))
+    .sort((left, right) => {
+      const leftTime = left.submittedAt ? new Date(left.submittedAt).getTime() : 0;
+      const rightTime = right.submittedAt ? new Date(right.submittedAt).getTime() : 0;
+      return rightTime - leftTime;
+    });
+  const attemptNumber =
+    historyRows.findIndex((row) => row.id === attempt.id) >= 0
+      ? historyRows.findIndex((row) => row.id === attempt.id) + 1
+      : 1;
 
   return {
     id: String(attempt.id),
+    attemptNumber,
     studentName: attempt.user.name,
     className: student?.kelas?.namaKelas ?? "-",
     courseTitle: attempt.quiz.moduleStudentClass.module.judul,
@@ -314,6 +386,7 @@ export async function getQuizAttemptDetail(attemptId: string, userId: string) {
     status: getQuizReviewStatus(attempt.retakeRequested),
     score: attempt.score ?? null,
     submittedAt: attempt.submittedAt?.toISOString() ?? null,
+    attemptHistory,
     questions: attempt.quiz.questions.map((q, index) => {
       const answer = attempt.answers.find(
         (a) => a.quizQuestionId === q.id

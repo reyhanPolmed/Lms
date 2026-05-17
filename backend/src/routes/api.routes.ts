@@ -19,6 +19,7 @@ import {
 import {
   getQuizController,
   getQuizResultController,
+  saveQuizAttemptController,
   startQuizController,
   submitQuizController
 } from "../controllers/quiz.controller.js";
@@ -41,6 +42,7 @@ export function createApiRouter() {
   router.post("/lessons/:id/complete", asyncHandler(completeLessonController));
   router.get("/quizzes/:id", asyncHandler(getQuizController));
   router.post("/quizzes/:id/start", asyncHandler(startQuizController));
+  router.put("/quizzes/:id/attempt", asyncHandler(saveQuizAttemptController));
   router.post("/quizzes/:id/submit", asyncHandler(submitQuizController));
   router.get("/quizzes/:id/result", asyncHandler(getQuizResultController));
   router.get("/tasks/:id", asyncHandler(getTaskController));

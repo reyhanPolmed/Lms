@@ -224,6 +224,7 @@ async function main() {
       deadline: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
       allowRevision: false,
       modulesStudentClassId: offeringFO.id,
+      sectionId: sectionFO1.id,
       lessonId: lessonFO1.id
     }
   });
