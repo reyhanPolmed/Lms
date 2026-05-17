@@ -76,7 +76,7 @@ async function getOfferingGraph(offeringId: string, userId: string) {
           status: "published"
         },
         orderBy: {
-          id: "asc"
+          posisi: "asc"
         },
         include: {
           submissions: {
@@ -132,7 +132,7 @@ function mapOfferingToModuleSummary(offering: Awaited<ReturnType<typeof getOffer
       title: task.judul,
       type: "task" as const,
       sectionId: task.sectionId,
-      position: Number(task.id),
+      position: task.posisi,
       createdAt: task.createdAt,
       href: `/tasks/${task.id}`,
       availableAt: task.availableAt,
@@ -268,7 +268,7 @@ export async function getStudentModuleDetail(offeringId: string, userId: string)
       title: task.judul,
       type: "task" as const,
       sectionId: task.sectionId,
-      position: Number(task.id),
+      position: task.posisi,
       createdAt: task.createdAt,
       href: `/tasks/${task.id}`,
       availableAt: task.availableAt,

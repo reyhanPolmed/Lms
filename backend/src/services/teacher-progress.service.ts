@@ -192,7 +192,7 @@ export async function getStudentProgressDetail(
         },
       },
       tasks: {
-        orderBy: { id: "asc" },
+        orderBy: { posisi: "asc" },
         include: {
           submissions: {
             where: { user: { students: { some: { id: bigStudentId } } } },
@@ -283,7 +283,7 @@ export async function getStudentProgressDetail(
         note,
         timestamp: submission?.updatedAt?.toISOString() ?? submission?.submittedAt?.toISOString() ?? null,
         sectionRank: sectionOrder.get(String(task.sectionId ?? "")) ?? Number.MAX_SAFE_INTEGER,
-        itemRank: Number(task.id),
+        itemRank: task.posisi,
       };
     }),
   ]

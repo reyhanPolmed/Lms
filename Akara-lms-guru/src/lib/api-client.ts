@@ -294,6 +294,7 @@ export type ModuleDetail = {
     description: string;
     availableAt: string | null;
     deadline: string;
+    position: number;
     status: string;
     submitMethod: "link" | "file" | "file_link";
     isActive: boolean;
@@ -328,6 +329,7 @@ export type TaskDetail = {
   description: string;
   deadline: string;
   availableAt: string | null;
+  position?: number;
   status: string;
   isActive: boolean;
   allowRevision: boolean;

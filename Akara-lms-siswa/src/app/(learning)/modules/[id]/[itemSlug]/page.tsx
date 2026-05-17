@@ -113,6 +113,7 @@ export default function ModuleItemDetailPage({
             onComplete={async () => {
               try {
                 await completeMutation.mutateAsync();
+                await Promise.all([lessonQuery.refetch(), moduleQuery.refetch()]);
                 toast.success("Lesson ditandai selesai");
               } catch (error) {
                 toast.error(error instanceof Error ? error.message : "Gagal menandai selesai");
@@ -161,7 +162,11 @@ export default function ModuleItemDetailPage({
             nextItem={nextItem}
             onAutosave={(payload) => autosaveMutation.mutateAsync(payload)}
             onStart={() => startMutation.mutateAsync()}
-            onSubmit={(payload) => submitQuizMutation.mutateAsync(payload)}
+            onSubmit={async (payload) => {
+              const submission = await submitQuizMutation.mutateAsync(payload);
+              await Promise.all([quizQuery.refetch(), moduleQuery.refetch()]);
+              return submission;
+            }}
             previousItem={previousItem}
             quiz={quiz}
           />
@@ -201,7 +206,11 @@ export default function ModuleItemDetailPage({
         <TaskSubmissionForm
           isSubmitting={submitTaskMutation.isPending}
           nextItem={nextItem}
-          onSubmit={(payload) => submitTaskMutation.mutateAsync(payload)}
+          onSubmit={async (payload) => {
+            const submission = await submitTaskMutation.mutateAsync(payload);
+            await Promise.all([taskQuery.refetch(), moduleQuery.refetch()]);
+            return submission;
+          }}
           previousItem={previousItem}
           task={task}
         />

@@ -95,7 +95,7 @@ async function getLessonGraph(lessonId: string, userId: string) {
               status: "published"
             },
             orderBy: {
-              id: "asc"
+              posisi: "asc"
             },
             include: {
               submissions: {
@@ -155,7 +155,7 @@ export async function getStudentLessonDetail(lessonId: string, userId: string) {
       title: item.judul,
       type: "task" as const,
       sectionId: item.sectionId,
-      position: Number(item.id),
+      position: item.posisi,
       createdAt: item.createdAt,
       href: `/tasks/${item.id}`,
       availableAt: item.availableAt,

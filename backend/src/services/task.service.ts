@@ -85,9 +85,9 @@ async function getTaskGraph(taskId: string, userId: string) {
           isAktif: true,
           status: "published"
         },
-            orderBy: {
-              id: "asc"
-            },
+        orderBy: {
+          posisi: "asc"
+        },
         include: {
           submissions: {
             where: {
@@ -192,7 +192,7 @@ export async function getStudentTaskDetail(taskId: string, userId: string) {
       title: item.judul,
       type: "task" as const,
       sectionId: item.sectionId,
-      position: Number(item.id),
+      position: item.posisi,
       createdAt: item.createdAt,
       href: `/tasks/${item.id}`,
       availableAt: item.availableAt,

@@ -94,16 +94,16 @@ export function buildSequentialSidebar(input: {
       return leftSectionOrder - rightSectionOrder;
     }
 
+    if (left.position !== right.position) {
+      return left.position - right.position;
+    }
+
     const leftCreatedAt = left.createdAt?.getTime() ?? Number.NaN;
     const rightCreatedAt = right.createdAt?.getTime() ?? Number.NaN;
     const hasComparableCreatedAt = Number.isFinite(leftCreatedAt) && Number.isFinite(rightCreatedAt);
 
     if (hasComparableCreatedAt && leftCreatedAt !== rightCreatedAt) {
       return leftCreatedAt - rightCreatedAt;
-    }
-
-    if (left.position !== right.position) {
-      return left.position - right.position;
     }
 
     return typeWeight[left.type] - typeWeight[right.type];

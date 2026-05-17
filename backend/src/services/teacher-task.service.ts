@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 
 import { prisma } from "../lib/prisma.js";
 import { requireTeacherContext, requireTeacherOwnsOffering } from "./teacher-context.service.js";
+import { getNextMixedItemPosition } from "./item-position.service.js";
 import { AppError } from "../utils/app-error.js";
 import { toBigIntId } from "./lms-context.service.js";
 import { env } from "../config/env.js";
@@ -175,11 +176,16 @@ export async function createTask(userId: string, payload: CreateTaskPayload) {
     lessonId: payload.lessonId,
     sectionId: payload.sectionId,
   });
+  const posisi = await getNextMixedItemPosition(prisma, {
+    offeringId,
+    sectionId: placement.sectionId,
+  });
 
   const task = await prisma.task.create({
     data: {
       modulesStudentClassId: offeringId,
       lessonId: placement.lessonId,
+      posisi,
       sectionId: placement.sectionId,
       judul: payload.judul,
       deskripsi: payload.deskripsi ?? null,
@@ -225,6 +231,14 @@ export async function updateTask(
           sectionId: payload.sectionId,
         })
       : null;
+  const shouldReposition =
+    nextPlacement !== null && nextPlacement.sectionId !== currentTask.sectionId;
+  const nextPosisi = shouldReposition
+    ? await getNextMixedItemPosition(prisma, {
+        offeringId: currentTask.modulesStudentClassId,
+        sectionId: nextPlacement.sectionId,
+      })
+    : undefined;
 
   const task = await prisma.$transaction(async (tx) => {
     const updated = await tx.task.update({
@@ -244,6 +258,7 @@ export async function updateTask(
           lessonId: nextPlacement.lessonId,
           sectionId: nextPlacement.sectionId,
         }),
+        ...(nextPosisi !== undefined && { posisi: nextPosisi }),
         ...(payload.allowRevision !== undefined && { allowRevision: payload.allowRevision }),
         ...(payload.isAktif !== undefined && { isAktif: payload.isAktif }),
         ...(payload.status !== undefined && { status: payload.status }),
@@ -329,6 +344,7 @@ function formatTask(
     submitMethod: string;
     modulesStudentClassId: bigint;
     lessonId: bigint | null;
+    posisi: number;
     sectionId: bigint | null;
     attachmentType?: string | null;
     attachmentPath?: string | null;
@@ -358,6 +374,7 @@ function formatTask(
     submitMethod: task.submitMethod,
     moduleStudentClassId: String(task.modulesStudentClassId),
     lessonId: task.lessonId ? String(task.lessonId) : null,
+    position: task.posisi,
     sectionId: task.sectionId ? String(task.sectionId) : null,
     attachment:
       task.attachmentPath && task.attachmentType

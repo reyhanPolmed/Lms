@@ -149,7 +149,7 @@ async function getQuizGraphWithClient(
               status: "published"
             },
             orderBy: {
-              id: "asc"
+              posisi: "asc"
             },
             include: {
               submissions: {
@@ -318,7 +318,7 @@ function buildQuizDetailView(quiz: QuizGraph) {
       title: item.judul,
       type: "task" as const,
       sectionId: item.sectionId,
-      position: Number(item.id),
+      position: item.posisi,
       createdAt: item.createdAt,
       href: `/tasks/${item.id}`,
       availableAt: item.availableAt,

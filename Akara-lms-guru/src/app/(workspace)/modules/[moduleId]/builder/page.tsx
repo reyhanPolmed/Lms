@@ -82,13 +82,12 @@ type MonitoringQuizRecord = {
   updatedAt: string;
 };
 
-function getCreatedAtRank(value: string | null | undefined, fallback: number) {
-  if (!value) {
+function getItemRank(value: number | null | undefined, fallback: number) {
+  if (typeof value !== "number" || Number.isNaN(value)) {
     return fallback;
   }
 
-  const time = new Date(value).getTime();
-  return Number.isFinite(time) ? time : fallback;
+  return value;
 }
 
 const CONTENT_TYPE_OPTIONS = ["Link", "PDF"];
@@ -432,7 +431,7 @@ export default function ModuleBuilderPage({
           ...moduleDetail.lessons
             .filter((l) => l.sectionId === s.id)
             .map((l, index) => ({
-              rank: getCreatedAtRank(l.createdAt, index),
+              rank: getItemRank(l.position, index),
               item: {
                 id: l.id,
                 kind: "Materi" as const,
@@ -444,7 +443,7 @@ export default function ModuleBuilderPage({
           ...moduleDetail.quizzes
             .filter((q) => q.sectionId === s.id)
             .map((q, index) => ({
-              rank: getCreatedAtRank(q.createdAt, 100000 + index),
+              rank: getItemRank(q.position, 100000 + index),
               item: {
                 id: q.id,
                 kind: "Kuis" as const,
@@ -462,7 +461,7 @@ export default function ModuleBuilderPage({
           ...moduleDetail.tasks
             .filter((t) => t.sectionId === s.id)
             .map((t, index) => ({
-              rank: getCreatedAtRank(t.createdAt, 200000 + index),
+              rank: getItemRank(t.position, 200000 + index),
               item: {
                 id: t.id,
                 kind: "Tugas" as const,

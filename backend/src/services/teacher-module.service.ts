@@ -101,7 +101,7 @@ export async function getTeacherModuleDetail(
         },
       },
       tasks: {
-        orderBy: { id: "asc" },
+        orderBy: { posisi: "asc" },
         select: {
           id: true,
           createdAt: true,
@@ -111,6 +111,7 @@ export async function getTeacherModuleDetail(
           attachmentType: true,
           availableAt: true,
           deadline: true,
+          posisi: true,
           status: true,
           submitMethod: true,
           isAktif: true,
@@ -174,6 +175,7 @@ export async function getTeacherModuleDetail(
       description: t.deskripsi ?? "",
       availableAt: t.availableAt?.toISOString() ?? null,
       deadline: t.deadline.toISOString(),
+      position: t.posisi,
       status: t.status,
       submitMethod: t.submitMethod,
       isActive: t.isAktif,

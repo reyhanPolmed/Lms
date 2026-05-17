@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto";
 import { prisma } from "../lib/prisma.js";
 import { env } from "../config/env.js";
 import { requireTeacherContext, requireTeacherOwnsOffering } from "./teacher-context.service.js";
+import { getNextMixedItemPosition } from "./item-position.service.js";
 import { AppError } from "../utils/app-error.js";
 import { toBigIntId } from "./lms-context.service.js";
 
@@ -85,11 +86,10 @@ export async function createLesson(userId: string, payload: CreateLessonPayload)
   // Auto-calculate posisi
   let posisi = payload.posisi;
   if (!posisi) {
-    const maxPos = await prisma.lesson.aggregate({
-      where: { moduleStudentClassId: offeringId },
-      _max: { posisi: true },
+    posisi = await getNextMixedItemPosition(prisma, {
+      offeringId,
+      sectionId: payload.sectionId ? toBigIntId(payload.sectionId) : null,
     });
-    posisi = (maxPos._max.posisi ?? 0) + 1;
   }
 
   const nextContentUrl = payload.contentFile
@@ -121,10 +121,26 @@ export async function updateLesson(
   payload: UpdateLessonPayload
 ) {
   const bigId = toBigIntId(lessonId, "Lesson ID");
-  await assertTeacherOwnsLesson(bigId, userId);
+  const { lesson } = await assertTeacherOwnsLesson(bigId, userId);
   const nextContentUrl = payload.contentFile
     ? await saveLessonContentFile(payload.contentFile)
     : payload.urlKonten;
+  const nextSectionId =
+    payload.sectionId !== undefined
+      ? payload.sectionId
+        ? toBigIntId(payload.sectionId)
+        : null
+      : lesson.sectionId;
+  const shouldReposition =
+    payload.posisi === undefined &&
+    payload.sectionId !== undefined &&
+    nextSectionId !== lesson.sectionId;
+  const nextPosisi = shouldReposition
+    ? await getNextMixedItemPosition(prisma, {
+        offeringId: lesson.moduleStudentClassId,
+        sectionId: nextSectionId,
+      })
+    : payload.posisi;
 
   const updated = await prisma.lesson.update({
     where: { id: bigId },
@@ -137,7 +153,7 @@ export async function updateLesson(
       ...(payload.tersediaPada !== undefined && {
         tersediaPada: payload.tersediaPada ? new Date(payload.tersediaPada) : null,
       }),
-      ...(payload.posisi !== undefined && { posisi: payload.posisi, urutan: payload.posisi }),
+      ...(nextPosisi !== undefined && { posisi: nextPosisi, urutan: nextPosisi }),
       ...(payload.status !== undefined && { status: payload.status }),
       ...(payload.sectionId !== undefined && {
         sectionId: payload.sectionId ? toBigIntId(payload.sectionId) : null,

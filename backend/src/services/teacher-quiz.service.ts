@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma.js";
 import { requireTeacherContext, requireTeacherOwnsOffering } from "./teacher-context.service.js";
+import { getNextMixedItemPosition } from "./item-position.service.js";
 import { AppError } from "../utils/app-error.js";
 import { toBigIntId } from "./lms-context.service.js";
 
@@ -95,11 +96,10 @@ export async function createQuiz(userId: string, payload: CreateQuizPayload) {
 
   let posisi = payload.posisi;
   if (!posisi) {
-    const maxPos = await prisma.quiz.aggregate({
-      where: { modulesStudentClassId: offeringId },
-      _max: { posisi: true },
+    posisi = await getNextMixedItemPosition(prisma, {
+      offeringId,
+      sectionId: payload.sectionId ? toBigIntId(payload.sectionId) : null,
     });
-    posisi = (maxPos._max.posisi ?? 0) + 1;
   }
 
   const quiz = await prisma.quiz.create({
@@ -172,14 +172,30 @@ export async function updateQuiz(
   payload: UpdateQuizPayload
 ) {
   const bigId = toBigIntId(quizId, "Quiz ID");
-  await assertTeacherOwnsQuiz(bigId, userId);
+  const { quiz: currentQuiz } = await assertTeacherOwnsQuiz(bigId, userId);
+  const nextSectionId =
+    payload.sectionId !== undefined
+      ? payload.sectionId
+        ? toBigIntId(payload.sectionId)
+        : null
+      : currentQuiz.sectionId;
+  const shouldReposition =
+    payload.posisi === undefined &&
+    payload.sectionId !== undefined &&
+    nextSectionId !== currentQuiz.sectionId;
+  const nextPosisi = shouldReposition
+    ? await getNextMixedItemPosition(prisma, {
+        offeringId: currentQuiz.modulesStudentClassId,
+        sectionId: nextSectionId,
+      })
+    : payload.posisi;
 
   const quiz = await prisma.$transaction(async (tx) => {
     const updated = await tx.quiz.update({
       where: { id: bigId },
       data: {
         ...(payload.judul !== undefined && { judul: payload.judul }),
-        ...(payload.posisi !== undefined && { posisi: payload.posisi }),
+        ...(nextPosisi !== undefined && { posisi: nextPosisi }),
         ...(payload.skorLulus !== undefined && { skorLulus: payload.skorLulus }),
         ...(payload.durasiMenit !== undefined && { durasiMenit: payload.durasiMenit }),
         ...(payload.availableAt !== undefined && {
@@ -321,9 +337,9 @@ export async function instantiateQuizFromBank(
     orderBy: { id: "asc" }
   });
 
-  const maxPos = await prisma.quiz.aggregate({
-    where: { modulesStudentClassId: targetOfferingId },
-    _max: { posisi: true }
+  const nextPosisi = await getNextMixedItemPosition(prisma, {
+    offeringId: targetOfferingId,
+    sectionId: payload.sectionId ? toBigIntId(payload.sectionId, "Section ID") : null,
   });
 
   const created = await prisma.quiz.create({
@@ -332,7 +348,7 @@ export async function instantiateQuizFromBank(
       sectionId: payload.sectionId ? toBigIntId(payload.sectionId, "Section ID") : null,
       lessonId: null,
       judul: sourceQuiz.judul,
-      posisi: (maxPos._max.posisi ?? 0) + 1,
+      posisi: nextPosisi,
       skorLulus: sourceQuiz.skorLulus,
       durasiMenit: sourceQuiz.durasiMenit,
       availableAt: payload.availableAt ? new Date(payload.availableAt) : null,

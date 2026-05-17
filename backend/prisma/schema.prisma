@@ -492,6 +492,7 @@ model Task {
   modulesStudentClassId BigInt             @map("modules_student_class_id")
   id                    BigInt             @id @default(autoincrement())
   lessonId              BigInt?            @map("lesson_id")
+  posisi                Int                @default(1)
   sectionId             BigInt?            @map("section_id")
   status                String             @default("draft") @db.VarChar(20)
   submitMethod          String             @default("link") @map("submit_method") @db.VarChar(20)
