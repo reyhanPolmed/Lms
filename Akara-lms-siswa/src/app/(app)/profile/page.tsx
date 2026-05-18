@@ -88,8 +88,8 @@ export default function ProfilePage() {
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1fr_0.9fr]">
-      <section className="surface-card p-8">
-        <p className="eyebrow">Profile</p>
+      <section className="surface-card p-6 sm:p-7">
+        <p className="eyebrow">Profil siswa</p>
         <h1 className="section-title mt-2">Informasi akun siswa</h1>
         <p className="mt-3 text-sm leading-6 text-slate-500">
           Data profil diambil dari backend dan perubahan dikirim ke endpoint profil siswa.
@@ -100,7 +100,7 @@ export default function ProfilePage() {
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-slate-700">Nama</span>
               <input
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-brand-ocean focus:bg-white"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-300 focus:bg-white focus:ring-4 focus:ring-slate-900/5"
                 defaultValue={profile.fullName}
                 name="fullName"
                 required
@@ -109,7 +109,7 @@ export default function ProfilePage() {
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-slate-700">Email</span>
               <input
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-brand-ocean focus:bg-white"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-300 focus:bg-white focus:ring-4 focus:ring-slate-900/5"
                 defaultValue={profile.email}
                 name="email"
                 required
@@ -122,7 +122,7 @@ export default function ProfilePage() {
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-slate-700">No. Telepon</span>
               <input
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-brand-ocean focus:bg-white"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-300 focus:bg-white focus:ring-4 focus:ring-slate-900/5"
                 defaultValue={profile.phone ?? ""}
                 name="phone"
               />
@@ -140,7 +140,7 @@ export default function ProfilePage() {
           <label className="block">
             <span className="mb-2 block text-sm font-medium text-slate-700">Bio</span>
             <textarea
-              className="min-h-32 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-brand-ocean focus:bg-white"
+              className="min-h-32 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-300 focus:bg-white focus:ring-4 focus:ring-slate-900/5"
               defaultValue={profile.bio ?? ""}
               maxLength={500}
               name="bio"
@@ -148,7 +148,7 @@ export default function ProfilePage() {
           </label>
 
           <button
-            className="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60"
+            className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60"
             disabled={updateMutation.isPending}
             type="submit"
           >
@@ -157,9 +157,9 @@ export default function ProfilePage() {
         </form>
       </section>
 
-      <section className="surface-card p-8">
-        <p className="eyebrow">Security</p>
-        <h2 className="mt-2 font-heading text-2xl font-semibold">Ganti password</h2>
+      <section className="surface-card p-6 sm:p-7">
+        <p className="eyebrow">Keamanan akun</p>
+        <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">Ganti password</h2>
         <p className="mt-3 text-sm leading-6 text-slate-500">
           Perubahan password akan divalidasi dan diproses langsung oleh backend.
         </p>
@@ -173,7 +173,7 @@ export default function ProfilePage() {
             <label key={field} className="block">
               <span className="mb-2 block text-sm font-medium text-slate-700">{label}</span>
               <input
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-brand-ocean focus:bg-white"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-300 focus:bg-white focus:ring-4 focus:ring-slate-900/5"
                 minLength={field === "currentPassword" ? 1 : 8}
                 onChange={(event) =>
                   setPasswordForm((current) => ({

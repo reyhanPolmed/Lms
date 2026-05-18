@@ -15,6 +15,7 @@ import {
 
 import { SidebarEntry } from "@/lib/types";
 import { getModuleItemIdentity } from "@/lib/learning-routes";
+import { cn } from "@/lib/utils";
 
 const typeMeta: Record<
   SidebarEntry["type"],
@@ -60,9 +61,12 @@ export function SidebarOutline({
 
   return (
     <section className="surface-card overflow-hidden">
-      <div className="flex items-center justify-between border-b border-slate-200 bg-[#eef4fd] px-5 py-4">
-        <h3 className="font-semibold text-slate-950">Daftar Materi</h3>
-        <List className="h-5 w-5 text-slate-500" />
+      <div className="flex items-center justify-between border-b border-slate-200/80 bg-white px-5 py-4">
+        <div>
+          <p className="eyebrow">Outline modul</p>
+          <h3 className="mt-1 text-base font-semibold text-slate-950">Daftar materi</h3>
+        </div>
+        <List className="h-5 w-5 text-slate-400" />
       </div>
 
       {groupedItems.length === 0 ? (
@@ -88,7 +92,7 @@ export function SidebarOutline({
                 </button>
 
                 {expanded ? (
-                  <div className="bg-[#f6f9ff]">
+                  <div className="bg-slate-50/70">
                     {group.items.map((item, itemIndex) => (
                       <OutlineItem
                         activeItemKey={activeItemKey}
@@ -122,32 +126,30 @@ function OutlineItem({
   const selected = getModuleItemIdentity(item) === activeItemKey;
   const meta = typeMeta[item.type];
   const MetaIcon = meta.icon;
+  const stateIcon = item.isCompleted ? (
+    <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+  ) : selected ? (
+    <PlayCircle className="h-5 w-5 text-slate-900" />
+  ) : (
+    <Circle className="h-5 w-5 text-slate-400" />
+  );
   const content = (
     <>
-      {item.isCompleted ? (
-        <CheckCircle2 className="h-5 w-5 text-brand-ocean" />
-      ) : selected ? (
-        <PlayCircle className="h-5 w-5 text-brand-ocean" />
-      ) : (
-        <Circle className="h-5 w-5 text-slate-400" />
-      )}
+      {stateIcon}
       <div className="min-w-0 flex-1">
         <p
-          className={`truncate text-sm font-semibold ${
+          className={cn(
+            "truncate text-sm font-semibold",
             item.isCompleted
               ? "text-slate-500 line-through"
               : selected
-                ? "text-brand-ocean"
+                ? "text-slate-950"
                 : "text-slate-700"
-          }`}
+          )}
         >
           {index + 1}. {item.title}
         </p>
-        <p
-          className={`mt-0.5 flex items-center gap-1 text-xs ${
-            selected ? "text-brand-ocean/80" : "text-slate-500"
-          }`}
-        >
+        <p className={cn("mt-0.5 flex items-center gap-1 text-xs", selected ? "text-slate-700" : "text-slate-500")}>
           <MetaIcon className="h-3.5 w-3.5" />
           {meta.label}
         </p>
@@ -161,11 +163,11 @@ function OutlineItem({
     </>
   );
 
-  const className = `flex items-center gap-3 border-l-2 px-5 py-3 pl-8 transition ${
-    selected
-      ? "border-brand-ocean bg-brand-ocean/5"
-      : "border-transparent hover:bg-slate-100"
-  } ${item.isLocked ? "cursor-not-allowed opacity-60" : ""}`;
+  const className = cn(
+    "flex items-center gap-3 border-l-2 px-5 py-3 pl-8 transition",
+    selected ? "border-slate-900 bg-white" : "border-transparent hover:bg-white/80",
+    item.isLocked ? "cursor-not-allowed opacity-60" : ""
+  );
 
   if (item.isLocked) {
     return <div className={className}>{content}</div>;

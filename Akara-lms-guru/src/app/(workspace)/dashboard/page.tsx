@@ -1,56 +1,54 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BookOpen, Users } from "lucide-react";
-import Link from "next/link";
+import { BookOpen, FileEdit, RefreshCw, Search, Users } from "lucide-react";
+import { motion } from "framer-motion";
 
+import { ActiveModulesTable } from "@/components/dashboard/active-modules-table";
+import { PageTitle } from "@/components/dashboard/page-title";
+import { RecentSubmissionsTable } from "@/components/dashboard/recent-submissions-table";
+import { SectionCard } from "@/components/dashboard/section-card";
+import { StatCard } from "@/components/dashboard/stat-card";
 import { teacherApi, type DashboardData } from "@/lib/api-client";
+import { dashboardSnapshot } from "@/lib/teacher-mocks";
 
-const KPI_ICONS = [
-  { bg: "bg-[#efeaff]", color: "text-[#6d5dfc]" },
-  { bg: "bg-[#e8f4ff]", color: "text-[#58a4e7]" },
-  { bg: "bg-[#fff0d9]", color: "text-[#f59f34]" },
-  { bg: "bg-[#efeaff]", color: "text-[#6d5dfc]" },
-  { bg: "bg-[#ffe5ec]", color: "text-[#f57182]" },
-];
-
-function getStatusBadgeClass(status: string) {
-  const toneMap: Record<string, string> = {
-    draft: "bg-[#fff1d8] text-[#a86409]",
-    published: "bg-[#e7f7ee] text-[#1f7a47]",
-    scheduled: "bg-[#e9f3ff] text-[#2f72ba]",
-    archived: "bg-[#eef0f5] text-[#58617d]",
-    submitted: "bg-[#e9f3ff] text-[#2f72ba]",
-    returned: "bg-[#fff1d8] text-[#a86409]",
-    graded: "bg-[#e7f7ee] text-[#1f7a47]",
-    retake: "bg-[#fff1d8] text-[#a86409]",
-    revision: "bg-[#fff1d8] text-[#a86409]",
-    approved: "bg-[#e7f7ee] text-[#1f7a47]",
-    late: "bg-[#ffe9ef] text-[#b73a58]",
-  };
-
-  return toneMap[status] ?? "bg-[#eef0f5] text-[#58617d]";
-}
-
-function DashboardSection({
-  title,
-  action,
-  children,
-}: {
-  title: string;
-  action?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="panel-surface flex min-h-0 flex-col overflow-hidden rounded-[20px] bg-white px-4 py-4">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="text-[19px] font-semibold tracking-[-0.02em] text-[#1f2747]">{title}</h2>
-        {action}
-      </div>
-      {children}
-    </section>
-  );
-}
+const KPI_DEFINITIONS = [
+  {
+    key: "activeModules",
+    label: "Modul Aktif",
+    helper: "Mata pelajaran yang sedang berjalan pada semester ini.",
+    icon: BookOpen,
+    tone: "indigo" as const,
+  },
+  {
+    key: "activeClasses",
+    label: "Kelas Aktif",
+    helper: "Rombel yang saat ini membutuhkan monitoring rutin.",
+    icon: Users,
+    tone: "blue" as const,
+  },
+  {
+    key: "draftItems",
+    label: "Draft Item",
+    helper: "Konten yang masih perlu diselesaikan sebelum dipublikasikan.",
+    icon: FileEdit,
+    tone: "amber" as const,
+  },
+  {
+    key: "needReview",
+    label: "Perlu Review",
+    helper: "Attempt kuis atau tugas yang menunggu keputusan guru.",
+    icon: Search,
+    tone: "rose" as const,
+  },
+  {
+    key: "pendingRevision",
+    label: "Menunggu Revisi",
+    helper: "Siswa yang perlu tindak lanjut berdasarkan feedback terakhir.",
+    icon: RefreshCw,
+    tone: "emerald" as const,
+  },
+] as const;
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -61,196 +59,88 @@ export default function DashboardPage() {
     teacherApi
       .getDashboard()
       .then(setData)
-      .catch((e: unknown) => setError(e instanceof Error ? e.message : "Gagal memuat data"))
+      .catch((e: unknown) => {
+        setData(dashboardSnapshot);
+        setError(
+          e instanceof Error
+            ? `Data live belum tersedia: ${e.message}. Menampilkan snapshot sementara dashboard.`
+            : "Data live belum tersedia. Menampilkan snapshot sementara dashboard."
+        );
+      })
       .finally(() => setLoading(false));
   }, []);
 
-  const kpiItems = data
-    ? [
-        { label: "Modul Aktif", value: String(data.kpi.activeModules) },
-        { label: "Kelas Aktif", value: String(data.kpi.activeClasses) },
-        { label: "Draft Item", value: String(data.kpi.draftItems) },
-        { label: "Need Review", value: String(data.kpi.needReview) },
-        { label: "Menunggu Revisi", value: String(data.kpi.pendingRevision) },
-      ]
-    : [];
-
   return (
-    <div className="grid min-h-full grid-rows-[auto_auto_minmax(0,1fr)] gap-3">
-      <header className="panel-surface rounded-[20px] px-5 py-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="max-w-3xl">
-            <h1 className="text-[34px] font-bold leading-[1.02] tracking-[-0.04em] text-[#18203f]">
-              {data ? `Selamat datang, ${data.teacher.name}` : "Dashboard Guru"}
-            </h1>
-            <p className="mt-2 text-[14px] leading-6 text-[#4f5878]">
-              Ringkasan operasional hari ini: authoring, publish, review, dan monitoring siswa.
-            </p>
-          </div>
-        </div>
-      </header>
-
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.28, ease: "easeOut" }}
+      className="space-y-4 pb-3"
+    >
       {loading ? (
-        <div className="col-span-5 rounded-[18px] border border-[rgba(113,94,215,0.10)] bg-white px-4 py-10 text-center text-[14px] font-medium text-[#5c6485]">
-          Memuat data dashboard...
-        </div>
-      ) : error ? (
-        <div className="rounded-[16px] border border-[#f1c2cd] bg-[#fff4f7] px-4 py-3 text-[13px] font-medium text-[#b24762]">
-          {error}
-        </div>
+        <SectionCard
+          title="Memuat dashboard guru"
+          description="Sedang mengambil ringkasan operasional pengajaran terbaru."
+        >
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div
+                key={index}
+                className="h-28 animate-pulse rounded-[24px] border border-[var(--line)] bg-[var(--surface-subtle)]"
+              />
+            ))}
+          </div>
+        </SectionCard>
+      ) : !data ? (
+        <SectionCard
+          title="Dashboard belum dapat dimuat"
+          description="Terjadi kendala saat mengambil data teacher dashboard."
+          variant="accent"
+        >
+          <p className="rounded-[20px] border border-[rgba(244,63,94,0.16)] bg-[var(--danger-soft)] px-4 py-4 text-sm text-[#b4234f]">
+            {error}
+          </p>
+        </SectionCard>
       ) : (
         <>
-          <section className="grid grid-cols-5 gap-3">
-            {kpiItems.map((item, idx) => {
-              const { bg, color } = KPI_ICONS[idx] ?? KPI_ICONS[0]!;
-              return (
-                <article
-                  key={item.label}
-                  className="panel-surface rounded-[18px] bg-white px-4 py-3.5"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#56607f]">
-                      {item.label}
-                    </p>
-                    <span
-                      className={`grid h-10 w-10 place-items-center rounded-[14px] ${bg} ${color}`}
-                    >
-                      {idx < 2 ? <Users className="h-5 w-5" /> : <BookOpen className="h-5 w-5" />}
-                    </span>
-                  </div>
-                  <p className="mt-3 text-[28px] font-bold tracking-[-0.06em] text-[#161d38]">
-                    {item.value}
-                  </p>
-                </article>
-              );
-            })}
-          </section>
-
-          <section className="grid min-h-0 gap-3">
-            <DashboardSection
-              title="Mata Pelajaran Aktif"
-              action={
-                <Link
-                  href="/modules"
-                  className="text-[12px] font-semibold text-[#6758d6] transition-colors hover:text-[#5646cc]"
-                >
-                  Buka daftar modul
-                </Link>
-              }
+          {error ? (
+            <SectionCard
+              title="Menggunakan snapshot sementara"
+              description="Koneksi data live sedang bermasalah. Dashboard tetap ditampilkan agar workflow tidak terputus."
+              variant="accent"
+              padding="compact"
             >
-              <div className="min-h-0 overflow-auto rounded-[14px] border border-[rgba(113,94,215,0.10)]">
-                <table className="w-full text-left text-[13px] text-[#4d5677]">
-                  <thead className="bg-[#faf8ff] text-[12px] uppercase tracking-[0.14em] text-[#596182]">
-                    <tr>
-                      <th className="px-4 py-3 font-semibold">Modul</th>
-                      <th className="px-3 py-3 font-semibold">Bab</th>
-                      <th className="px-3 py-3 font-semibold">L/Q/T</th>
-                      <th className="px-3 py-3 font-semibold">Status</th>
-                      <th className="px-3 py-3 font-semibold">Progress</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[rgba(113,94,215,0.10)]">
-                    {data?.modules.map((row) => (
-                      <tr key={row.id} className="align-top">
-                        <td className="px-4 py-3.5">
-                          <p className="text-[14px] font-semibold text-[#202844]">{row.title}</p>
-                          <p className="mt-1 text-[12px] text-[#58617f]">
-                            {row.department} • {row.gradeLevel}
-                          </p>
-                        </td>
-                        <td className="px-3 py-3.5 text-[14px] font-semibold text-[#28304d]">
-                          {row.chapters}
-                        </td>
-                        <td className="px-3 py-3.5 text-[14px] font-semibold text-[#28304d]">
-                          {row.lessons}/{row.quizzes}/{row.tasks}
-                        </td>
-                        <td className="px-3 py-3.5">
-                          <span
-                            className={`inline-flex rounded-full px-3 py-1.5 text-[13px] font-semibold ${getStatusBadgeClass(
-                              row.status
-                            )}`}
-                          >
-                            {row.status}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3.5 text-[14px] font-semibold text-[#28304d]">
-                          {row.completionRate}%
-                        </td>
-                      </tr>
-                    ))}
-                    {data?.modules.length === 0 && (
-                      <tr>
-                        <td
-                          colSpan={5}
-                          className="px-4 py-8 text-center text-[13px] font-medium text-[#66708f]"
-                        >
-                          Belum ada mata pelajaran yang di-assign.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </DashboardSection>
+              <p className="rounded-[20px] border border-[rgba(245,158,11,0.18)] bg-[var(--warning-soft)] px-4 py-4 text-sm text-[#9a5b11]">
+                {error}
+              </p>
+            </SectionCard>
+          ) : null}
+          <div className="w-full">
+            <PageTitle
+              eyebrow="Teacher Dashboard"
+              title={`Selamat datang, ${data.teacher.name}`}
+              description="Pantau modul aktif, review yang menunggu tindakan, dan kondisi progres siswa dari satu dashboard yang lebih fokus dan siap dipakai harian."
+              meta={[data.teacher.department, `NIP ${data.teacher.nip}`]}
+            />
+          </div>
 
-            {(data?.recentSubmissions.length ?? 0) > 0 && (
-              <DashboardSection
-                title="Submission Terbaru"
-                action={
-                  <Link
-                    href="/review-tugas"
-                    className="text-[12px] font-semibold text-[#6758d6] transition-colors hover:text-[#5646cc]"
-                  >
-                    Review semua
-                  </Link>
-                }
-              >
-                <div className="min-h-0 overflow-auto rounded-[14px] border border-[rgba(113,94,215,0.10)]">
-                  <table className="w-full text-left text-[13px] text-[#4d5677]">
-                    <thead className="bg-[#faf8ff] text-[12px] uppercase tracking-[0.14em] text-[#596182]">
-                      <tr>
-                        <th className="px-4 py-3 font-semibold">Siswa</th>
-                        <th className="px-3 py-3 font-semibold">Mapel</th>
-                        <th className="px-3 py-3 font-semibold">Tugas</th>
-                        <th className="px-3 py-3 font-semibold">Status</th>
-                        <th className="px-3 py-3 font-semibold">Skor</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[rgba(113,94,215,0.10)]">
-                      {data?.recentSubmissions.map((sub) => (
-                        <tr key={sub.id} className="align-top">
-                          <td className="px-4 py-3.5">
-                            <p className="text-[14px] font-semibold text-[#202844]">{sub.studentName}</p>
-                            <p className="mt-1 text-[12px] font-medium text-[#58617f]">{sub.className}</p>
-                          </td>
-                          <td className="px-3 py-3.5 text-[13px] font-medium text-[#2f3755]">
-                            {sub.courseTitle}
-                          </td>
-                          <td className="px-3 py-3.5 text-[13px] font-medium text-[#2f3755]">
-                            {sub.assignmentTitle}
-                          </td>
-                          <td className="px-3 py-3.5">
-                            <span
-                              className={`inline-flex rounded-full px-3 py-1.5 text-[13px] font-semibold ${getStatusBadgeClass(
-                                sub.status
-                              )}`}
-                            >
-                              {sub.status}
-                            </span>
-                          </td>
-                          <td className="px-3 py-3.5 text-[15px] font-bold text-[#1f2747]">
-                            {sub.score ?? "—"}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </DashboardSection>
-            )}
+          <section className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            {KPI_DEFINITIONS.map(({ key, label, helper, icon, tone }) => (
+              <StatCard
+                key={key}
+                label={label}
+                value={data.kpi[key]}
+                helper={helper}
+                icon={icon}
+                tone={tone}
+              />
+            ))}
           </section>
+
+          <ActiveModulesTable modules={data.modules} />
+          <RecentSubmissionsTable submissions={data.recentSubmissions} />
         </>
       )}
-    </div>
+    </motion.div>
   );
 }

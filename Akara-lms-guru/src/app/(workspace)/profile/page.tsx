@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { MiniInput, PageHeader, Surface } from "@/components/workspace/ui";
-import { Mail, Phone, BookOpen, ShieldCheck, Loader2 } from "lucide-react";
+import { BookOpen, Loader2, Mail, ShieldCheck } from "lucide-react";
 import { useToast } from "@/components/workspace/toast";
+import { Button } from "@/components/ui/button";
 import { teacherApi, type DashboardData } from "@/lib/api-client";
 import { authClient } from "@/lib/auth-client";
 
@@ -47,7 +48,7 @@ export default function ProfilePage() {
     setIsChangingPassword(true);
 
     try {
-      const { data, error } = await authClient.changePassword({
+      const { error } = await authClient.changePassword({
         newPassword,
         currentPassword,
         revokeOtherSessions: true
@@ -61,67 +62,68 @@ export default function ProfilePage() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (err: any) {
-      toast.error(err.message || "Terjadi kesalahan saat mengganti password.");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Terjadi kesalahan saat mengganti password.");
     } finally {
       setIsChangingPassword(false);
     }
   };
 
   return (
-    <div className="grid min-h-full grid-rows-[auto_minmax(0,1fr)] gap-3">
+    <div className="space-y-5 pb-6">
       <PageHeader
         title="Profil Guru"
         description="Lihat informasi profil Anda dan kelola keamanan akun."
       />
 
-      <section className="grid min-h-0 gap-4 md:grid-cols-2">
-        
-        {/* Left Column: Preview Profile */}
+      <section className="grid gap-4 md:grid-cols-2">
         <Surface title="Informasi Profil">
-          <div className="flex h-full flex-col items-center justify-center p-6">
-            <div className="mb-6 flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-tr from-[#765df5] to-[#a89bf8] text-white shadow-xl ring-4 ring-[#f0edff]">
-              <span className="text-[40px] font-bold">{initials}</span>
+          <div className="flex h-full flex-col items-center justify-center p-4 text-center">
+            <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-[24px] border border-[rgba(79,70,199,0.14)] bg-[var(--accent-soft)] text-[var(--accent)] shadow-[var(--shadow-soft)]">
+              <span className="text-[28px] font-semibold">{initials}</span>
             </div>
-            <h3 className="text-[22px] font-extrabold text-[#2b325b]">{data?.teacher?.name || "Memuat..."}</h3>
-            <p className="mb-6 mt-1 rounded-full bg-[#f0edff] px-3 py-1.5 text-[12px] font-bold uppercase tracking-wider text-[#6d5dfc]">{data?.teacher?.department || "Guru"}</p>
+            <h3 className="text-xl font-semibold tracking-[-0.03em] text-[var(--page-ink)]">
+              {data?.teacher?.name || "Memuat..."}
+            </h3>
+            <p className="mb-5 mt-2 rounded-full border border-[rgba(79,70,199,0.14)] bg-[var(--accent-soft)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">
+              {data?.teacher?.department || "Guru"}
+            </p>
             
-            <div className="w-full space-y-4 rounded-[16px] border border-[rgba(113,94,215,0.08)] bg-[#faf9ff] p-5 text-[12px] text-[#4e5378] shadow-sm">
-              <div className="flex items-center gap-4 border-b border-[rgba(113,94,215,0.08)] pb-4">
-                <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-white shadow-sm border border-[rgba(113,94,215,0.05)]">
-                  <Mail className="h-4 w-4 text-[#715ed7]" />
+            <div className="w-full space-y-3 rounded-[18px] border border-[var(--line)] bg-[var(--surface-subtle)] p-5 text-left text-sm text-[var(--muted-ink)]">
+              <div className="flex items-center gap-4 border-b border-[var(--line)] pb-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-[14px] border border-[var(--line)] bg-[var(--surface)] text-[var(--accent)]">
+                  <Mail className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="text-[13px] font-semibold uppercase tracking-wider text-[#a5aecf] mb-0.5">NIP</p>
-                  <p className="font-bold text-[#2b325b]">{data?.teacher?.nip || "-"}</p>
+                  <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted-ink)]">NIP</p>
+                  <p className="font-semibold text-[var(--page-ink)]">{data?.teacher?.nip || "-"}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-4 border-b border-[rgba(113,94,215,0.08)] pb-4">
-                <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-white shadow-sm border border-[rgba(113,94,215,0.05)]">
-                  <BookOpen className="h-4 w-4 text-[#715ed7]" />
+              <div className="flex items-center gap-4 pt-1">
+                <div className="flex h-10 w-10 items-center justify-center rounded-[14px] border border-[var(--line)] bg-[var(--surface)] text-[var(--accent)]">
+                  <BookOpen className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="text-[13px] font-semibold uppercase tracking-wider text-[#a5aecf] mb-0.5">Mata Pelajaran</p>
-                  <p className="font-bold text-[#2b325b]">{data?.teacher?.department || "-"}</p>
+                  <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted-ink)]">Mata Pelajaran</p>
+                  <p className="font-semibold text-[var(--page-ink)]">{data?.teacher?.department || "-"}</p>
                 </div>
               </div>
             </div>
           </div>
         </Surface>
 
-        {/* Right Column: Keamanan & Password */}
         <Surface 
           title="Keamanan & Password"
-          action={<ShieldCheck className="h-5 w-5 text-[#8a92ba]" />}
+          action={<ShieldCheck className="h-5 w-5 text-[var(--accent)]" />}
         >
-          <div className="flex h-full flex-col p-2">
-            <div className="mb-6 rounded-[12px] border border-[#f0b16b]/30 bg-[#fff8ef] p-4 text-[#c1782c]">
-              <p className="text-[13px] font-medium leading-relaxed">
+          <div className="flex h-full flex-col p-1">
+            <div className="mb-4 rounded-[16px] border border-[rgba(245,158,11,0.18)] bg-[var(--warning-soft)] px-4 py-3 text-[var(--warning)]">
+              <p className="text-[12px] leading-6">
                 Untuk menjaga keamanan akun Anda, pastikan password baru memiliki minimal 8 karakter, kombinasi angka, dan huruf kapital.
               </p>
             </div>
 
-            <div className="grid gap-4">
+            <div className="grid min-h-0 flex-1 gap-3 overflow-y-auto no-scrollbar">
               <MiniInput 
                 label="Password Lama" 
                 placeholder="Masukkan password lama" 
@@ -145,15 +147,15 @@ export default function ProfilePage() {
               />
             </div>
             
-            <div className="mt-auto flex justify-end pt-8">
-              <button 
+            <div className="mt-4 flex shrink-0 justify-end">
+              <Button 
+                type="button"
                 onClick={handleChangePassword}
                 disabled={isChangingPassword}
-                className="cursor-pointer rounded-[10px] bg-gradient-to-r from-[#765df5] to-[#5b50dc] px-6 py-2.5 text-[13px] font-bold tracking-wide text-white transition-all hover:opacity-90 hover:shadow-[0_4px_12px_rgba(113,94,215,0.25)] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center"
               >
-                {isChangingPassword ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                {isChangingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 {isChangingPassword ? "Memproses..." : "Ganti Password"}
-              </button>
+              </Button>
             </div>
           </div>
         </Surface>

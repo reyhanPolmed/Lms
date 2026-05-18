@@ -229,7 +229,7 @@ function DetailPageLayout({
   return (
     <div className="grid gap-6 xl:grid-cols-4 xl:items-start">
       <div className="xl:col-span-3">{children}</div>
-      <aside className="xl:col-span-1 xl:sticky xl:top-24">{sidebar}</aside>
+      <aside className="xl:col-span-1 xl:sticky xl:top-28">{sidebar}</aside>
     </div>
   );
 }
@@ -247,11 +247,11 @@ function Breadcrumbs({
     <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-slate-500">
       <Home className="h-4 w-4" />
       <ChevronRight className="h-4 w-4" />
-      <Link className="transition hover:text-brand-ocean" href="/modules">
-        Materi
+      <Link className="transition hover:text-slate-900" href="/modules">
+        Modul
       </Link>
       <ChevronRight className="h-4 w-4" />
-      <Link className="transition hover:text-brand-ocean" href={`/modules/${moduleId}`}>
+      <Link className="transition hover:text-slate-900" href={`/modules/${moduleId}`}>
         {moduleTitle}
       </Link>
       <ChevronRight className="h-4 w-4" />
@@ -264,7 +264,7 @@ function BackToModuleLink({ moduleId }: { moduleId: string }) {
   return (
     <div className="flex items-center justify-between gap-4">
       <Link
-        className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-brand-ocean"
+        className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-slate-900"
         href={`/modules/${moduleId}`}
       >
         <ArrowLeft className="h-4 w-4" />

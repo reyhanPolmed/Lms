@@ -59,37 +59,56 @@ export default function ModuleDetailPage({
       <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-slate-500">
         <Home className="h-4 w-4" />
         <ChevronRight className="h-4 w-4" />
-        <Link className="transition hover:text-brand-ocean" href="/modules">
-          Materi
+        <Link className="transition hover:text-slate-900" href="/modules">
+          Modul
         </Link>
         <ChevronRight className="h-4 w-4" />
         <span className="text-slate-950">{data.title}</span>
       </div>
 
-      <section
-        className="overflow-hidden rounded-[36px] px-8 py-8 text-white shadow-soft"
-        style={{
-          background: `linear-gradient(135deg, ${data.accent} 0%, #081225 85%)`
-        }}
-      >
-        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+      <section className="surface-card overflow-hidden p-0">
+        <div
+          className="h-2 w-full"
+          style={{
+            background: `linear-gradient(90deg, ${data.accent ?? "#155DFC"} 0%, rgba(15,23,42,0.94) 100%)`
+          }}
+        />
+        <div className="flex flex-col gap-6 p-6 sm:p-7 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-3xl">
-            <p className="eyebrow text-white/70">{data.department}</p>
-            <h1 className="mt-3 font-heading text-4xl font-semibold">{data.title}</h1>
-            <p className="mt-4 text-sm leading-7 text-white/80">{data.description}</p>
-          </div>
-          <div className="grid gap-3 rounded-[28px] border border-white/10 bg-white/10 p-5">
-            <div>
-              <p className="text-xs uppercase tracking-[0.24em] text-white/60">Progress</p>
-              <p className="mt-2 font-heading text-3xl font-semibold">{data.completionRate}%</p>
+            <p className="eyebrow">{data.department}</p>
+            <h1 className="mt-2 text-[32px] font-semibold tracking-[-0.04em] text-slate-950">
+              {data.title}
+            </h1>
+            <p className="mt-4 text-sm leading-7 text-slate-600">{data.description}</p>
+            <div className="mt-5 flex flex-wrap gap-2 text-xs font-medium text-slate-600">
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5">
+                {data.totalItems} item belajar
+              </span>
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5">
+                Pengajar: {data.teacherName}
+              </span>
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5">
+                Berikutnya: {data.nextItemTitle}
+              </span>
             </div>
-            <div className="h-2 rounded-full bg-white/10">
+          </div>
+
+          <div className="dashboard-panel min-w-full p-5 sm:min-w-[290px] lg:max-w-[320px]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Progress modul
+            </p>
+            <p className="mt-3 text-[36px] font-semibold leading-none tracking-[-0.05em] text-slate-950">
+              {data.completionRate ?? 0}%
+            </p>
+            <div className="mt-4 h-2 rounded-full bg-slate-100">
               <div
-                className="h-full rounded-full bg-brand-gold"
-                style={{ width: `${data.completionRate}%` }}
+                className="h-full rounded-full bg-slate-900"
+                style={{ width: `${data.completionRate ?? 0}%` }}
               />
             </div>
-            <p className="text-sm text-white/70">Pengajar: {data.teacherName}</p>
+            <p className="mt-4 text-sm leading-6 text-slate-500">
+              Gunakan daftar item di bawah untuk membuka materi, kuis, dan tugas sesuai urutan.
+            </p>
           </div>
         </div>
       </section>
@@ -102,17 +121,14 @@ export default function ModuleDetailPage({
             </div>
           ) : (
             data.sections.map((section) => (
-            <section
-              key={section.id}
-              className="surface-card block w-full p-6"
-            >
+            <section key={section.id} className="surface-card block w-full p-5 sm:p-6">
               <div className="mb-5 flex items-start gap-4">
-                <div className="rounded-2xl bg-slate-950 p-3 text-white">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-slate-700">
                   <Layers3 className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 className="font-heading text-xl font-semibold">{section.title}</h2>
-                  <p className="mt-1 text-sm text-slate-500">{section.description}</p>
+                  <h2 className="text-xl font-semibold tracking-[-0.03em] text-slate-950">{section.title}</h2>
+                  <p className="mt-1 text-sm leading-6 text-slate-500">{section.description}</p>
                 </div>
               </div>
 
@@ -136,13 +152,13 @@ export default function ModuleDetailPage({
         </div>
 
         <aside className="surface-card p-6">
-          <p className="eyebrow">Arah belajar</p>
-          <h2 className="mt-2 font-heading text-2xl font-semibold">Ringkasan modul</h2>
+          <p className="eyebrow">Ringkasan modul</p>
+          <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">Arah belajar</h2>
           <ul className="mt-5 space-y-3 text-sm leading-6 text-slate-600">
             <li>Jumlah item belajar: {data.totalItems}</li>
             <li>Item berikutnya: {data.nextItemTitle}</li>
-            <li>Progress berjalan: {data.completionRate}%</li>
-            <li>Lesson sekarang dibuka lewat halaman terpisah, bukan viewer di URL modul.</li>
+            <li>Progress berjalan: {data.completionRate ?? 0}%</li>
+            <li>Semua item dibuka lewat halaman detail terpisah agar fokus belajar lebih rapi.</li>
           </ul>
         </aside>
       </section>
@@ -155,20 +171,20 @@ function LessonRouteCard({ item }: { item: SidebarEntry }) {
   const ItemIcon = meta.icon;
   const status = item.isLocked ? "locked" : item.isCompleted ? "complete" : "active";
   const className =
-    "flex flex-col gap-4 rounded-3xl border border-slate-200 p-4 transition md:flex-row md:items-center md:justify-between";
+    "flex flex-col gap-4 rounded-[22px] border border-slate-200/80 p-4 transition md:flex-row md:items-center md:justify-between";
 
   if (item.isLocked) {
     return (
       <div
         aria-disabled="true"
-        className={`${className} cursor-not-allowed opacity-60`}
+        className={`${className} cursor-not-allowed bg-slate-50/70 opacity-70`}
       >
         <div className="flex items-start gap-3">
           <div className="rounded-2xl bg-slate-100 p-3 text-slate-500">
             <ItemIcon className="h-5 w-5" />
           </div>
           <div>
-            <p className="mt-1 font-heading text-lg font-semibold text-slate-950">{item.title}</p>
+            <p className="mt-1 text-lg font-semibold tracking-[-0.02em] text-slate-950">{item.title}</p>
             <p className="mt-1 text-sm text-slate-500">{meta.helper}</p>
           </div>
         </div>
@@ -182,15 +198,15 @@ function LessonRouteCard({ item }: { item: SidebarEntry }) {
 
   return (
     <Link
-      className={`${className} hover:-translate-y-0.5 hover:border-brand-ocean/40 hover:bg-slate-50 hover:shadow-soft`}
+      className={`${className} hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 hover:shadow-[0_18px_40px_-36px_rgba(15,23,42,0.28)]`}
       href={item.href}
     >
       <div className="flex items-start gap-3">
-        <div className="rounded-2xl bg-brand-ocean/5 p-3 text-brand-ocean">
+        <div className="rounded-2xl bg-slate-100 p-3 text-slate-700">
           <ItemIcon className="h-5 w-5" />
         </div>
         <div>
-          <p className="mt-1 font-heading text-lg font-semibold text-slate-950">{item.title}</p>
+          <p className="mt-1 text-lg font-semibold tracking-[-0.02em] text-slate-950">{item.title}</p>
           <p className="mt-1 text-sm text-slate-500">{meta.helper}</p>
         </div>
       </div>

@@ -1,8 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { AlertTriangle, ClipboardList, School, Users } from "lucide-react";
 
+import { ClassSummaryCard } from "@/components/dashboard/class-summary-card";
+import { EmptyState } from "@/components/dashboard/empty-state";
+import { ErrorState } from "@/components/dashboard/error-state";
+import { LoadingState } from "@/components/dashboard/loading-state";
 import { PageHeader, Surface } from "@/components/workspace/ui";
 import { buildTaskClassCards, loadTaskReviewRows, type ReviewTaskSubmissionRow } from "./review-tugas-utils";
 
@@ -12,9 +16,6 @@ export default function TaskReviewClassesPage() {
   const [error, setError] = useState("");
 
   const loadData = useCallback(() => {
-    setLoading(true);
-    setError("");
-
     loadTaskReviewRows()
       .then(setSubmissions)
       .catch((loadError: unknown) => {
@@ -30,49 +31,46 @@ export default function TaskReviewClassesPage() {
   const classCards = useMemo(() => buildTaskClassCards(submissions), [submissions]);
 
   return (
-    <div className="grid min-h-full grid-rows-[auto_minmax(0,1fr)] gap-2">
+    <div className="space-y-5 pb-6">
       <PageHeader
         title="Review Tugas Siswa"
-        description="Pilih kelas sebagai pintu masuk awal untuk meninjau tugas siswa."
+        description="Pilih kelas untuk meninjau pengumpulan tugas, feedback revisi, dan status penilaian."
       />
 
-      <Surface title="Pilih Kelas">
+      <Surface title="Pilih Kelas" description="Daftar ini membantu guru masuk ke antrean tugas berdasarkan kelas.">
         {loading ? (
-          <p className="py-8 text-center text-[13px] text-[#626b8b]">Memuat ringkasan kelas...</p>
+          <LoadingState
+            title="Memuat ringkasan kelas"
+            description="Mengambil daftar pengumpulan tugas dan mengelompokkannya per kelas."
+          />
         ) : error ? (
-          <p className="rounded-[12px] border border-[#f4d1d8] bg-[#fff7f9] px-3 py-2 text-[12px] text-[#b25a70]">
-            {error}
-          </p>
+          <ErrorState message={error} />
         ) : classCards.length === 0 ? (
-          <div className="rounded-[18px] border border-dashed border-[rgba(113,94,215,0.16)] bg-[#fcfbff] px-4 py-8 text-center">
-            <p className="text-[13px] text-[#626b8b]">Belum ada kelas dengan pengumpulan tugas.</p>
-          </div>
+          <EmptyState
+            icon={School}
+            title="Belum ada pengumpulan tugas"
+            description="Kelas akan muncul setelah siswa mengirimkan tugas untuk mata pelajaran aktif."
+          />
         ) : (
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2">
             {classCards.map((item) => (
-              <article
+              <ClassSummaryCard
                 key={item.className}
-                className="rounded-[22px] border border-[rgba(113,94,215,0.12)] bg-white p-4 shadow-[0_10px_24px_rgba(28,24,62,0.04)]"
-              >
-                <div>
-                  <p className="text-[18px] font-semibold text-[#252b4d]">{item.className}</p>
-                  <p className="mt-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-[#727b9b]">
-                    Wali Kelas
-                  </p>
-                  <p className="mt-1 text-[13px] text-[#596183]">{item.homeroomName}</p>
-                </div>
-
-                <p className="mt-4 text-[13px] text-[#697198]">
-                  {item.studentCount} siswa | {item.subjectCount} mapel | {item.pendingCount} perlu ditinjau
-                </p>
-
-                <Link
-                  href={`/review-tugas/kelas/${encodeURIComponent(item.className)}`}
-                  className="mt-4 flex w-full items-center justify-center rounded-[14px] bg-[#715ed7] px-3 py-2.5 text-[13px] font-semibold text-white shadow-[0_12px_24px_rgba(113,94,215,0.20)] transition-opacity hover:opacity-90"
-                >
-                  Tinjau Kelas
-                </Link>
-              </article>
+                title={item.className}
+                homeroomName={item.homeroomName}
+                href={`/review-tugas/kelas/${encodeURIComponent(item.className)}`}
+                ctaLabel="Tinjau Kelas"
+                metrics={[
+                  { label: "Siswa", value: item.studentCount, icon: Users },
+                  { label: "Mapel", value: item.subjectCount, icon: ClipboardList },
+                  {
+                    label: "Perlu review",
+                    value: item.pendingCount,
+                    icon: AlertTriangle,
+                    tone: item.pendingCount > 0 ? "warning" : "success",
+                  },
+                ]}
+              />
             ))}
           </div>
         )}

@@ -2,9 +2,22 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { BookOpen, CheckCircle2, CircleHelp, ClipboardCheck, FileText, GraduationCap } from "lucide-react";
 
+import { EmptyState } from "@/components/dashboard/empty-state";
+import { ErrorState } from "@/components/dashboard/error-state";
+import { LoadingState } from "@/components/dashboard/loading-state";
+import { StatusBadge } from "@/components/dashboard/status-badge";
+import { Button } from "@/components/ui/button";
 import { PageHeader, Surface } from "@/components/workspace/ui";
 import { teacherApi, type ModuleSummary } from "@/lib/api-client";
+
+const moduleMetrics = [
+  { label: "Bab", key: "chapters", icon: BookOpen },
+  { label: "Materi", key: "lessons", icon: FileText },
+  { label: "Kuis", key: "quizzes", icon: CircleHelp },
+  { label: "Tugas", key: "tasks", icon: ClipboardCheck },
+] as const;
 
 export default function ModulesPage() {
   const [modules, setModules] = useState<ModuleSummary[]>([]);
@@ -20,66 +33,80 @@ export default function ModulesPage() {
   }, []);
 
   return (
-    <div className="grid min-h-full grid-rows-[auto_minmax(0,1fr)] gap-2">
+    <div className="space-y-5 pb-6">
       <PageHeader
         title="Mata Pelajaran"
-        description="Kelola semua mata pelajaran yang Anda ampu. Klik detail untuk membuka builder konten."
+        description="Kelola mata pelajaran yang didaftarkan admin dan lengkapi konten pembelajarannya secara terstruktur."
       />
 
-      <Surface title={`Daftar Mata Pelajaran (${modules.length})`}>
+      <Surface
+        title="Daftar Mata Pelajaran"
+        action={
+          <span className="rounded-full border border-[var(--line)] bg-[var(--surface-subtle)] px-3 py-1.5 text-[12px] font-semibold text-[var(--muted-ink)]">
+            {modules.length} modul aktif
+          </span>
+        }
+      >
         {loading ? (
-          <p className="py-6 text-center text-[13px] text-[#626b8b]">Memuat data...</p>
+          <LoadingState
+            title="Memuat mata pelajaran"
+            description="Mengambil daftar modul yang ditugaskan untuk guru pengampu."
+          />
         ) : error ? (
-          <p className="rounded-[9px] border border-[#f5c4cd] bg-[#fff2f5] px-3 py-2 text-[12px] text-[#ba4b64]">
-            {error}
-          </p>
+          <ErrorState message={error} />
         ) : modules.length === 0 ? (
-          <p className="py-6 text-center text-[13px] text-[#626b8b]">Belum ada mata pelajaran.</p>
+          <EmptyState
+            icon={BookOpen}
+            title="Belum ada mata pelajaran"
+            description="Mata pelajaran akan muncul setelah admin mendaftarkan modul untuk guru ini."
+          />
         ) : (
-          <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-            {modules.map((m) => (
+          <div className="grid gap-4 md:grid-cols-2">
+            {modules.map((module) => (
               <article
-                key={m.id}
-                className="flex flex-col rounded-[14px] border border-[rgba(113,94,215,0.12)] bg-white p-3.5"
+                key={module.id}
+                className="flex h-full flex-col rounded-[20px] border border-[var(--line)] bg-[var(--surface)] p-5 shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5 hover:border-[rgba(79,70,199,0.22)]"
               >
-                <div className="mb-2 flex items-start justify-between gap-2">
-                  <div>
-                    <p className="text-[12px] font-bold text-[#2b325b]">{m.title}</p>
-                    <p className="text-[12px] text-[#626b8b]">
-                      {m.department} — {m.gradeLevel}
-                    </p>
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] border border-[rgba(79,70,199,0.12)] bg-[var(--accent-soft)] text-[var(--accent)]">
+                    <GraduationCap className="h-5 w-5" />
                   </div>
-                  <span
-                    className={`rounded-[6px] px-2 py-0.5 text-[13px] font-semibold ${
-                      m.status === "published"
-                        ? "bg-[#eaf6ee] text-[#2f8c57]"
-                        : "bg-[#fff0d9] text-[#c17614]"
-                    }`}
-                  >
-                    {m.status}
-                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="truncate text-lg font-semibold capitalize tracking-[-0.03em] text-[var(--page-ink)]">
+                          {module.title}
+                        </h3>
+                        <p className="mt-1 text-sm text-[var(--muted-ink)]">
+                          {module.department} - Kelas {module.gradeLevel}
+                        </p>
+                      </div>
+                      <StatusBadge status={module.status} />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-4 gap-1 rounded-[10px] bg-[#faf8ff] px-2 py-1.5">
-                  {[
-                    { label: "Bab", val: m.chapters },
-                    { label: "Materi", val: m.lessons },
-                    { label: "Kuis", val: m.quizzes },
-                    { label: "Tugas", val: m.tasks },
-                  ].map(({ label, val }) => (
-                    <div key={label} className="text-center">
-                      <p className="text-[13px] font-bold text-[#4e5378]">{val}</p>
-                      <p className="text-[12px] text-[#626b8b]">{label}</p>
+                <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {moduleMetrics.map(({ label, key, icon: Icon }) => (
+                    <div
+                      key={label}
+                      className="rounded-[14px] border border-[var(--line)] bg-[var(--surface-subtle)] px-3 py-3"
+                    >
+                      <Icon className="h-4 w-4 text-[var(--accent)]" />
+                      <p className="mt-2 text-base font-semibold leading-none text-[var(--page-ink)]">
+                        {module[key]}
+                      </p>
+                      <p className="mt-1 text-[12px] text-[var(--muted-ink)]">{label}</p>
                     </div>
                   ))}
                 </div>
 
-                <Link
-                  href={`/modules/${m.id}/builder`}
-                  className="mt-3 block rounded-[9px] border border-[#bdb6f6] px-3 py-1.5 text-center text-[12px] font-semibold text-[#5b6191] transition-all hover:bg-[#f0edff]"
-                >
-                  Detail Mata Pelajaran →
-                </Link>
+                <Button asChild variant="secondary" className="mt-5 w-full">
+                  <Link href={`/modules/${module.id}/builder`}>
+                    Detail Mata Pelajaran
+                    <CheckCircle2 className="h-4 w-4" />
+                  </Link>
+                </Button>
               </article>
             ))}
           </div>

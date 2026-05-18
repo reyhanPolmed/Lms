@@ -18,7 +18,7 @@ interface ProtectedShellProps {
 export function ProtectedShell({
   children,
   showSidebar = true,
-  mainClassName = "mx-auto w-full max-w-6xl px-5 py-7 sm:px-8 lg:py-8"
+  mainClassName = "mx-auto w-full max-w-[1480px] px-4 py-5 sm:px-6 lg:px-8 lg:py-6"
 }: ProtectedShellProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -59,9 +59,9 @@ export function ProtectedShell({
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f9ff] text-[#0b1c30]">
+    <div className="workspace-shell min-h-screen bg-transparent text-slate-900">
       {showSidebar ? <Sidebar /> : null}
-      <div className={showSidebar ? "min-h-screen lg:pl-64" : "min-h-screen"}>
+      <div className={showSidebar ? "min-h-screen lg:pl-[280px]" : "min-h-screen"}>
         <Topbar profile={profileQuery.data} />
         <main className={mainClassName}>{children}</main>
       </div>

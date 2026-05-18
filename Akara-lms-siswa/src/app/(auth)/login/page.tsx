@@ -83,10 +83,7 @@ export default function LoginPage() {
       : null;
 
   return (
-    <main
-      className="relative isolate h-screen overflow-hidden bg-[#f5f0e8] text-slate-900"
-      style={{ fontFamily: '"Bahnschrift", "Aptos", "Segoe UI", sans-serif' }}
-    >
+    <main className="relative isolate h-screen overflow-hidden bg-[#f5f0e8] text-slate-900">
       <Image
         alt="Ilustrasi kampus untuk halaman login siswa"
         className="object-cover object-center"
@@ -97,43 +94,37 @@ export default function LoginPage() {
         src={backgroundLogin}
       />
 
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(250,246,240,0.96)_0%,rgba(250,246,240,0.82)_30%,rgba(250,246,240,0.38)_55%,rgba(250,246,240,0.12)_100%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.72),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.28),transparent_28%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(248,245,239,0.96)_0%,rgba(248,245,239,0.84)_33%,rgba(248,245,239,0.44)_58%,rgba(248,245,239,0.16)_100%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.72),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.22),transparent_28%)]" />
 
       <div className="relative z-10 flex h-full min-h-0 items-center px-4 sm:px-8 lg:px-12">
-        <div className="flex w-full min-h-0 max-w-[370px] flex-col justify-center py-[50px]">
+        <div className="flex w-full min-h-0 max-w-[400px] flex-col justify-center py-[50px]">
           <div className="mb-3 flex shrink-0 items-center gap-2.5 text-slate-900">
-            <div className="flex h-9 w-9 items-center justify-center rounded-[18px] border border-slate-900/10 bg-white/72 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur-sm">
+            <div className="flex h-10 w-10 items-center justify-center rounded-[20px] border border-slate-900/10 bg-white/78 shadow-[0_14px_30px_-24px_rgba(15,23,42,0.18)] backdrop-blur-sm">
               <BookOpen className="h-4 w-4 text-slate-800" />
             </div>
             <div className="min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">
                 Akara LMS Siswa
               </p>
-              <h1
-                className="text-[15px] font-semibold tracking-[-0.02em] text-slate-900"
-                style={{ fontFamily: '"Georgia", "Cambria", "Times New Roman", serif' }}
-              >
+              <h1 className="text-[15px] font-semibold tracking-[-0.02em] text-slate-900">
                 Portal Belajar
               </h1>
             </div>
           </div>
 
           <div className="max-w-[500px] shrink-0 space-y-1">
-            <p className="text-[clamp(1.2rem,2.6vw,1.7rem)] font-semibold leading-[1.05] tracking-[-0.04em] text-slate-900">
+            <p className="text-[clamp(1.35rem,2.6vw,1.9rem)] font-semibold leading-[1.08] tracking-[-0.04em] text-slate-900">
               Lanjutkan belajar dari satu ruang yang rapi.
             </p>
-            <p className="max-w-[420px] text-[11px] leading-4 text-slate-600 sm:text-[12px]">
+            <p className="max-w-[420px] text-[12px] leading-5 text-slate-600">
               Masuk untuk membuka Bab, materi, kuis, tugas, dan progres belajar terbaru.
             </p>
           </div>
 
-          <section className="mt-3.5 flex w-full max-w-[500px] min-h-0 shrink-0 flex-col overflow-hidden rounded-[22px] border border-white/65 bg-white/72 p-3 shadow-[0_24px_80px_rgba(15,23,42,0.16)] backdrop-blur-xl sm:p-3.5">
+          <section className="mt-4 flex w-full max-w-[500px] min-h-0 shrink-0 flex-col overflow-hidden rounded-[24px] border border-white/70 bg-white/76 p-4 shadow-[0_24px_70px_-38px_rgba(15,23,42,0.2)] backdrop-blur-xl sm:p-5">
             <div className="mb-2.5 shrink-0">
-              <h2
-                className="text-[15px] font-semibold tracking-[-0.03em] text-slate-900"
-                style={{ fontFamily: '"Georgia", "Cambria", "Times New Roman", serif' }}
-              >
+              <h2 className="text-[15px] font-semibold tracking-[-0.03em] text-slate-900">
                 Masuk ke akun siswa
               </h2>
               <p className="mt-1 text-[11px] text-slate-500">
@@ -146,8 +137,8 @@ export default function LoginPage() {
                 <div
                   className={
                     feedback.tone === "error"
-                      ? "flex items-start gap-2 rounded-[18px] border border-red-200 bg-red-50 px-2.5 py-2 text-[11px] leading-4 text-red-700"
-                      : "flex items-start gap-2 rounded-[18px] border border-emerald-200 bg-emerald-50 px-2.5 py-2 text-[11px] leading-4 text-emerald-700"
+                      ? "flex items-start gap-2 rounded-[18px] border border-red-200 bg-red-50 px-3 py-2.5 text-[11px] leading-4 text-red-700"
+                      : "flex items-start gap-2 rounded-[18px] border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-[11px] leading-4 text-emerald-700"
                   }
                 >
                   <feedback.icon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
@@ -165,7 +156,7 @@ export default function LoginPage() {
                   <Mail className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
                   <input
                     autoComplete="email"
-                    className="h-10 w-full rounded-[18px] border border-slate-200/90 bg-white/90 pl-9 pr-3 text-[12px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:ring-4 focus:ring-slate-900/5"
+                    className="h-11 w-full rounded-[18px] border border-slate-200/90 bg-white/92 pl-9 pr-3 text-[12px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:ring-4 focus:ring-slate-900/5"
                     onChange={(event) => setEmail(event.target.value)}
                     placeholder="siswa@akara.edu"
                     required
@@ -183,7 +174,7 @@ export default function LoginPage() {
                   <Lock className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
                   <input
                     autoComplete="current-password"
-                    className="h-10 w-full rounded-[18px] border border-slate-200/90 bg-white/90 pl-9 pr-3 text-[12px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:ring-4 focus:ring-slate-900/5"
+                    className="h-11 w-full rounded-[18px] border border-slate-200/90 bg-white/92 pl-9 pr-3 text-[12px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:ring-4 focus:ring-slate-900/5"
                     onChange={(event) => setPassword(event.target.value)}
                     placeholder="Masukkan kata sandi"
                     required
@@ -194,7 +185,7 @@ export default function LoginPage() {
               </label>
 
               <button
-                className="flex h-10 w-full items-center justify-center gap-1.5 rounded-[18px] bg-slate-900 px-4 text-[12px] font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-900/15 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex h-11 w-full items-center justify-center gap-1.5 rounded-[18px] bg-slate-900 px-4 text-[12px] font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-900/15 disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={loading}
                 type="submit"
               >
@@ -209,7 +200,7 @@ export default function LoginPage() {
               </button>
             </form>
 
-            <div className="mt-2.5 flex shrink-0 items-center gap-2 text-[10px] text-slate-500">
+            <div className="mt-3 flex shrink-0 items-center gap-2 text-[10px] text-slate-500">
               <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-900/5 text-slate-700">
                 <CheckCircle2 className="h-3 w-3" />
               </span>

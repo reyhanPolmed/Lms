@@ -1,8 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { AlertTriangle, ClipboardList, School, Users } from "lucide-react";
 
+import { ClassSummaryCard } from "@/components/dashboard/class-summary-card";
+import { EmptyState } from "@/components/dashboard/empty-state";
+import { ErrorState } from "@/components/dashboard/error-state";
+import { LoadingState } from "@/components/dashboard/loading-state";
 import { PageHeader, Surface } from "@/components/workspace/ui";
 import { teacherApi, type QuizItem, type QuizSubmissionSummary } from "@/lib/api-client";
 import { buildClassCards } from "./review-kuis-utils";
@@ -15,9 +19,6 @@ export default function QuizReviewClassesPage() {
   const [error, setError] = useState("");
 
   const loadQuizzes = useCallback(() => {
-    setLoadingQuizzes(true);
-    setError("");
-
     teacherApi
       .getQuizzes()
       .then(setQuizzes)
@@ -35,14 +36,18 @@ export default function QuizReviewClassesPage() {
     let cancelled = false;
 
     if (quizzes.length === 0) {
-      setSubmissions([]);
       return undefined;
     }
 
-    setLoadingSubmissions(true);
-    setError("");
+    Promise.resolve()
+      .then(() => {
+        if (!cancelled) {
+          setLoadingSubmissions(true);
+          setError("");
+        }
 
-    Promise.all(quizzes.map((quiz) => teacherApi.getQuizSubmissions(quiz.id)))
+        return Promise.all(quizzes.map((quiz) => teacherApi.getQuizSubmissions(quiz.id)));
+      })
       .then((rows) => {
         if (!cancelled) {
           setSubmissions(rows.flat());
@@ -68,49 +73,46 @@ export default function QuizReviewClassesPage() {
   const classCards = useMemo(() => buildClassCards(submissions), [submissions]);
 
   return (
-    <div className="grid min-h-full grid-rows-[auto_minmax(0,1fr)] gap-2">
+    <div className="space-y-5 pb-6">
       <PageHeader
         title="Review Kuis Siswa"
-        description="Pilih kelas sebagai pintu masuk awal untuk meninjau hasil kuis siswa."
+        description="Pilih kelas sebagai pintu masuk awal untuk meninjau hasil kuis dan menentukan tindak lanjut."
       />
 
-      <Surface title="Pilih Kelas">
+      <Surface title="Pilih Kelas" description="Ringkasan kelas disusun dari pengumpulan kuis yang sudah masuk.">
         {loadingQuizzes || loadingSubmissions ? (
-          <p className="py-8 text-center text-[13px] text-[#626b8b]">Memuat ringkasan kelas...</p>
+          <LoadingState
+            title="Memuat ringkasan kelas"
+            description="Menggabungkan daftar kuis dan pengumpulan siswa untuk halaman review."
+          />
         ) : error ? (
-          <p className="rounded-[12px] border border-[#f4d1d8] bg-[#fff7f9] px-3 py-2 text-[12px] text-[#b25a70]">
-            {error}
-          </p>
+          <ErrorState message={error} />
         ) : classCards.length === 0 ? (
-          <div className="rounded-[18px] border border-dashed border-[rgba(113,94,215,0.16)] bg-[#fcfbff] px-4 py-8 text-center">
-            <p className="text-[13px] text-[#626b8b]">Belum ada kelas dengan pengumpulan kuis.</p>
-          </div>
+          <EmptyState
+            icon={School}
+            title="Belum ada pengumpulan kuis"
+            description="Kelas akan muncul setelah siswa mulai mengerjakan kuis yang sudah dipublikasikan."
+          />
         ) : (
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2">
             {classCards.map((item) => (
-              <article
+              <ClassSummaryCard
                 key={item.className}
-                className="rounded-[22px] border border-[rgba(113,94,215,0.12)] bg-white p-4 shadow-[0_10px_24px_rgba(28,24,62,0.04)]"
-              >
-                <div>
-                  <p className="text-[18px] font-semibold text-[#252b4d]">{item.className}</p>
-                  <p className="mt-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-[#727b9b]">
-                    Wali Kelas
-                  </p>
-                  <p className="mt-1 text-[13px] text-[#596183]">{item.homeroomName}</p>
-                </div>
-
-                <p className="mt-4 text-[13px] text-[#697198]">
-                  {item.studentCount} siswa | {item.quizCount} kuis | {item.pendingCount} perlu ditinjau
-                </p>
-
-                <Link
-                  href={`/review-kuis/kelas/${encodeURIComponent(item.className)}`}
-                  className="mt-4 flex w-full items-center justify-center rounded-[14px] bg-[#715ed7] px-3 py-2.5 text-[13px] font-semibold text-white shadow-[0_12px_24px_rgba(113,94,215,0.20)] transition-opacity hover:opacity-90"
-                >
-                  Tinjau Kelas
-                </Link>
-              </article>
+                title={item.className}
+                homeroomName={item.homeroomName}
+                href={`/review-kuis/kelas/${encodeURIComponent(item.className)}`}
+                ctaLabel="Tinjau Kelas"
+                metrics={[
+                  { label: "Siswa", value: item.studentCount, icon: Users },
+                  { label: "Kuis", value: item.quizCount, icon: ClipboardList },
+                  {
+                    label: "Perlu review",
+                    value: item.pendingCount,
+                    icon: AlertTriangle,
+                    tone: item.pendingCount > 0 ? "warning" : "success",
+                  },
+                ]}
+              />
             ))}
           </div>
         )}

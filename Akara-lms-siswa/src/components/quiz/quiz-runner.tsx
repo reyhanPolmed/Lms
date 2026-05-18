@@ -11,6 +11,7 @@ import {
   QuizSubmitPayload,
   SidebarEntry
 } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 const ATTEMPT_SNAPSHOT_PREFIX = "akara_quiz_attempt_snapshot";
 const ATTEMPT_LOCK_PREFIX = "akara_quiz_attempt_lock";
@@ -543,24 +544,24 @@ export function QuizRunner({
         {phase === "intro" ? (
           <>
             <p className="eyebrow">Quiz intro</p>
-            <h1 className="mt-2 font-heading text-4xl font-semibold text-slate-950">{quiz.title}</h1>
+            <h1 className="mt-2 text-4xl font-semibold tracking-[-0.04em] text-slate-950">{quiz.title}</h1>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600">{quiz.intro}</p>
-            <div className="mt-8 grid gap-4 rounded-[28px] bg-slate-50 p-6 md:grid-cols-4">
+            <div className="mt-8 grid gap-4 rounded-[24px] border border-slate-200/80 bg-slate-50 p-6 md:grid-cols-4">
               <div>
                 <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Durasi</p>
-                <p className="mt-2 font-heading text-2xl font-semibold">{quiz.durationMinutes} menit</p>
+                <p className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">{quiz.durationMinutes} menit</p>
               </div>
               <div>
                 <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Passing grade</p>
-                <p className="mt-2 font-heading text-2xl font-semibold">{quiz.passScore}</p>
+                <p className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">{quiz.passScore}</p>
               </div>
               <div>
                 <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Pertanyaan</p>
-                <p className="mt-2 font-heading text-2xl font-semibold">{quiz.questions.length}</p>
+                <p className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">{quiz.questions.length}</p>
               </div>
               <div>
                 <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Attempt tersisa</p>
-                <p className="mt-2 font-heading text-2xl font-semibold">
+                <p className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">
                   {quiz.attemptsRemaining}/{quiz.maxAttempts}
                 </p>
               </div>
@@ -585,14 +586,14 @@ export function QuizRunner({
             <p className="eyebrow">Quiz attempt</p>
             <div className="mt-2 flex flex-wrap items-start justify-between gap-4">
               <div>
-                <h1 className="font-heading text-3xl font-semibold text-slate-950">{quiz.title}</h1>
+                <h1 className="text-3xl font-semibold tracking-[-0.04em] text-slate-950">{quiz.title}</h1>
                 <p className="mt-2 text-sm text-slate-600">
                   Attempt {attempt.attemptNumber} dari {quiz.maxAttempts}
                 </p>
               </div>
               <div className="rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3 text-right">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Timer</p>
-                <p className="mt-2 font-heading text-3xl font-semibold text-slate-950">
+                <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-slate-950">
                   {attempt.durationSeconds > 0 ? formatRemainingTime(remainingSeconds) : "Tanpa batas"}
                 </p>
                 <p className="mt-2 text-xs text-slate-500">
@@ -638,35 +639,51 @@ export function QuizRunner({
                 </div>
               ) : (
                 orderedQuestions.map((question, index) => (
-                  <div key={question.id} className="rounded-[28px] border border-slate-200 p-6">
+                  <div key={question.id} className="rounded-[24px] border border-slate-200 bg-white p-6">
                     <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
                       Pertanyaan {index + 1}
                     </p>
-                    <p className="mt-3 font-heading text-xl font-semibold text-slate-950">
+                    <p className="mt-3 text-xl font-semibold tracking-[-0.03em] text-slate-950">
                       {question.prompt}
                     </p>
                     <div className="mt-5 grid gap-3">
-                      {question.options.map((option) => (
-                        <label
-                          key={option.key}
-                          className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 p-4 transition hover:border-slate-300"
-                        >
-                          <input
-                            checked={answers[question.id] === option.key}
-                            className="mt-1"
-                            disabled={!isPrimaryTab || isSubmitting}
-                            name={question.id}
-                            onChange={() =>
-                              setAnswers((current) => ({
-                                ...current,
-                                [question.id]: option.key
-                              }))
-                            }
-                            type="radio"
-                          />
-                          <span className="text-sm leading-6 text-slate-700">{option.label}</span>
-                        </label>
-                      ))}
+                      {question.options.map((option) => {
+                        const selectedOption = answers[question.id] === option.key;
+
+                        return (
+                          <label
+                            key={option.key}
+                            className={cn(
+                              "flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition",
+                              selectedOption
+                                ? "border-slate-900 bg-slate-900 text-white"
+                                : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                            )}
+                          >
+                            <input
+                              checked={selectedOption}
+                              className="mt-1 accent-slate-900"
+                              disabled={!isPrimaryTab || isSubmitting}
+                              name={question.id}
+                              onChange={() =>
+                                setAnswers((current) => ({
+                                  ...current,
+                                  [question.id]: option.key
+                                }))
+                              }
+                              type="radio"
+                            />
+                            <span
+                              className={cn(
+                                "text-sm leading-6",
+                                selectedOption ? "text-white" : "text-slate-700"
+                              )}
+                            >
+                              {option.label}
+                            </span>
+                          </label>
+                        );
+                      })}
                     </div>
                   </div>
                 ))
@@ -676,6 +693,7 @@ export function QuizRunner({
             <div className="mt-6 rounded-[28px] bg-amber-50 p-5 text-sm leading-6 text-amber-900">
               <label className="flex items-start gap-3">
                 <input
+                  className="mt-1 accent-amber-700"
                   checked={fullscreenViolation}
                   disabled={!isPrimaryTab || isSubmitting}
                   onChange={(event) => setFullscreenViolation(event.target.checked)}
@@ -701,10 +719,10 @@ export function QuizRunner({
         ) : (
           <>
             <p className="eyebrow">Quiz result</p>
-            <h1 className="mt-2 font-heading text-4xl font-semibold text-slate-950">Hasil quiz</h1>
-            <div className="mt-8 rounded-[32px] bg-slate-950 p-8 text-white">
+            <h1 className="mt-2 text-4xl font-semibold tracking-[-0.04em] text-slate-950">Hasil quiz</h1>
+            <div className="mt-8 rounded-[28px] bg-slate-950 p-8 text-white">
               <p className="text-sm uppercase tracking-[0.24em] text-slate-400">Score</p>
-              <p className="mt-3 font-heading text-6xl font-semibold">{submissionResult?.score ?? 0}</p>
+              <p className="mt-3 text-6xl font-semibold tracking-[-0.05em]">{submissionResult?.score ?? 0}</p>
               <p className="mt-4 text-sm text-slate-300">
                 {submissionResult?.isPassed ? "Status lulus" : "Belum lulus"} dengan passing grade{" "}
                 {quiz.passScore}.

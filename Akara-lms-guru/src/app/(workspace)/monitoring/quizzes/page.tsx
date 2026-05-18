@@ -2,8 +2,15 @@
 
 import Link from "next/link";
 import { Eye, Plus, SquarePen, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { EmptyState } from "@/components/dashboard/empty-state";
+import { ErrorState } from "@/components/dashboard/error-state";
+import { LoadingState } from "@/components/dashboard/loading-state";
+import { ActionMenu } from "@/components/shared/action-menu";
+import { AppIcon } from "@/components/ui/app-icon";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge, MiniSelect, PageHeader, Surface } from "@/components/workspace/ui";
 import { useToast } from "@/components/workspace/toast";
 import { teacherApi, type QuizItem } from "@/lib/api-client";
@@ -26,6 +33,13 @@ type EditDraft = {
   }[];
 };
 
+type OptionKey = "opsiA" | "opsiB" | "opsiC" | "opsiD";
+const optionValues = ["A", "B", "C", "D"] as const;
+
+function getOptionKey(option: (typeof optionValues)[number]): OptionKey {
+  return `opsi${option}` as OptionKey;
+}
+
 export default function QuizMonitoringPage() {
   const { toast } = useToast();
   const [quizzes, setQuizzes] = useState<QuizItem[]>([]);
@@ -38,7 +52,6 @@ export default function QuizMonitoringPage() {
   const [subjectFilter, setSubjectFilter] = useState("");
 
   const loadQuizzes = useCallback(() => {
-    setLoading(true);
     teacherApi
       .getQuizBanks()
       .then(setQuizzes)
@@ -141,7 +154,7 @@ export default function QuizMonitoringPage() {
   };
 
   return (
-    <div className="grid min-h-full grid-rows-[auto_auto_minmax(0,1fr)] gap-2">
+    <div className="space-y-5 pb-4">
       <PageHeader
         title="Monitoring Kuis"
         description="Kelola bank kuis per mata pelajaran, pantau status publish, dan siapkan kuis untuk dipakai lintas kelas."
@@ -150,140 +163,148 @@ export default function QuizMonitoringPage() {
       <Surface
         title="Filter Monitoring"
         action={
-          <Link
-            href="/editor/quiz"
-            className="inline-flex items-center gap-1.5 rounded-[10px] bg-gradient-to-r from-[#765df5] to-[#5b50dc] px-3 py-1.5 text-[12px] font-semibold text-white"
-          >
-            <Plus className="h-3.5 w-3.5" /> Tambah Kuis
-          </Link>
+          <Button asChild size="sm">
+            <Link href="/editor/quiz">
+              <AppIcon icon={Plus} size="xs" /> Tambah Kuis
+            </Link>
+          </Button>
         }
       >
-        <div className="grid gap-2 md:grid-cols-4">
-          <MiniSelect
-            label="Mata Pelajaran"
-            options={subjects}
-            placeholder="Semua mapel"
-            value={subjectFilter}
-            onChange={(e) => setSubjectFilter(e.target.value)}
-          />
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div className="w-full max-w-[280px]">
+            <MiniSelect
+              label="Mata Pelajaran"
+              options={subjects}
+              placeholder="Semua mapel"
+              value={subjectFilter}
+              onChange={(e) => setSubjectFilter(e.target.value)}
+            />
+          </div>
+          <p className="text-[13px] text-[var(--muted-ink)]">
+            Fokuskan daftar ke mapel tertentu agar review lebih cepat.
+          </p>
         </div>
       </Surface>
 
-      <Surface title={`Daftar Kuis (${filtered.length} kuis, ${publishedCount} published)`}>
+      <Surface
+        title="Daftar Kuis"
+        description={`${filtered.length} kuis ditampilkan, ${publishedCount} dalam status publikasi.`}
+      >
         {loading ? (
-          <p className="py-6 text-center text-[13px] text-[#626b8b]">Memuat kuis...</p>
+          <LoadingState title="Memuat kuis" description="Mengambil bank kuis dan status publikasinya." />
         ) : error ? (
-          <p className="rounded-[9px] border border-[#f5c4cd] bg-[#fff2f5] px-3 py-2 text-[12px] text-[#ba4b64]">
-            {error}
-          </p>
+          <ErrorState message={error} />
+        ) : filtered.length === 0 ? (
+          <EmptyState
+            icon={Plus}
+            title="Belum ada bank kuis"
+            description="Tambah kuis baru agar assessment bisa dipublikasikan ke kelas."
+          />
         ) : (
-          <div className="min-h-0 overflow-auto rounded-[12px] border border-[rgba(113,94,215,0.1)]">
-            <table className="w-full text-left text-[12px] text-[#626b8b]">
-              <thead className="bg-[#faf8ff] text-[12px] uppercase tracking-[0.16em] text-[#60658e]">
-                <tr>
-                  <th className="px-3 py-2">Kuis</th>
-                  <th className="px-2 py-2">Mata Pelajaran</th>
-                  <th className="px-2 py-2">Soal</th>
-                  <th className="px-2 py-2">Pass</th>
-                  <th className="px-2 py-2">Durasi</th>
-                  <th className="px-2 py-2">Status</th>
-                  <th className="px-2 py-2">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[rgba(113,94,215,0.1)]">
-                {filtered.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-3 py-6 text-center text-[12px] text-[#626b8b]">
-                      Belum ada bank kuis. Tambah kuis baru dengan tombol di atas.
-                    </td>
-                  </tr>
-                ) : (
-                  filtered.map((quiz) => (
-                    <tr key={quiz.id}>
-                      <td className="px-3 py-2.5 font-semibold text-[#4e5378]">{quiz.title}</td>
-                      <td className="px-2 py-2.5">{quiz.moduleName ?? "—"}</td>
-                      <td className="px-2 py-2.5">{quiz.questionCount}</td>
-                      <td className="px-2 py-2.5">{quiz.passScore}</td>
-                      <td className="px-2 py-2.5">{quiz.durationMinutes ? `${quiz.durationMinutes} mnt` : "—"}</td>
-                      <td className="px-2 py-2.5">
-                        <Badge status={quiz.isActive ? "published" : "draft"} />
-                      </td>
-                      <td className="px-2 py-2.5">
-                        <div className="flex gap-1">
-                          <button
-                            type="button"
-                            onClick={() => setPreviewDraft(quiz)}
-                            className="inline-flex cursor-pointer items-center gap-1 rounded-[7px] border border-[rgba(113,94,215,0.2)] bg-[#faf8ff] px-2 py-1 text-[13px] text-[#6d5dfc] transition-colors hover:bg-[#f0eaff]"
-                          >
-                            <Eye className="h-3 w-3" /> Preview
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => openEdit(quiz)}
-                            className="inline-flex cursor-pointer items-center gap-1 rounded-[7px] border border-[rgba(113,94,215,0.2)] bg-white px-2 py-1 text-[13px] text-[#5b6191] transition-colors hover:bg-[#faf9ff]"
-                          >
-                            <SquarePen className="h-3 w-3" /> Edit
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => toggleStatus(quiz)}
-                            className={`inline-flex cursor-pointer items-center gap-1 rounded-[7px] px-2 py-1 text-[13px] transition-colors ${
-                              quiz.isActive
-                                ? "border border-[rgba(113,94,215,0.2)] bg-white text-[#5b6191] hover:bg-[#faf9ff]"
-                                : "border border-[rgba(47,140,87,0.3)] bg-[#eaf6ee] text-[#2f8c57] hover:bg-[#d5f0e0]"
-                            }`}
-                          >
-                            {quiz.isActive ? "Draft" : "Publish"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => removeQuiz(quiz)}
-                            className="inline-flex cursor-pointer items-center gap-1 rounded-[7px] border border-[rgba(233,84,116,0.24)] bg-[#fff5f7] px-2 py-1 text-[13px] text-[#c54564] transition-colors hover:bg-[#ffeef1]"
-                          >
-                            <Trash2 className="h-3 w-3" /> Hapus
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+          <div className="table-shell min-h-0 overflow-auto">
+            <Table className="min-w-[860px] text-[13px] text-[var(--muted-ink)]">
+              <TableHeader className="bg-[var(--surface-subtle)]">
+                <TableRow>
+                  <TableHead className="w-[28%]">Kuis</TableHead>
+                  <TableHead className="w-[22%]">Mata Pelajaran</TableHead>
+                  <TableHead className="w-[10%]">Soal</TableHead>
+                  <TableHead className="w-[10%]">Pass</TableHead>
+                  <TableHead className="w-[12%]">Durasi</TableHead>
+                  <TableHead className="w-[10%]">Status</TableHead>
+                  <TableHead className="w-[8%] pr-4 text-right">Aksi</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((quiz) => (
+                  <TableRow key={quiz.id}>
+                    <TableCell className="font-semibold text-[var(--page-ink)]">
+                      <div className="max-w-[260px] text-sm leading-5">{quiz.title}</div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="max-w-[220px] text-sm leading-5">{quiz.moduleName ?? "-"}</div>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">{quiz.questionCount}</TableCell>
+                    <TableCell className="whitespace-nowrap">{quiz.passScore}</TableCell>
+                    <TableCell className="whitespace-nowrap">{quiz.durationMinutes ? `${quiz.durationMinutes} mnt` : "-"}</TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      <Badge status={quiz.isActive ? "published" : "draft"} />
+                    </TableCell>
+                    <TableCell className="pr-4">
+                      <div className="flex items-center justify-end gap-1 whitespace-nowrap">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPreviewDraft(quiz)}
+                          aria-label={`Preview ${quiz.title}`}
+                          className="shrink-0"
+                        >
+                          <AppIcon icon={Eye} size="xs" /> Preview
+                        </Button>
+                        <ActionMenu
+                          ariaLabel={`Buka aksi untuk ${quiz.title}`}
+                          items={[
+                            {
+                              label: "Edit",
+                              icon: SquarePen,
+                              onSelect: () => openEdit(quiz),
+                            },
+                            {
+                              label: quiz.isActive ? "Jadikan Draft" : "Publish",
+                              onSelect: () => {
+                                void toggleStatus(quiz);
+                              },
+                            },
+                            {
+                              label: "Hapus",
+                              icon: Trash2,
+                              destructive: true,
+                              onSelect: () => {
+                                void removeQuiz(quiz);
+                              },
+                            },
+                          ]}
+                        />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         )}
       </Surface>
 
-      {/* Preview Modal */}
-      {previewDraft && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-          <div className="flex max-h-full w-full max-w-2xl flex-col overflow-hidden rounded-[18px] border border-[rgba(113,94,215,0.12)] bg-white shadow-2xl">
-            <header className="flex items-center justify-between border-b border-[rgba(113,94,215,0.1)] bg-[#faf8ff] px-5 py-4">
+      {previewDraft ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(15,23,42,0.42)] p-4 backdrop-blur-sm">
+          <div className="flex max-h-full w-full max-w-2xl flex-col overflow-hidden rounded-[22px] border border-[var(--line)] bg-[var(--surface)] shadow-[0_28px_70px_rgba(15,23,42,0.22)]">
+            <header className="flex items-center justify-between border-b border-[var(--line)] bg-[var(--surface-subtle)] px-5 py-4">
               <div>
-                <h2 className="text-[14px] font-semibold text-[#2c315b]">{previewDraft.title}</h2>
-                <p className="mt-0.5 text-[12px] text-[#565f7d]">
-                  {previewDraft.moduleName} • {previewDraft.durationMinutes ?? "—"} menit
+                <h2 className="text-base font-semibold tracking-[-0.03em] text-[var(--page-ink)]">{previewDraft.title}</h2>
+                <p className="mt-1 text-sm text-[var(--muted-ink)]">
+                  {previewDraft.moduleName} - {previewDraft.durationMinutes ?? "-"} menit
                 </p>
               </div>
-              <button onClick={() => setPreviewDraft(null)} className="cursor-pointer rounded-full p-1.5 text-[#5b6191] hover:bg-[#f0edff]">
+              <Button type="button" variant="ghost" size="sm" onClick={() => setPreviewDraft(null)}>
                 Tutup
-              </button>
+              </Button>
             </header>
             <div className="flex-1 overflow-y-auto p-5">
               <div className="space-y-4">
-                {previewDraft.questions.map((q, idx) => (
-                  <article key={q.id} className="rounded-[12px] border border-[rgba(113,94,215,0.1)] p-4">
-                    <p className="text-[13px] font-semibold text-[#4e5378]">{idx + 1}. {q.pertanyaan}</p>
-                    <div className="mt-3 space-y-1.5">
-                      {(["A", "B", "C", "D"] as const).map((opt) => (
+                {previewDraft.questions.map((question, index) => (
+                  <article key={question.id} className="rounded-[16px] border border-[var(--line)] bg-[var(--surface)] p-4">
+                    <p className="text-sm font-semibold text-[var(--page-ink)]">{index + 1}. {question.pertanyaan}</p>
+                    <div className="mt-3 space-y-2">
+                      {optionValues.map((option) => (
                         <div
-                          key={opt}
-                          className={`rounded-[8px] border p-2 text-[12px] ${
-                            opt === q.opsiBenar
-                              ? "border-[#c1e6d1] bg-[#f0fcf5] font-semibold text-[#2f8c57]"
-                              : "border-[rgba(113,94,215,0.1)] text-[#565f7d]"
-                          }`}
+                          key={option}
+                          className={
+                            option === question.opsiBenar
+                              ? "rounded-[12px] border border-[rgba(34,197,94,0.18)] bg-[var(--success-soft)] p-2.5 text-sm font-semibold text-[var(--success)]"
+                              : "rounded-[12px] border border-[var(--line)] bg-[var(--surface-subtle)] p-2.5 text-sm text-[var(--muted-ink)]"
+                          }
                         >
-                          {opt}. {q[`opsi${opt}` as keyof typeof q]}
+                          {option}. {question[getOptionKey(option)]}
                         </div>
                       ))}
                     </div>
@@ -293,23 +314,22 @@ export default function QuizMonitoringPage() {
             </div>
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* Edit Modal */}
-      {editDraft && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-          <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-[18px] border border-[rgba(113,94,215,0.12)] bg-[#fbfaff] shadow-2xl">
-            <header className="flex items-center justify-between border-b border-[rgba(113,94,215,0.1)] bg-white px-5 py-4">
+      {editDraft ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(15,23,42,0.42)] p-4 backdrop-blur-sm">
+          <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-[22px] border border-[var(--line)] bg-[var(--surface)] shadow-[0_28px_70px_rgba(15,23,42,0.22)]">
+            <header className="flex items-center justify-between border-b border-[var(--line)] px-5 py-4">
               <div>
-                <h2 className="text-[14px] font-semibold text-[#2c315b]">Edit Kuis</h2>
-                <p className="mt-0.5 text-[12px] text-[#565f7d]">Ubah detail dan daftar soal kuis</p>
+                <h2 className="text-base font-semibold tracking-[-0.03em] text-[var(--page-ink)]">Edit Kuis</h2>
+                <p className="mt-1 text-sm text-[var(--muted-ink)]">Ubah detail dan daftar soal kuis.</p>
               </div>
-              <button onClick={() => { setEditDraft(null); setEditError(""); }} className="cursor-pointer rounded-full p-1.5 text-[#5b6191] hover:bg-[#f0edff]">
+              <Button type="button" variant="ghost" size="sm" onClick={() => { setEditDraft(null); setEditError(""); }}>
                 Tutup
-              </button>
+              </Button>
             </header>
 
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            <div className="flex-1 space-y-4 overflow-y-auto p-5">
               <div className="grid gap-4 md:grid-cols-2">
                 {[
                   { label: "Judul Kuis", key: "title", type: "text" },
@@ -317,21 +337,21 @@ export default function QuizMonitoringPage() {
                   { label: "Durasi (Menit)", key: "durationMinutes", type: "number" },
                 ].map(({ label, key, type }) => (
                   <label key={key} className="block">
-                    <span className="mb-1 block text-[12px] font-semibold uppercase tracking-[0.16em] text-[#626b8b]">{label}</span>
+                    <span className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted-ink)]">{label}</span>
                     <input
                       type={type}
                       value={editDraft[key as keyof EditDraft] as string}
                       onChange={(e) => setEditDraft((prev) => prev ? { ...prev, [key]: e.target.value } : prev)}
-                      className="h-9 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 text-[13px] text-[#4f5678] outline-none"
+                      className="control-surface h-10 w-full px-3 text-sm"
                     />
                   </label>
                 ))}
                 <label className="block">
-                  <span className="mb-1 block text-[12px] font-semibold uppercase tracking-[0.16em] text-[#626b8b]">Status</span>
+                  <span className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted-ink)]">Status</span>
                   <select
                     value={editDraft.isAktif ? "published" : "draft"}
                     onChange={(e) => setEditDraft((prev) => prev ? { ...prev, isAktif: e.target.value === "published" } : prev)}
-                    className="h-9 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 text-[13px] text-[#4f5678] outline-none"
+                    className="control-surface h-10 w-full px-3 text-sm"
                   >
                     <option value="draft">draft</option>
                     <option value="published">published</option>
@@ -340,37 +360,43 @@ export default function QuizMonitoringPage() {
               </div>
 
               <div className="space-y-3">
-                <p className="border-b border-[rgba(113,94,215,0.1)] pb-2 text-[13px] font-bold uppercase tracking-[0.16em] text-[#626b8b]">Daftar Soal</p>
-                {editDraft.questions.map((q, idx) => (
-                  <article key={q.id} className="rounded-[12px] border border-[rgba(113,94,215,0.12)] bg-white p-4">
-                    <p className="mb-2 text-[12px] font-bold text-[#5b4aab]">Soal {idx + 1}</p>
+                <p className="border-b border-[var(--line)] pb-2 text-[12px] font-semibold uppercase tracking-[0.16em] text-[var(--muted-ink)]">Daftar Soal</p>
+                {editDraft.questions.map((question, index) => (
+                  <article key={question.id} className="rounded-[16px] border border-[var(--line)] bg-[var(--surface-subtle)] p-4">
+                    <p className="mb-2 text-sm font-semibold text-[var(--page-ink)]">Soal {index + 1}</p>
                     <textarea
-                      value={q.pertanyaan}
+                      value={question.pertanyaan}
                       onChange={(e) => setEditDraft((prev) => {
                         if (!prev) return prev;
-                        return { ...prev, questions: prev.questions.map((x) => x.id === q.id ? { ...x, pertanyaan: e.target.value } : x) };
+                        return { ...prev, questions: prev.questions.map((item) => item.id === question.id ? { ...item, pertanyaan: e.target.value } : item) };
                       })}
-                      className="h-16 w-full rounded-[8px] border border-[rgba(113,94,215,0.12)] bg-[#faf9ff] p-2 text-[13px] text-[#4f5678] outline-none"
+                      className="control-surface h-20 w-full p-3 text-sm"
                     />
-                    <div className="mt-2 grid grid-cols-2 gap-2">
-                      {(["A", "B", "C", "D"] as const).map((opt) => (
-                        <div key={opt} className="flex items-center gap-2">
+                    <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      {optionValues.map((option) => (
+                        <div key={option} className="flex items-center gap-2">
                           <input
-                            value={q[`opsi${opt}` as keyof typeof q] as string}
+                            value={question[getOptionKey(option)]}
                             onChange={(e) => setEditDraft((prev) => {
                               if (!prev) return prev;
-                              return { ...prev, questions: prev.questions.map((x) => x.id === q.id ? { ...x, [`opsi${opt}`]: e.target.value } : x) };
+                              return {
+                                ...prev,
+                                questions: prev.questions.map((item) =>
+                                  item.id === question.id ? { ...item, [getOptionKey(option)]: e.target.value } : item
+                                ),
+                              };
                             })}
-                            placeholder={`Opsi ${opt}`}
-                            className="h-8 flex-1 rounded-[7px] border border-[rgba(113,94,215,0.12)] bg-[#faf8ff] px-2 text-[12px] text-[#616a92] outline-none"
+                            placeholder={`Opsi ${option}`}
+                            className="control-surface h-9 min-w-0 flex-1 px-3 text-sm"
                           />
-                          <button
+                          <Button
                             type="button"
-                            onClick={() => setEditDraft((prev) => prev ? { ...prev, questions: prev.questions.map((x) => x.id === q.id ? { ...x, opsiBenar: opt } : x) } : prev)}
-                            className={`rounded-[6px] px-2 py-1 text-[13px] font-semibold ${q.opsiBenar === opt ? "bg-[#eaf6ee] text-[#2f8c57]" : "border border-[rgba(113,94,215,0.2)] bg-white text-[#5b6191]"}`}
+                            variant={question.opsiBenar === option ? "outline" : "secondary"}
+                            size="sm"
+                            onClick={() => setEditDraft((prev) => prev ? { ...prev, questions: prev.questions.map((item) => item.id === question.id ? { ...item, opsiBenar: option } : item) } : prev)}
                           >
-                            {q.opsiBenar === opt ? "✓" : opt}
-                          </button>
+                            {option}
+                          </Button>
                         </div>
                       ))}
                     </div>
@@ -378,35 +404,22 @@ export default function QuizMonitoringPage() {
                 ))}
               </div>
 
-              {editError && (
-                <p className="rounded-[10px] border border-[#f5c4cd] bg-[#fff2f5] px-3 py-2 text-[12px] text-[#ba4b64]">
-                  {editError}
-                </p>
-              )}
+              {editError ? <ErrorState message={editError} /> : null}
             </div>
 
-            <footer className="border-t border-[rgba(113,94,215,0.1)] bg-white px-5 py-4">
+            <footer className="border-t border-[var(--line)] bg-[var(--surface-subtle)] px-5 py-4">
               <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => { setEditDraft(null); setEditError(""); }}
-                  className="cursor-pointer rounded-[10px] border border-[rgba(113,94,215,0.2)] bg-white px-5 py-2.5 text-[13px] font-bold text-[#5b6191] hover:bg-[#faf9ff]"
-                >
+                <Button type="button" variant="secondary" onClick={() => { setEditDraft(null); setEditError(""); }}>
                   Batal
-                </button>
-                <button
-                  type="button"
-                  onClick={saveEdit}
-                  disabled={saving}
-                  className="cursor-pointer rounded-[10px] bg-gradient-to-r from-[#765df5] to-[#5b50dc] px-5 py-2.5 text-[13px] font-bold text-white hover:opacity-90 disabled:opacity-50"
-                >
+                </Button>
+                <Button type="button" onClick={saveEdit} disabled={saving}>
                   {saving ? "Menyimpan..." : "Simpan Perubahan"}
-                </button>
+                </Button>
               </div>
             </footer>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

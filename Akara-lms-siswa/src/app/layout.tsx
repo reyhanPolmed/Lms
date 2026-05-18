@@ -1,18 +1,14 @@
 import type { Metadata } from "next";
-import { Lexend, Plus_Jakarta_Sans } from "next/font/google";
+import { Poppins } from "next/font/google";
 
 import { AppProviders } from "@/components/providers/app-providers";
 
 import "./globals.css";
 
-const headingFont = Lexend({
+const poppins = Poppins({
   subsets: ["latin"],
-  variable: "--font-heading"
-});
-
-const bodyFont = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-body"
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-poppins"
 });
 
 export const metadata: Metadata = {
@@ -27,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id">
-      <body className={`${headingFont.variable} ${bodyFont.variable} font-body antialiased`}>
+      <body className={`${poppins.variable} font-body antialiased`}>
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

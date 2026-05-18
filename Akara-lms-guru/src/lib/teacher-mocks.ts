@@ -5,6 +5,7 @@ import type {
   StudentProgressView,
   StatusTone
 } from "@akara/shared/types/contracts";
+import type { DashboardData } from "@/lib/api-client";
 
 export type ModuleSummary = CourseSummaryView;
 export type ReviewRow = SubmissionReviewView;
@@ -194,3 +195,43 @@ export const quizMonitoring = [
   { label: "Lulus", value: 22 },
   { label: "Tidak Lulus", value: 6 },
 ];
+
+export const dashboardSnapshot: DashboardData = {
+  teacher: {
+    id: "teacher-demo",
+    name: "Ninda Prameswari",
+    nip: "19870612 201001 2 004",
+    department: "Matematika",
+  },
+  kpi: {
+    activeModules: 4,
+    activeClasses: 8,
+    draftItems: 15,
+    needReview: 18,
+    pendingRevision: 7,
+  },
+  modules: modules.map((module) => ({
+    id: module.id,
+    moduleId: module.id,
+    title: module.title,
+    department: module.department,
+    gradeLevel: module.gradeLevel ?? "-",
+    chapters: module.chapters ?? 0,
+    lessons: module.lessons ?? 0,
+    quizzes: module.quizzes ?? 0,
+    tasks: module.tasks ?? 0,
+    draftItems: Math.max(0, (module.tasks ?? 0) - 2),
+    completionRate: module.completionRate ?? 0,
+    status: module.status ?? "draft",
+  })),
+  recentSubmissions: reviews.map((review) => ({
+    id: review.id,
+    studentName: review.studentName,
+    className: review.className,
+    courseTitle: review.courseTitle,
+    assignmentTitle: review.assignmentTitle,
+    submittedAt: review.submittedAt,
+    status: review.status,
+    score: review.score,
+  })),
+};

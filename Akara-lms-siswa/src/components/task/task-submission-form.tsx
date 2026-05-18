@@ -126,7 +126,7 @@ export function TaskSubmissionForm({
         </p>
 
         {task.attachment ? (
-          <div className="mt-8 space-y-4 rounded-[28px] border border-slate-200 bg-white p-5">
+          <div className="mt-8 space-y-4 rounded-[24px] border border-slate-200 bg-white p-5">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-[0.24em] text-slate-500">
@@ -135,7 +135,7 @@ export function TaskSubmissionForm({
                 <p className="mt-2 font-medium text-slate-900">{task.attachment.fileName}</p>
               </div>
               <Link
-                className="rounded-full border border-brand-ocean/15 bg-brand-ocean/5 px-4 py-2 text-sm font-semibold text-brand-ocean transition hover:bg-brand-ocean/10"
+                className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white"
                 href={task.attachment.url}
                 rel="noreferrer"
                 target="_blank"
@@ -164,7 +164,7 @@ export function TaskSubmissionForm({
           </div>
         ) : null}
 
-        <div className="mt-8 rounded-[28px] bg-slate-50 p-6">
+        <div className="mt-8 rounded-[24px] border border-slate-200/80 bg-slate-50 p-6">
           <p className="text-xs uppercase tracking-[0.24em] text-slate-500">
             Checklist submission
           </p>
@@ -184,7 +184,7 @@ export function TaskSubmissionForm({
                 Link submission
               </span>
               <input
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-brand-ocean focus:bg-white"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-300 focus:bg-white focus:ring-4 focus:ring-slate-900/5"
                 disabled={hasSubmitted}
                 onChange={(event) => setSubmissionLink(event.target.value)}
                 placeholder="https://drive.google.com/..."
@@ -202,7 +202,7 @@ export function TaskSubmissionForm({
               </span>
               <input
                 accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none file:mr-3 file:cursor-pointer file:rounded-full file:border-0 file:bg-brand-ocean/8 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-brand-ocean"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-300 focus:bg-white focus:ring-4 focus:ring-slate-900/5 file:mr-3 file:cursor-pointer file:rounded-full file:border file:border-slate-200 file:bg-white file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700"
                 disabled={hasSubmitted}
                 onChange={async (event) => {
                   const file = event.target.files?.[0];
@@ -269,7 +269,7 @@ export function TaskSubmissionForm({
           {task.currentSubmission.file ? (
             <div className="mt-4">
               <Link
-                className="text-sm font-semibold text-brand-ocean hover:underline"
+                className="text-sm font-semibold text-slate-900 hover:underline"
                 href={task.currentSubmission.file.url}
                 rel="noreferrer"
                 target="_blank"

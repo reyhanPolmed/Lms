@@ -1,0 +1,45 @@
+export const designTokens = {
+  colors: {
+    background: "#f4f7fb",
+    surface: "#ffffff",
+    surfaceSubtle: "#f8fafc",
+    text: "#0f172a",
+    textSoft: "#334155",
+    muted: "#64748b",
+    line: "#dbe3ef",
+    accent: "#5a61d6",
+    accentSoft: "#eef2ff",
+    success: "#15803d",
+    successSoft: "#ecfdf3",
+    warning: "#b45309",
+    warningSoft: "#fff7ed",
+    danger: "#be123c",
+    dangerSoft: "#fff1f2",
+  },
+  radius: {
+    page: "28px",
+    panel: "24px",
+    pill: "999px",
+  },
+  shadow: {
+    soft: "0 18px 40px rgba(15, 23, 42, 0.06)",
+    inset: "0 1px 0 rgba(255, 255, 255, 0.8)",
+  },
+} as const;
+
+export const statusLabels: Record<string, string> = {
+  approved: "Disetujui",
+  archived: "Arsip",
+  draft: "Draft",
+  graded: "Dinilai",
+  late: "Terlambat",
+  published: "Publikasi",
+  rendah: "Risiko Rendah",
+  retake: "Remedial",
+  returned: "Dikembalikan",
+  revision: "Revisi",
+  scheduled: "Terjadwal",
+  sedang: "Perlu Perhatian",
+  submitted: "Masuk",
+  tinggi: "Risiko Tinggi",
+};

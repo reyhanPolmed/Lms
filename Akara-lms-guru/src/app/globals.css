@@ -1,14 +1,32 @@
 @import "tailwindcss";
 
 :root {
-  --page-bg: #f7f4ff;
-  --page-ink: #1f2447;
-  --muted-ink: #66709a;
-  --line: rgba(113, 94, 215, 0.12);
-  --panel: rgba(255, 255, 255, 0.82);
-  --accent: #6d5dfc;
-  --font-sans: "Bahnschrift", "Aptos", "Segoe UI", sans-serif;
-  --font-display: "Georgia", "Cambria", "Times New Roman", serif;
+  --page-bg: #f5f7fb;
+  --page-ink: #101828;
+  --muted-ink: #667085;
+  --line: #d8e0ec;
+  --panel: #ffffff;
+  --surface: #ffffff;
+  --surface-subtle: #f8fafc;
+  --surface-muted: #f1f5f9;
+  --accent: #4f46c7;
+  --accent-strong: #3730a3;
+  --accent-soft: #eef2ff;
+  --success: #15803d;
+  --success-soft: #ecfdf3;
+  --warning: #b45309;
+  --warning-soft: #fff7ed;
+  --danger: #be123c;
+  --danger-soft: #fff1f2;
+  --shadow-card: 0 14px 34px rgba(16, 24, 40, 0.06);
+  --shadow-soft: 0 8px 22px rgba(16, 24, 40, 0.05);
+  --radius-card: 20px;
+  --radius-control: 12px;
+  --font-sans: var(--font-poppins), "Aptos", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-poppins), "Aptos Display", "Aptos", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --tracking-tight: -0.032em;
+  --tracking-soft: -0.012em;
+  --leading-body: 1.65;
 }
 
 * {
@@ -25,42 +43,118 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgba(189, 177, 255, 0.42), transparent 22rem),
-    radial-gradient(circle at top right, rgba(131, 211, 185, 0.18), transparent 18rem),
-    linear-gradient(180deg, #faf7ff 0%, #f4f3ff 52%, #f7f9ff 100%);
+    radial-gradient(circle at top left, rgba(79, 70, 199, 0.06), transparent 26%),
+    linear-gradient(180deg, #f7f9fc 0%, #eef3f8 100%);
   color: var(--page-ink);
   font-family: var(--font-sans), sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-soft);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-kerning: normal;
+  font-feature-settings:
+    "kern" 1,
+    "liga" 1,
+    "calt" 1;
+  position: relative;
+}
+
+body::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  background-size: 120px 120px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.45), transparent 82%);
+  opacity: 0.28;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
 }
 
 ::selection {
-  background: rgba(109, 93, 252, 0.2);
+  background: rgba(90, 97, 214, 0.22);
 }
 
 @layer base {
+  * {
+    border-color: var(--line);
+  }
+
   h1,
   h2,
   h3,
   h4 {
-    font-family: var(--font-display), serif;
-    letter-spacing: -0.04em;
+    font-family: var(--font-display), sans-serif;
+    line-height: 1.12;
+    letter-spacing: var(--tracking-tight);
+  }
+
+  p,
+  li,
+  td,
+  th,
+  input,
+  textarea,
+  select,
+  button {
+    letter-spacing: var(--tracking-soft);
+  }
+
+  small,
+  label,
+  caption {
+    letter-spacing: -0.004em;
   }
 }
 
 @layer components {
   .panel-surface {
     border: 1px solid var(--line);
-    background: var(--panel);
-    backdrop-filter: blur(20px);
-    box-shadow:
-      0 16px 42px rgba(79, 70, 216, 0.08),
-      inset 0 1px 0 rgba(255, 255, 255, 0.65);
+    border-radius: var(--radius-card);
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: var(--shadow-card);
+  }
+
+  .control-surface {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+    background: var(--surface);
+    color: var(--page-ink);
+    outline: none;
+    transition:
+      border-color 160ms ease,
+      box-shadow 160ms ease,
+      background-color 160ms ease;
+  }
+
+  .control-surface:focus-visible {
+    border-color: rgba(79, 70, 199, 0.36);
+    box-shadow: 0 0 0 4px rgba(79, 70, 199, 0.1);
+  }
+
+  .table-shell {
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    background: var(--surface);
   }
 
   .subtle-grid {
     background-image:
-      linear-gradient(rgba(113, 94, 215, 0.06) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(113, 94, 215, 0.06) 1px, transparent 1px);
-    background-size: 28px 28px;
+      linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+    background-size: 36px 36px;
   }
 
   .no-scrollbar::-webkit-scrollbar {
@@ -76,6 +170,12 @@ body {
 @layer utilities {
   .animate-fade-in-up {
     animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .surface-ring {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.7),
+      var(--shadow-card);
   }
 
   @keyframes fadeInUp {

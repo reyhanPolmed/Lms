@@ -4,6 +4,13 @@
 
 :root {
   color-scheme: light;
+  --page-bg: #f3f6fb;
+  --page-bg-soft: #eef2f7;
+  --surface: rgba(255, 255, 255, 0.94);
+  --surface-muted: rgba(248, 250, 252, 0.92);
+  --border-color: rgba(148, 163, 184, 0.2);
+  --text-strong: #0f172a;
+  --text-muted: #475569;
 }
 
 * {
@@ -18,11 +25,11 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgba(14, 165, 233, 0.08), transparent 24%),
-    radial-gradient(circle at top right, rgba(245, 158, 11, 0.08), transparent 18%),
-    linear-gradient(180deg, #f4f7fb 0%, #edf2f8 100%);
-  color: #0f172a;
-  font-family: var(--font-body), sans-serif;
+    radial-gradient(circle at top left, rgba(30, 41, 59, 0.05), transparent 22%),
+    radial-gradient(circle at bottom right, rgba(79, 70, 229, 0.06), transparent 20%),
+    linear-gradient(180deg, var(--page-bg) 0%, var(--page-bg-soft) 100%);
+  color: var(--text-strong);
+  font-family: var(--font-poppins), sans-serif;
 }
 
 a {
@@ -32,24 +39,27 @@ a {
 
 button,
 input,
-textarea {
+textarea,
+select {
   font: inherit;
 }
 
 .surface-card {
-  @apply rounded-2xl border border-slate-200/80 bg-white/95 shadow-[0_20px_60px_-42px_rgba(15,23,42,0.28)] backdrop-blur;
+  @apply rounded-[24px] border bg-white/95 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.18)] backdrop-blur;
+  border-color: var(--border-color);
 }
 
 .surface-panel {
-  @apply rounded-2xl border border-slate-200/80 bg-white/90 backdrop-blur;
+  @apply rounded-[22px] border bg-white/90 backdrop-blur;
+  border-color: var(--border-color);
 }
 
 .section-title {
-  @apply font-heading text-2xl font-semibold tracking-tight text-slate-950;
+  @apply font-heading text-[28px] font-semibold tracking-[-0.03em] text-slate-950;
 }
 
 .eyebrow {
-  @apply text-xs font-semibold uppercase tracking-[0.24em] text-slate-500;
+  @apply text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500;
 }
 
 .workspace-shell {
@@ -65,15 +75,17 @@ textarea {
     linear-gradient(rgba(148, 163, 184, 0.07) 1px, transparent 1px),
     linear-gradient(90deg, rgba(148, 163, 184, 0.07) 1px, transparent 1px);
   background-size: 24px 24px;
-  mask-image: linear-gradient(180deg, rgba(15, 23, 42, 0.28), transparent 78%);
+  mask-image: linear-gradient(180deg, rgba(15, 23, 42, 0.22), transparent 78%);
 }
 
 .dashboard-panel {
-  @apply rounded-2xl border border-slate-200/80 bg-white/95 shadow-[0_18px_60px_-44px_rgba(15,23,42,0.28)] backdrop-blur-xl;
+  @apply rounded-[24px] border bg-white/95 shadow-[0_18px_52px_-42px_rgba(15,23,42,0.16)] backdrop-blur-xl;
+  border-color: var(--border-color);
 }
 
 .dashboard-panel-muted {
-  @apply rounded-2xl border border-slate-200/70 bg-slate-50/90;
+  @apply rounded-[22px] border bg-slate-50/90;
+  border-color: var(--border-color);
 }
 
 .panel-label {

@@ -98,23 +98,12 @@ export default function ClassStudentsPage({
                     <p className="text-[13px] uppercase tracking-[0.14em] text-[#7b84a6]">Mapel aktif</p>
                     <p className="mt-1 text-[16px] font-semibold text-[#2f365e]">{student.rows.length}</p>
                   </div>
-                  <div className="rounded-[12px] bg-[#f8f9fc] px-3 py-2">
+                  {/* <div className="rounded-[12px] bg-[#f8f9fc] px-3 py-2">
                     <p className="text-[13px] uppercase tracking-[0.14em] text-[#7b84a6]">Status tugas</p>
                     <div className="mt-1">
                       <Badge status={student.rows[0]?.taskStatus ?? "draft"} />
                     </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {student.rows.map((row) => (
-                    <span
-                      key={row.id}
-                      className="rounded-full border border-[rgba(113,94,215,0.12)] bg-[#faf8ff] px-2.5 py-1 text-[13px] font-medium text-[#656c93]"
-                    >
-                      {row.courseTitle}
-                    </span>
-                  ))}
+                  </div> */}
                 </div>
 
                 <Link
