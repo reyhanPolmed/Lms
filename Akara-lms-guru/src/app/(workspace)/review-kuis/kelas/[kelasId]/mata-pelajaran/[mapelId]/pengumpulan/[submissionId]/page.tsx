@@ -5,7 +5,11 @@ import { use, useEffect, useState } from "react";
 import { PageHeader, Surface } from "@/components/workspace/ui";
 import { useToast } from "@/components/workspace/toast";
 import { teacherApi, type QuizAttemptDetail } from "@/lib/api-client";
-import { getQuestionAnswerTone } from "../../../../../../review-kuis-utils";
+import {
+  decodeReviewRouteSegment,
+  encodeReviewRouteSegment,
+  getQuestionAnswerTone,
+} from "../../../../../../review-kuis-utils";
 
 export default function QuizSubmissionDetailPage({
   params,
@@ -14,7 +18,7 @@ export default function QuizSubmissionDetailPage({
 }) {
   const { kelasId, mapelId, submissionId } = use(params);
   const className = decodeURIComponent(kelasId);
-  const subjectName = decodeURIComponent(mapelId);
+  const subjectName = decodeReviewRouteSegment(mapelId);
   const { toast } = useToast();
 
   const [detail, setDetail] = useState<QuizAttemptDetail | null>(null);
@@ -69,7 +73,7 @@ export default function QuizSubmissionDetailPage({
       <PageHeader
         title="Detail Jawaban Kuis"
         description="Periksa jawaban siswa secara fokus lalu simpan draft, minta revisi, atau publish nilai."
-        actionHref={`/review-kuis/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeURIComponent(subjectName)}`}
+        actionHref={`/review-kuis/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeReviewRouteSegment(subjectName)}`}
         actionLabel="Kembali ke pengumpulan"
       />
 

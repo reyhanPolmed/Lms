@@ -83,7 +83,7 @@ export default function TaskReviewClassSubjectsPage({
                   href={`/review-tugas/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeURIComponent(item.subjectName)}`}
                   className="mt-4 flex w-full items-center justify-center rounded-[14px] bg-[#715ed7] px-3 py-2.5 text-[13px] font-semibold text-white shadow-[0_12px_24px_rgba(113,94,215,0.20)] transition-opacity hover:opacity-90"
                 >
-                  Lihat Pengumpulan
+                  Lihat Tugas
                 </Link>
               </article>
             ))}

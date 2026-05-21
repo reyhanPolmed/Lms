@@ -1,7 +1,5 @@
 import {
   teacherApi,
-  type ModuleDetail,
-  type ModuleSummary,
   type TaskSubmissionDetail,
   type TaskSubmissionSummary,
 } from "@/lib/api-client";
@@ -28,6 +26,16 @@ export type ReviewTaskSubjectCard = {
   taskCount: number;
   pendingCount: number;
   averageScore: number | null;
+};
+
+export type ReviewTaskCard = {
+  taskId: string;
+  taskTitle: string;
+  submissionCount: number;
+  studentCount: number;
+  pendingCount: number;
+  averageScore: number | null;
+  latestSubmittedAt: string | null;
 };
 
 export function formatTaskSubmittedAt(value: string | null) {
@@ -119,6 +127,44 @@ export function buildTaskSubjectCards(submissions: ReviewTaskSubmissionRow[]) {
       };
     })
     .sort((left, right) => left.subjectName.localeCompare(right.subjectName, "id"));
+}
+
+export function buildTaskCards(submissions: ReviewTaskSubmissionRow[]) {
+  const grouped = new Map<string, ReviewTaskSubmissionRow[]>();
+
+  submissions.forEach((submission) => {
+    const taskRows = grouped.get(submission.taskId) ?? [];
+    taskRows.push(submission);
+    grouped.set(submission.taskId, taskRows);
+  });
+
+  return Array.from(grouped.entries())
+    .map<ReviewTaskCard>(([taskId, taskRows]) => {
+      const scoredRows = taskRows.filter((row) => row.score !== null);
+      const averageScore =
+        scoredRows.length > 0
+          ? Math.round(
+              scoredRows.reduce((total, row) => total + (row.score ?? 0), 0) / scoredRows.length
+            )
+          : null;
+
+      const sortedRows = [...taskRows].sort((left, right) => {
+        const leftTime = left.submittedAt ? new Date(left.submittedAt).getTime() : 0;
+        const rightTime = right.submittedAt ? new Date(right.submittedAt).getTime() : 0;
+        return rightTime - leftTime;
+      });
+
+      return {
+        taskId,
+        taskTitle: taskRows[0]?.taskTitle ?? "Tugas",
+        submissionCount: taskRows.length,
+        studentCount: new Set(taskRows.map((row) => row.studentName)).size,
+        pendingCount: taskRows.filter((row) => getTaskReviewLabel(row) !== "Sudah dinilai").length,
+        averageScore,
+        latestSubmittedAt: sortedRows[0]?.submittedAt ?? null,
+      };
+    })
+    .sort((left, right) => left.taskTitle.localeCompare(right.taskTitle, "id"));
 }
 
 export async function loadTaskReviewRows() {

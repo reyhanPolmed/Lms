@@ -6,6 +6,8 @@ import { use, useCallback, useEffect, useMemo, useState } from "react";
 import { PageHeader, Surface } from "@/components/workspace/ui";
 import { teacherApi, type QuizItem, type QuizSubmissionSummary } from "@/lib/api-client";
 import {
+  decodeReviewRouteSegment,
+  encodeReviewRouteSegment,
   formatSubmittedAt,
   getReviewLabel,
   getReviewToneClass,
@@ -20,7 +22,7 @@ export default function QuizReviewSubjectSubmissionsPage({
 }) {
   const { kelasId, mapelId } = use(params);
   const className = decodeURIComponent(kelasId);
-  const subjectName = decodeURIComponent(mapelId);
+  const subjectName = decodeReviewRouteSegment(mapelId);
 
   const [quizzes, setQuizzes] = useState<QuizItem[]>([]);
   const [submissions, setSubmissions] = useState<QuizSubmissionSummary[]>([]);
@@ -176,7 +178,7 @@ export default function QuizReviewSubjectSubmissionsPage({
                       {getReviewLabel(submission)}
                     </span>
                     <Link
-                      href={`/review-kuis/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeURIComponent(subjectName)}/pengumpulan/${submission.id}`}
+                      href={`/review-kuis/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeReviewRouteSegment(subjectName)}/pengumpulan/${submission.id}`}
                       className="inline-flex w-fit items-center justify-center rounded-[10px] border border-[#d8d2ff] bg-white px-2.5 py-1.5 text-[12px] font-semibold text-[#6c63ad] hover:border-[#715ed7] hover:text-[#715ed7]"
                     >
                       Review

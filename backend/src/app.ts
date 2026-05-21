@@ -15,6 +15,7 @@ import { notFoundMiddleware } from "./middlewares/not-found.middleware.js";
 import { createApiRouter } from "./routes/api.routes.js";
 import { createTeacherRouter } from "./routes/teacher.routes.js";
 import { loginController, logoutController } from "./controllers/auth.controller.js";
+import { syncTeacherCredentialController } from "./controllers/internal-auth.controller.js";
 import { asyncHandler } from "./utils/async-handler.js";
 
 export function createApp() {
@@ -43,6 +44,7 @@ export function createApp() {
 
   app.use(express.json({ limit: "10mb" }));
   app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
+  app.post("/api/internal/teacher-credentials/sync", asyncHandler(syncTeacherCredentialController));
   app.use(csrfMiddleware);
 
   app.post("/login", asyncHandler(loginController));

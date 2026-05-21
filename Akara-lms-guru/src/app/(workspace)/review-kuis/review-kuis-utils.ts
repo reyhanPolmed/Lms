@@ -29,6 +29,26 @@ export function formatSubmittedAt(value: string | null) {
   }).format(new Date(value));
 }
 
+export function encodeReviewRouteSegment(value: string) {
+  return encodeURIComponent(encodeURIComponent(value));
+}
+
+export function decodeReviewRouteSegment(value: string) {
+  let decoded = value;
+
+  for (let index = 0; index < 2; index += 1) {
+    try {
+      const nextValue = decodeURIComponent(decoded);
+      if (nextValue === decoded) break;
+      decoded = nextValue;
+    } catch {
+      break;
+    }
+  }
+
+  return decoded;
+}
+
 export function getReviewLabel(submission: QuizSubmissionSummary) {
   if (submission.status === "retake") return "Perlu revisi";
   if (submission.status === "graded" && submission.score !== null) return "Sudah dinilai";

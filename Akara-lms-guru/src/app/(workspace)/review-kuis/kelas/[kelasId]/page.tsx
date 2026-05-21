@@ -5,7 +5,7 @@ import { use, useCallback, useEffect, useMemo, useState } from "react";
 
 import { PageHeader, Surface } from "@/components/workspace/ui";
 import { teacherApi, type QuizItem, type QuizSubmissionSummary } from "@/lib/api-client";
-import { buildSubjectCards } from "../../review-kuis-utils";
+import { buildSubjectCards, encodeReviewRouteSegment } from "../../review-kuis-utils";
 
 export default function QuizReviewClassSubjectsPage({
   params,
@@ -118,7 +118,7 @@ export default function QuizReviewClassSubjectsPage({
                 </div>
 
                 <Link
-                  href={`/review-kuis/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeURIComponent(item.subjectName)}`}
+                  href={`/review-kuis/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeReviewRouteSegment(item.subjectName)}`}
                   className="mt-4 flex w-full items-center justify-center rounded-[14px] bg-[#715ed7] px-3 py-2.5 text-[13px] font-semibold text-white shadow-[0_12px_24px_rgba(113,94,215,0.20)] transition-opacity hover:opacity-90"
                 >
                   Lihat Pengumpulan
