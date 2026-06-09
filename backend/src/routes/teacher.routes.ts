@@ -42,6 +42,12 @@ import {
   listTaskSubmissionsController,
 } from "../controllers/teacher.controller.js";
 import {
+  getTaskSubmissionIntegrityPairDetailController,
+  getTaskSubmissionIntegritySummaryController,
+  listTaskSubmissionIntegrityPairsController,
+  retryTaskSubmissionIntegrityController,
+} from "../controllers/teacher-integrity.controller.js";
+import {
   createSectionController,
   deleteSectionController,
   updateSectionController,
@@ -104,6 +110,22 @@ export function createTeacherRouter() {
   router.put(
     "/task-submissions/:id/grade",
     asyncHandler(gradeTaskSubmissionController)
+  );
+  router.get(
+    "/task-submissions/:id/integrity-summary",
+    asyncHandler(getTaskSubmissionIntegritySummaryController)
+  );
+  router.get(
+    "/task-submissions/:id/integrity-pairs",
+    asyncHandler(listTaskSubmissionIntegrityPairsController)
+  );
+  router.get(
+    "/task-submissions/:id/integrity-pairs/:comparisonId",
+    asyncHandler(getTaskSubmissionIntegrityPairDetailController)
+  );
+  router.post(
+    "/task-submissions/:id/integrity-retry",
+    asyncHandler(retryTaskSubmissionIntegrityController)
   );
 
   router.get(

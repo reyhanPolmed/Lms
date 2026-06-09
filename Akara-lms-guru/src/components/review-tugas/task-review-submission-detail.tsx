@@ -12,6 +12,21 @@ type TaskReviewSubmissionDetailProps = {
   backHref: string;
 };
 
+function getOriginalityLabel(status: string) {
+  switch (status) {
+    case "queued":
+      return "Masuk antrean";
+    case "processing":
+      return "Sedang diproses";
+    case "completed":
+      return "Pemeriksaan selesai";
+    case "failed":
+      return "Pemeriksaan gagal";
+    default:
+      return "Belum dijalankan";
+  }
+}
+
 export function TaskReviewSubmissionDetail({
   submissionId,
   backHref,
@@ -183,6 +198,25 @@ export function TaskReviewSubmissionDetail({
                   {!detail.submissionLink && !detail.submissionFile ? (
                     <p className="text-[13px] text-[#626b8b]">Tidak ada submission dari siswa.</p>
                   ) : null}
+                </div>
+              </div>
+
+              <div className="rounded-[18px] border border-[rgba(113,94,215,0.10)] bg-white p-4 shadow-[0_10px_20px_rgba(28,24,62,0.03)]">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[#8a92b6]">
+                  Pemeriksaan Orisinalitas
+                </p>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-[14px] border border-[rgba(113,94,215,0.10)] bg-[#fbfaff] px-3 py-3">
+                  <div>
+                    <p className="text-[13px] font-semibold text-[#3e4670]">
+                      {getOriginalityLabel(detail.originalityCheck.status)}
+                    </p>
+                    <p className="mt-1 text-[12px] text-[#626b8b]">
+                      Hasil ini adalah indikator risiko untuk review manual guru.
+                    </p>
+                  </div>
+                  <p className="text-[20px] font-semibold text-[#715ed7]">
+                    {detail.originalityCheck.maxSimilarity.toFixed(1)}%
+                  </p>
                 </div>
               </div>
 

@@ -10,6 +10,11 @@ const envSchema = z.object({
   BETTER_AUTH_URL: z.string().url("BETTER_AUTH_URL harus URL valid"),
   BETTER_AUTH_TRUSTED_ORIGINS: z.string().default("http://localhost:3000"),
   CORS_ORIGIN: z.string().default("http://localhost:3000"),
+  WINNOWING_API_BASE_URL: z.string().url("WINNOWING_API_BASE_URL harus URL valid").optional(),
+  WINNOWING_API_KEY: z.string().optional(),
+  WINNOWING_TENANT_ID: z.string().min(1, "WINNOWING_TENANT_ID tidak boleh kosong").optional(),
+  WINNOWING_SYNC_INTERVAL_MS: z.coerce.number().int().positive().default(10000),
+  WINNOWING_MAX_RETRIES: z.coerce.number().int().min(0).default(3),
   CSRF_ENABLED: z
     .string()
     .default("false")

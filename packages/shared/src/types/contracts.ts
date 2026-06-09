@@ -50,10 +50,29 @@ export interface TaskAttachmentView {
   url: string;
 }
 
+export type OriginalityCheckStatus =
+  | "not_requested"
+  | "queued"
+  | "processing"
+  | "completed"
+  | "failed";
+
+export interface OriginalityCheckSummary {
+  status: OriginalityCheckStatus;
+  providerStatus: string | null;
+  maxSimilarity: number;
+  similarityLevel: string | null;
+  revision: number;
+  checkedAt: string | null;
+  lastSyncedAt: string | null;
+  errorMessage: string | null;
+}
+
 export interface TaskSubmissionView {
   link?: string;
   file?: TaskAttachmentView;
   status: SubmissionStatus | "approved" | "revision";
+  originalityCheck?: OriginalityCheckSummary;
   teacherNote?: string;
   submittedAt: string | null;
 }

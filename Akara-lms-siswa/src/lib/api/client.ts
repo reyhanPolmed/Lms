@@ -724,6 +724,16 @@ export const lmsClient = {
             }
           : undefined,
         status: "submitted",
+        originalityCheck: {
+          status: "queued",
+          providerStatus: "QUEUED",
+          maxSimilarity: 0,
+          similarityLevel: null,
+          revision: 1,
+          checkedAt: null,
+          lastSyncedAt: new Date().toISOString(),
+          errorMessage: null,
+        },
         submittedAt: new Date().toISOString()
       } satisfies CurrentSubmission;
       markModuleItemComplete(task.courseId, id);

@@ -22,10 +22,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
 export function DashboardShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const isIntegrityCheckPage = pathname.includes("/integrity-check");
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -56,32 +58,48 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
   return (
     <main className="min-h-screen h-dvh overflow-hidden bg-[var(--page-bg)] text-[var(--page-ink)]">
-      <div className="grid h-full min-h-0 xl:grid-cols-[200px_minmax(0,1fr)]">
-        <aside className="hidden min-h-0 shrink-0 xl:sticky xl:top-0 xl:flex xl:h-dvh">
-          <AppSidebar pathname={pathname} onLogout={openLogoutModal} />
-        </aside>
+      <div
+        className={cn(
+          "grid h-full min-h-0",
+          isIntegrityCheckPage ? "grid-cols-1" : "xl:grid-cols-[200px_minmax(0,1fr)]"
+        )}
+      >
+        {!isIntegrityCheckPage ? (
+          <aside className="hidden min-h-0 shrink-0 xl:sticky xl:top-0 xl:flex xl:h-dvh">
+            <AppSidebar pathname={pathname} onLogout={openLogoutModal} />
+          </aside>
+        ) : null}
 
         <div className="flex min-h-0 min-w-0 flex-col overflow-hidden">
           <div className="no-scrollbar min-h-0 flex-1 overflow-auto">
-            <div className="w-full min-w-0 px-3 py-3 sm:px-4 sm:py-4 lg:px-3 lg:py-4 xl:px-2">
-              <div className="mb-3 flex xl:hidden">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="icon"
-                  onClick={() => setMobileSidebarOpen(true)}
-                  aria-label="Buka navigasi"
-                >
-                  <AppIcon icon={PanelLeft} size="sm" />
-                </Button>
-              </div>
+            <div
+              className={cn(
+                "w-full min-w-0",
+                isIntegrityCheckPage
+                  ? "px-2 py-2 sm:px-3 sm:py-3 lg:px-4 lg:py-4 xl:px-4"
+                  : "px-3 py-3 sm:px-4 sm:py-4 lg:px-3 lg:py-4 xl:px-2"
+              )}
+            >
+              {!isIntegrityCheckPage ? (
+                <div className="mb-3 flex xl:hidden">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="icon"
+                    onClick={() => setMobileSidebarOpen(true)}
+                    aria-label="Buka navigasi"
+                  >
+                    <AppIcon icon={PanelLeft} size="sm" />
+                  </Button>
+                </div>
+              ) : null}
               {children}
             </div>
           </div>
         </div>
       </div>
 
-      <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
+      <Sheet open={!isIntegrityCheckPage && mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
         <SheetContent side="left" className="w-[min(88vw,20rem)] p-0">
           <SheetHeader className="sr-only">
             <SheetTitle>Navigasi Teacher Hub</SheetTitle>

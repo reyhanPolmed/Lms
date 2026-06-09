@@ -523,12 +523,38 @@ model TaskSubmission {
   score           Int?
   teacherFeedback String?                     @map("teacher_feedback")
   rubricScores    TaskSubmissionRubricScore[]
+  similarityCheck TaskSubmissionSimilarityCheck?
   task            Task                        @relation(fields: [taskId], references: [id], onDelete: Cascade)
   user            User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([taskId], map: "task_submissions_task_id_index")
   @@index([userId], map: "task_submissions_user_id_index")
   @@map("task_submissions")
+}
+
+model TaskSubmissionSimilarityCheck {
+  id                   BigInt         @id @default(autoincrement())
+  taskSubmissionId     BigInt         @unique @map("task_submission_id")
+  tenantId             String         @map("tenant_id") @db.VarChar(255)
+  externalId           String         @map("external_id") @db.VarChar(255)
+  similarityDocumentId String?        @map("similarity_document_id") @db.VarChar(255)
+  similarityJobId      String?        @map("similarity_job_id") @db.VarChar(255)
+  similarityStatus     String         @default("not_requested") @map("similarity_status") @db.VarChar(30)
+  providerStatus       String?        @map("provider_status") @db.VarChar(40)
+  maxSimilarity        Float          @default(0) @map("max_similarity")
+  similarityLevel      String?        @map("similarity_level") @db.VarChar(20)
+  revision             Int            @default(0)
+  retryCount           Int            @default(0) @map("retry_count")
+  nextRetryAt          DateTime?      @map("next_retry_at") @db.Timestamp(0)
+  lastSyncedAt         DateTime?      @map("last_synced_at") @db.Timestamp(0)
+  checkedAt            DateTime?      @map("checked_at") @db.Timestamp(0)
+  similarityError      String?        @map("similarity_error")
+  createdAt            DateTime       @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt            DateTime       @updatedAt @map("updated_at") @db.Timestamp(0)
+  submission           TaskSubmission @relation(fields: [taskSubmissionId], references: [id], onDelete: Cascade)
+
+  @@index([similarityStatus, nextRetryAt], map: "task_submission_similarity_checks_status_retry_index")
+  @@map("task_submission_similarity_checks")
 }
 
 model TaskRubric {

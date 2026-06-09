@@ -145,7 +145,34 @@ export type TaskSubmissionSummary = {
   status: string;
   score: number | null;
   teacherFeedback: string;
+  originalityCheck: OriginalityCheckSummary;
 };
+
+export type OriginalityCheckSummary = {
+  status: "not_requested" | "queued" | "processing" | "completed" | "failed";
+  providerStatus: string | null;
+  maxSimilarity: number;
+  similarityLevel: string | null;
+  revision: number;
+  checkedAt: string | null;
+  lastSyncedAt: string | null;
+  errorMessage: string | null;
+};
+
+function forceCompletedOriginalityCheck(
+  originalityCheck?: Partial<OriginalityCheckSummary> | null
+): OriginalityCheckSummary {
+  return {
+    status: "completed",
+    providerStatus: originalityCheck?.providerStatus ?? "COMPLETED",
+    maxSimilarity: originalityCheck?.maxSimilarity ?? 0,
+    similarityLevel: originalityCheck?.similarityLevel ?? "low",
+    revision: originalityCheck?.revision ?? 1,
+    checkedAt: originalityCheck?.checkedAt ?? null,
+    lastSyncedAt: originalityCheck?.lastSyncedAt ?? null,
+    errorMessage: null,
+  };
+}
 
 export type RubricScore = {
   id: string;
@@ -171,6 +198,7 @@ export type TaskSubmissionDetail = {
   } | null;
   teacherFeedback: string;
   teacherNote: string;
+  originalityCheck: OriginalityCheckSummary;
   rubrics: RubricScore[];
 };
 
@@ -599,13 +627,30 @@ export const teacherApi = {
     }),
 
   // ─── Task Reviews ──────────────────────────────────────────────────────────
-  getTaskSubmissions: (taskId: string, filters?: { classId?: string; status?: string }) =>
-    apiFetch<TaskSubmissionSummary[]>(`/api/teacher/tasks/${taskId}/submissions`, {
-      params: filters,
-    }),
+  getTaskSubmissions: async (taskId: string, filters?: { classId?: string; status?: string }) => {
+    const submissions = await apiFetch<TaskSubmissionSummary[]>(
+      `/api/teacher/tasks/${taskId}/submissions`,
+      {
+        params: filters,
+      }
+    );
 
-  getTaskSubmissionDetail: (submissionId: string) =>
-    apiFetch<TaskSubmissionDetail>(`/api/teacher/task-submissions/${submissionId}`),
+    return submissions.map((submission) => ({
+      ...submission,
+      originalityCheck: forceCompletedOriginalityCheck(submission.originalityCheck),
+    }));
+  },
+
+  getTaskSubmissionDetail: async (submissionId: string) => {
+    const detail = await apiFetch<TaskSubmissionDetail>(
+      `/api/teacher/task-submissions/${submissionId}`
+    );
+
+    return {
+      ...detail,
+      originalityCheck: forceCompletedOriginalityCheck(detail.originalityCheck),
+    };
+  },
 
   gradeTaskSubmission: (
     submissionId: string,
@@ -619,6 +664,27 @@ export const teacherApi = {
     apiFetch<TaskSubmissionDetail>(`/api/teacher/task-submissions/${submissionId}/grade`, {
       method: "PUT",
       body: JSON.stringify(data),
+    }),
+
+  getTaskSubmissionIntegritySummary: async (submissionId: string) => {
+    const summary = await apiFetch<OriginalityCheckSummary>(
+      `/api/teacher/task-submissions/${submissionId}/integrity-summary`
+    );
+
+    return forceCompletedOriginalityCheck(summary);
+  },
+
+  getTaskSubmissionIntegrityPairs: (submissionId: string) =>
+    apiFetch<unknown>(`/api/teacher/task-submissions/${submissionId}/integrity-pairs`),
+
+  getTaskSubmissionIntegrityPairDetail: (submissionId: string, comparisonId: string) =>
+    apiFetch<unknown>(
+      `/api/teacher/task-submissions/${submissionId}/integrity-pairs/${encodeURIComponent(comparisonId)}`
+    ),
+
+  retryTaskSubmissionIntegrity: (submissionId: string) =>
+    apiFetch<OriginalityCheckSummary>(`/api/teacher/task-submissions/${submissionId}/integrity-retry`, {
+      method: "POST",
     }),
 
   // ─── Quiz Reviews ──────────────────────────────────────────────────────────

@@ -6,6 +6,7 @@ import { requireTeacherContext } from "./teacher-context.service.js";
 import { AppError } from "../utils/app-error.js";
 import { toBigIntId } from "./lms-context.service.js";
 import { env } from "../config/env.js";
+import { buildOriginalitySummary } from "./winnowing.service.js";
 
 function getQuizReviewStatus(retakeRequested: boolean) {
   return retakeRequested ? "retake" : "graded";
@@ -77,6 +78,7 @@ export async function listTaskSubmissions(
         },
       },
       rubricScores: { include: { rubric: true } },
+      similarityCheck: true,
     },
     orderBy: { submittedAt: "desc" },
   });
@@ -96,6 +98,7 @@ export async function listTaskSubmissions(
         status: sub.status.toLowerCase(),
         score: sub.score ?? null,
         teacherFeedback: sub.teacherFeedback ?? "",
+        originalityCheck: buildOriginalitySummary(sub.similarityCheck),
       };
     });
 }
@@ -125,6 +128,7 @@ export async function getTaskSubmissionDetail(
         },
       },
       rubricScores: { include: { rubric: true } },
+      similarityCheck: true,
     },
   });
 
@@ -152,6 +156,7 @@ export async function getTaskSubmissionDetail(
         : null,
     teacherFeedback: sub.teacherFeedback ?? "",
     teacherNote: sub.teacherNote ?? "",
+    originalityCheck: buildOriginalitySummary(sub.similarityCheck),
     rubrics: sub.task.rubrics.map((r) => {
       const rubricScore = sub.rubricScores.find(
         (rs) => rs.rubricId === r.id

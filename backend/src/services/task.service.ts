@@ -13,6 +13,10 @@ import {
   toBigIntId
 } from "./lms-context.service.js";
 import { AppError } from "../utils/app-error.js";
+import {
+  buildOriginalitySummary,
+  enqueueTaskSubmissionSimilarityCheck
+} from "./winnowing.service.js";
 
 async function getTaskGraph(taskId: string, userId: string) {
   const student = await requireStudentContext(userId);
@@ -32,6 +36,9 @@ async function getTaskGraph(taskId: string, userId: string) {
       submissions: {
         where: {
           userId: student.userId
+        },
+        include: {
+          similarityCheck: true
         },
         take: 1
       },
@@ -216,6 +223,7 @@ export async function getStudentTaskDetail(taskId: string, userId: string) {
           link: currentSubmission.submissionLink ?? undefined,
           file: buildSubmissionFile(currentSubmission),
           status: currentSubmission.status.toLowerCase(),
+          originalityCheck: buildOriginalitySummary(currentSubmission.similarityCheck),
           teacherNote: currentSubmission.teacherNote ?? undefined,
           submittedAt: currentSubmission.submittedAt?.toISOString() ?? null
         }
@@ -272,8 +280,8 @@ export async function submitTaskSubmission(
     throw new AppError("Tugas ini tidak mengizinkan revisi", 422);
   }
 
-  if (currentSubmission) {
-    await prisma.taskSubmission.update({
+  const savedSubmission = currentSubmission
+    ? await prisma.taskSubmission.update({
       where: {
         id: currentSubmission.id
       },
@@ -284,9 +292,8 @@ export async function submitTaskSubmission(
         status: SubmissionStatus.SUBMITTED,
         teacherNote: null
       }
-    });
-  } else {
-    await prisma.taskSubmission.create({
+    })
+    : await prisma.taskSubmission.create({
       data: {
         taskId: task.id,
         userId: student.userId,
@@ -296,7 +303,8 @@ export async function submitTaskSubmission(
         status: SubmissionStatus.SUBMITTED
       }
     });
-  }
+
+  await enqueueTaskSubmissionSimilarityCheck(savedSubmission.id);
 
   return getStudentTaskDetail(taskId, userId);
 }

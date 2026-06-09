@@ -23,6 +23,40 @@ type TaskReviewSubmissionsTableProps = {
   buildIntegrityHref?: (submissionId: string) => string;
 };
 
+function getOriginalityLabel(status: string) {
+  switch (status) {
+    case "queued":
+      return "Antrean";
+    case "processing":
+      return "Diproses";
+    case "completed":
+      return "Selesai";
+    case "failed":
+      return "Gagal";
+    default:
+      return "Belum dicek";
+  }
+}
+
+function getOriginalityTone(status: string) {
+  switch (status) {
+    case "completed":
+      return "border-[#cde8d6] bg-[#edf8f1] text-[#2f8c57]";
+    case "failed":
+      return "border-[#f4d1d8] bg-[#fff7f9] text-[#b25a70]";
+    case "queued":
+    case "processing":
+      return "border-[#d6e4ff] bg-[#f4f8ff] text-[#4169b2]";
+    default:
+      return "border-[var(--line)] bg-[var(--surface-subtle)] text-[var(--muted-ink)]";
+  }
+}
+
+function formatSimilarityPercentage(value: number) {
+  const normalizedValue = Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : 0;
+  return `${Math.round(normalizedValue)}%`;
+}
+
 export function TaskReviewSubmissionsTable({
   className,
   subjectName,
@@ -49,53 +83,68 @@ export function TaskReviewSubmissionsTable({
       </div>
 
       <div className="overflow-hidden rounded-[18px] border border-[rgba(216,224,236,0.86)] bg-[var(--surface)]">
-        <div className="grid grid-cols-[1.15fr_1.1fr_0.95fr_0.7fr_0.9fr_1.2fr] gap-3 border-b border-[rgba(216,224,236,0.86)] bg-[var(--surface-subtle)] px-4 py-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-[var(--muted-ink)]">
-          <span>Siswa</span>
-          <span>Tugas</span>
-          <span>Dikumpulkan</span>
-          <span>Skor</span>
-          <span>Status Review</span>
-          <span>Aksi</span>
+        <div className="grid grid-cols-[0.88fr_0.84fr_0.5fr_0.84fr_0.76fr_1.18fr] gap-2.5 border-b border-[rgba(216,224,236,0.86)] bg-[var(--surface-subtle)] px-4 py-3 text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--muted-ink)]">
+          <span className="whitespace-nowrap">Siswa</span>
+          <span className="whitespace-nowrap">Dikumpulkan</span>
+          <span className="whitespace-nowrap">Skor</span>
+          <span className="whitespace-nowrap">Status Review</span>
+          <span className="whitespace-nowrap pr-3 text-center">Indeks kemiripan</span>
+          <span className="whitespace-nowrap pl-3">Aksi</span>
         </div>
 
         <div className="divide-y divide-[rgba(216,224,236,0.86)]">
           {submissions.map((submission) => (
             <div
               key={submission.id}
-              className="grid grid-cols-[1.15fr_1.1fr_0.95fr_0.7fr_0.9fr_1.2fr] gap-3 px-4 py-3 text-left"
+              className="grid grid-cols-[0.88fr_0.84fr_0.5fr_0.84fr_0.76fr_1.18fr] items-center gap-2.5 px-4 py-3 text-left"
             >
-              <span className="text-[13px] font-semibold text-[var(--page-ink)]">
+              <span className="truncate whitespace-nowrap text-[13px] font-semibold text-[var(--page-ink)]">
                 {submission.studentName}
               </span>
-              <span className="text-[12px] text-[var(--muted-ink)]">{submission.taskTitle}</span>
-              <span className="text-[12px] text-[var(--muted-ink)]">
+              <span className="truncate whitespace-nowrap text-[12px] text-[var(--muted-ink)]">
                 {formatTaskSubmittedAt(submission.submittedAt)}
               </span>
-              <span className="text-[12px] font-semibold text-[var(--page-ink)]">
+              <span className="whitespace-nowrap text-[12px] font-semibold text-[var(--page-ink)]">
                 {submission.score !== null ? `${submission.score}/100` : "-"}
               </span>
               <span
                 className={cn(
-                  "inline-flex w-fit rounded-full border px-2 py-1 text-[13px] font-semibold",
+                  "inline-flex w-fit whitespace-nowrap rounded-full border px-2 py-1 text-[13px] font-semibold",
                   getTaskReviewToneClass(submission)
                 )}
               >
                 {getTaskReviewLabel(submission)}
               </span>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex justify-center">
+                <span
+                  className={cn(
+                    "inline-flex h-fit w-fit whitespace-nowrap rounded-full border px-2 py-1 text-[12px] font-semibold",
+                    getOriginalityTone(submission.originalityCheck.status)
+                  )}
+                >
+                  {submission.originalityCheck.status === "completed"
+                    ? formatSimilarityPercentage(submission.originalityCheck.maxSimilarity)
+                    : getOriginalityLabel(submission.originalityCheck.status)}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 whitespace-nowrap">
                 <Link
                   href={buildDetailHref(submission.id)}
-                  className="inline-flex w-fit items-center justify-center rounded-[10px] border border-[rgba(79,70,199,0.18)] bg-white px-2.5 py-1.5 text-[12px] font-semibold text-[var(--accent)] hover:border-[var(--accent)]"
+                  className="inline-flex shrink-0 items-center justify-center rounded-[10px] border border-[rgba(79,70,199,0.18)] bg-white px-2.5 py-1.5 text-[12px] font-semibold text-[var(--accent)] hover:border-[var(--accent)]"
                 >
                   Review
                 </Link>
-                {buildIntegrityHref ? (
+                {buildIntegrityHref && submission.originalityCheck.status === "completed" ? (
                   <Link
                     href={buildIntegrityHref(submission.id)}
-                    className="inline-flex w-fit items-center justify-center rounded-[10px] border border-[rgba(180,83,9,0.18)] bg-[var(--warning-soft)] px-2.5 py-1.5 text-[12px] font-semibold text-[var(--warning)] hover:border-[var(--warning)]"
+                    className="inline-flex shrink-0 items-center justify-center rounded-[10px] border border-[rgba(180,83,9,0.18)] bg-[var(--warning-soft)] px-2.5 py-1.5 text-[12px] font-semibold text-[var(--warning)] hover:border-[var(--warning)]"
                   >
                     Integrity Check
                   </Link>
+                ) : buildIntegrityHref ? (
+                  <span className="inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-[10px] border border-[var(--line)] bg-[var(--surface-subtle)] px-2.5 py-1.5 text-[12px] font-semibold text-[var(--muted-ink)]">
+                    {getOriginalityLabel(submission.originalityCheck.status)}
+                  </span>
                 ) : null}
               </div>
             </div>
