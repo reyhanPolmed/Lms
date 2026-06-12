@@ -46,6 +46,14 @@ type SimilarityProviderPayload = {
   processingError?: string | null;
 };
 
+type UnknownRecord = Record<string, unknown>;
+type PairSummarySnapshot = {
+  similarityScore: number;
+  similarityLevel: string | null;
+  pairedDocumentId: string | null;
+  pairedExternalId: string | null;
+};
+
 const ACTIVE_STATUSES = ["queued", "processing"];
 const DISPATCH_BATCH_SIZE = 10;
 const SYNC_BATCH_SIZE = 25;
@@ -86,7 +94,7 @@ export function buildOriginalitySummary(check: TaskSubmissionSimilarityCheck | n
   };
 }
 
-async function winnowingFetch<T>(pathname: string, init?: RequestInit) {
+function buildWinnowingHeaders(init?: RequestInit) {
   if (!env.WINNOWING_API_BASE_URL || !env.WINNOWING_TENANT_ID) {
     throw new AppError("Winnowing API belum dikonfigurasi", 503);
   }
@@ -95,6 +103,12 @@ async function winnowingFetch<T>(pathname: string, init?: RequestInit) {
   if (env.WINNOWING_API_KEY) {
     headers.set("Authorization", `Bearer ${env.WINNOWING_API_KEY}`);
   }
+
+  return headers;
+}
+
+async function winnowingRawFetch(pathname: string, init?: RequestInit) {
+  const headers = buildWinnowingHeaders(init);
 
   const response = await fetch(new URL(pathname, env.WINNOWING_API_BASE_URL), {
     ...init,
@@ -106,6 +120,11 @@ async function winnowingFetch<T>(pathname: string, init?: RequestInit) {
     throw new Error(`Winnowing API ${response.status}: ${message || response.statusText}`);
   }
 
+  return response;
+}
+
+async function winnowingFetch<T>(pathname: string, init?: RequestInit) {
+  const response = await winnowingRawFetch(pathname, init);
   return response.json() as Promise<WinnowingResponse<T>>;
 }
 
@@ -124,11 +143,195 @@ function extractDocument(payload: SimilarityProviderPayload): WinnowingDocument 
   };
 }
 
+function asRecord(value: unknown): UnknownRecord {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as UnknownRecord)
+    : {};
+}
+
+function unwrapPairs(value: unknown) {
+  const record = asRecord(value);
+  if (Array.isArray(record.pairs)) return record.pairs;
+  if (Array.isArray(value)) return value;
+  return [];
+}
+
+function pickNumber(record: UnknownRecord, keys: string[]) {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string" && value.trim() && Number.isFinite(Number(value))) {
+      return Number(value);
+    }
+  }
+
+  return 0;
+}
+
+function pickString(record: UnknownRecord, keys: string[]) {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "string" && value.trim()) return value;
+  }
+
+  return null;
+}
+
+function normalizePairSummaries(value: unknown) {
+  const pairs = unwrapPairs(value);
+  return pairs.map((item) => {
+    const pair = asRecord(item);
+
+    return {
+      similarityScore: pickNumber(pair, ["similarityScore", "similarity_score", "score"]),
+      similarityLevel: pickString(pair, ["similarityLevel", "similarity_level", "level"]),
+      pairedDocumentId: pickString(pair, [
+        "pairedDocumentId",
+        "paired_document_id",
+        "documentId",
+        "document_id",
+      ]),
+      pairedExternalId: pickString(pair, [
+        "pairedExternalId",
+        "paired_external_id",
+        "externalId",
+        "external_id",
+      ]),
+    } satisfies PairSummarySnapshot;
+  });
+}
+
+function deriveSimilarityLevel(score: number) {
+  if (score >= 70) return "high";
+  if (score >= 30) return "medium";
+  if (score > 0) return "low";
+  return null;
+}
+
+async function getSimilaritySummaryFromPairs(documentId: string) {
+  const response = await winnowingFetch<unknown>(
+    `/api/v1/documents/${encodeURIComponent(documentId)}/pairs?tenantId=${encodeURIComponent(env.WINNOWING_TENANT_ID!)}`
+  );
+  const pairs = normalizePairSummaries(response.data);
+
+  let maxSimilarity = 0;
+  let similarityLevel: string | null = null;
+
+  for (const pair of pairs) {
+    if (pair.similarityScore > maxSimilarity) {
+      maxSimilarity = pair.similarityScore;
+      similarityLevel = pair.similarityLevel;
+    }
+  }
+
+  return {
+    pairs,
+    maxSimilarity,
+    similarityLevel: similarityLevel ?? deriveSimilarityLevel(maxSimilarity),
+  };
+}
+
+async function syncRelatedChecksFromPairs(
+  check: TaskSubmissionSimilarityCheck,
+  pairs: PairSummarySnapshot[]
+) {
+  if (!pairs.length || !check.tenantId) return;
+
+  const pairedDocumentIds = Array.from(
+    new Set(pairs.map((pair) => pair.pairedDocumentId).filter((value): value is string => Boolean(value)))
+  );
+  const pairedExternalIds = Array.from(
+    new Set(pairs.map((pair) => pair.pairedExternalId).filter((value): value is string => Boolean(value)))
+  );
+
+  if (!pairedDocumentIds.length && !pairedExternalIds.length) return;
+
+  const relatedChecks = await prisma.taskSubmissionSimilarityCheck.findMany({
+    where: {
+      tenantId: check.tenantId,
+      id: { not: check.id },
+      OR: [
+        pairedDocumentIds.length ? { similarityDocumentId: { in: pairedDocumentIds } } : undefined,
+        pairedExternalIds.length ? { externalId: { in: pairedExternalIds } } : undefined,
+      ].filter((value): value is NonNullable<typeof value> => Boolean(value)),
+    },
+  });
+
+  if (!relatedChecks.length) return;
+
+  const checksByDocumentId = new Map(
+    relatedChecks
+      .filter((item) => item.similarityDocumentId)
+      .map((item) => [item.similarityDocumentId!, item] as const)
+  );
+  const checksByExternalId = new Map(relatedChecks.map((item) => [item.externalId, item] as const));
+  const updates = new Map<bigint, { maxSimilarity: number; similarityLevel: string | null }>();
+
+  for (const pair of pairs) {
+    const relatedCheck =
+      (pair.pairedDocumentId ? checksByDocumentId.get(pair.pairedDocumentId) : undefined) ??
+      (pair.pairedExternalId ? checksByExternalId.get(pair.pairedExternalId) : undefined);
+
+    if (!relatedCheck) continue;
+
+    const current = updates.get(relatedCheck.id) ?? {
+      maxSimilarity: relatedCheck.maxSimilarity,
+      similarityLevel: relatedCheck.similarityLevel,
+    };
+
+    if (pair.similarityScore > current.maxSimilarity) {
+      updates.set(relatedCheck.id, {
+        maxSimilarity: pair.similarityScore,
+        similarityLevel: pair.similarityLevel ?? deriveSimilarityLevel(pair.similarityScore),
+      });
+    }
+  }
+
+  for (const [id, update] of updates) {
+    await prisma.taskSubmissionSimilarityCheck.update({
+      where: { id },
+      data: {
+        maxSimilarity: update.maxSimilarity,
+        similarityLevel: update.similarityLevel,
+        lastSyncedAt: new Date(),
+      },
+    });
+  }
+}
+
+export async function syncSimilaritySummaryFromPairs(check: TaskSubmissionSimilarityCheck) {
+  if (!check.similarityDocumentId || !env.WINNOWING_TENANT_ID) return check;
+
+  const summary = await getSimilaritySummaryFromPairs(check.similarityDocumentId);
+
+  const updated = await prisma.taskSubmissionSimilarityCheck.update({
+    where: { id: check.id },
+    data: {
+      maxSimilarity: summary.maxSimilarity,
+      similarityLevel: summary.similarityLevel,
+      lastSyncedAt: new Date(),
+    },
+  });
+
+  await syncRelatedChecksFromPairs(updated, summary.pairs);
+
+  return updated;
+}
+
 async function createWinnowingDocument(taskSubmissionId: bigint) {
   const submission = await prisma.taskSubmission.findUnique({
     where: { id: taskSubmissionId },
     include: {
-      task: true,
+      task: {
+        include: {
+          moduleStudentClass: {
+            include: {
+              module: true,
+              studentClass: true,
+            },
+          },
+        },
+      },
       user: true,
     },
   });
@@ -146,6 +349,17 @@ async function createWinnowingDocument(taskSubmissionId: bigint) {
   form.append("courseId", String(submission.task.modulesStudentClassId));
   form.append("title", `${submission.task.judul} - ${submission.user.name}`);
   form.append("languages", "id");
+  form.append(
+    "metadata",
+    JSON.stringify({
+      studentName: submission.user.name,
+      className: submission.task.moduleStudentClass.studentClass?.namaKelas ?? null,
+      courseTitle: submission.task.moduleStudentClass.module.judul,
+      assignmentTitle: submission.task.judul,
+      submissionTitle: `${submission.task.judul} - ${submission.user.name}`,
+      submissionFileName: path.basename(submission.submissionFilePath),
+    })
+  );
   form.append(
     "file",
     new Blob([fileBytes], {
@@ -267,14 +481,30 @@ async function syncSimilarityCheck(check: TaskSubmissionSimilarityCheck) {
     const document = extractDocument(response.data);
     const providerStatus = document.processingStatus ?? response.data.status ?? "QUEUED";
     const status = mapProviderStatus(providerStatus);
+    let maxSimilarity = document.maxSimilarity ?? check.maxSimilarity;
+    let similarityLevel = document.similarityLevel ?? check.similarityLevel;
+
+    if (status === "completed") {
+      try {
+        const pairSummary = await getSimilaritySummaryFromPairs(check.similarityDocumentId);
+        maxSimilarity = pairSummary.maxSimilarity;
+        similarityLevel = pairSummary.similarityLevel;
+        await syncRelatedChecksFromPairs(check, pairSummary.pairs);
+      } catch (error) {
+        logger.warn(
+          { err: error, checkId: String(check.id), documentId: check.similarityDocumentId },
+          "Winnowing pair summary sync failed"
+        );
+      }
+    }
 
     await prisma.taskSubmissionSimilarityCheck.update({
       where: { id: check.id },
       data: {
         similarityStatus: status,
         providerStatus,
-        maxSimilarity: document.maxSimilarity ?? check.maxSimilarity,
-        similarityLevel: document.similarityLevel ?? check.similarityLevel,
+        maxSimilarity,
+        similarityLevel,
         checkedAt: status === "completed" ? new Date(document.processedAt ?? Date.now()) : check.checkedAt,
         lastSyncedAt: new Date(),
         similarityError: document.processingError ?? null,
@@ -325,6 +555,16 @@ export async function getTaskSubmissionIntegrityComparison(comparisonId: string)
   return winnowingFetch<unknown>(
     `/api/v1/comparisons/${encodeURIComponent(comparisonId)}?tenantId=${encodeURIComponent(env.WINNOWING_TENANT_ID!)}`
   );
+}
+
+export async function getTaskSubmissionIntegrityComparisonVisual(comparisonId: string) {
+  return winnowingFetch<unknown>(
+    `/api/v1/comparisons/${encodeURIComponent(comparisonId)}/visual?tenantId=${encodeURIComponent(env.WINNOWING_TENANT_ID!)}`
+  );
+}
+
+export async function fetchTaskSubmissionIntegrityAsset(assetPath: string) {
+  return winnowingRawFetch(assetPath);
 }
 
 export async function retryTaskSubmissionIntegrityCheck(check: TaskSubmissionSimilarityCheck) {

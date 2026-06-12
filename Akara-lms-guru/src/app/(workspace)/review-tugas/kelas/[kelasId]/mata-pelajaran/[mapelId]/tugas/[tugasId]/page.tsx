@@ -106,10 +106,10 @@ export default function TaskReviewTaskSubmissionsPage({
             totalPages={totalPages}
             onPageChange={setCurrentPage}
             buildDetailHref={(submissionId) =>
-              `/review-tugas/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeURIComponent(subjectName)}/tugas/${encodeURIComponent(taskId)}/pengumpulan/${submissionId}`
+              `/review-tugas/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeURIComponent(subjectName)}/pengumpulan/${submissionId}`
             }
             buildIntegrityHref={(submissionId) =>
-              `/review-tugas/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeURIComponent(subjectName)}/tugas/${encodeURIComponent(taskId)}/pengumpulan/${submissionId}/integrity-check`
+              `/review-tugas/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeURIComponent(subjectName)}/pengumpulan/${submissionId}/integrity-check`
             }
           />
         )}

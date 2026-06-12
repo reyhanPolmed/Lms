@@ -159,21 +159,6 @@ export type OriginalityCheckSummary = {
   errorMessage: string | null;
 };
 
-function forceCompletedOriginalityCheck(
-  originalityCheck?: Partial<OriginalityCheckSummary> | null
-): OriginalityCheckSummary {
-  return {
-    status: "completed",
-    providerStatus: originalityCheck?.providerStatus ?? "COMPLETED",
-    maxSimilarity: originalityCheck?.maxSimilarity ?? 0,
-    similarityLevel: originalityCheck?.similarityLevel ?? "low",
-    revision: originalityCheck?.revision ?? 1,
-    checkedAt: originalityCheck?.checkedAt ?? null,
-    lastSyncedAt: originalityCheck?.lastSyncedAt ?? null,
-    errorMessage: null,
-  };
-}
-
 export type RubricScore = {
   id: string;
   name: string;
@@ -200,6 +185,41 @@ export type TaskSubmissionDetail = {
   teacherNote: string;
   originalityCheck: OriginalityCheckSummary;
   rubrics: RubricScore[];
+};
+
+export type IntegrityVisualDocument = {
+  id: string | null;
+  side: "A" | "B";
+  layoutMap: {
+    kind: string | null;
+    pages: {
+      pageIndex: number;
+      width: number;
+      height: number;
+      imageUrl: string | null;
+      pdfWidth: number;
+      pdfHeight: number;
+    }[];
+  } | null;
+  highlights: {
+    pageIndex: number;
+    text: string | null;
+    bboxNormalized: {
+      x1: number;
+      y1: number;
+      x2: number;
+      y2: number;
+    } | null;
+  }[];
+};
+
+export type IntegrityVisualContext = {
+  comparisonId: string;
+  similarityScore: number;
+  similarityLevel: string | null;
+  matchedFingerprintCount: number;
+  sourceDocument: IntegrityVisualDocument;
+  comparisonDocument: IntegrityVisualDocument;
 };
 
 export type QuizSubmissionSummary = {
@@ -377,6 +397,12 @@ export type TaskDetail = {
     order: number;
   }[];
 };
+
+export function resolveApiUrl(path: string | null | undefined) {
+  if (!path) return null;
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${BASE}${path}`;
+}
 
 // ────────────────────────────────────────────────────────────────────────────────
 // Dashboard
@@ -628,29 +654,13 @@ export const teacherApi = {
 
   // ─── Task Reviews ──────────────────────────────────────────────────────────
   getTaskSubmissions: async (taskId: string, filters?: { classId?: string; status?: string }) => {
-    const submissions = await apiFetch<TaskSubmissionSummary[]>(
-      `/api/teacher/tasks/${taskId}/submissions`,
-      {
-        params: filters,
-      }
-    );
-
-    return submissions.map((submission) => ({
-      ...submission,
-      originalityCheck: forceCompletedOriginalityCheck(submission.originalityCheck),
-    }));
+    return apiFetch<TaskSubmissionSummary[]>(`/api/teacher/tasks/${taskId}/submissions`, {
+      params: filters,
+    });
   },
 
-  getTaskSubmissionDetail: async (submissionId: string) => {
-    const detail = await apiFetch<TaskSubmissionDetail>(
-      `/api/teacher/task-submissions/${submissionId}`
-    );
-
-    return {
-      ...detail,
-      originalityCheck: forceCompletedOriginalityCheck(detail.originalityCheck),
-    };
-  },
+  getTaskSubmissionDetail: (submissionId: string) =>
+    apiFetch<TaskSubmissionDetail>(`/api/teacher/task-submissions/${submissionId}`),
 
   gradeTaskSubmission: (
     submissionId: string,
@@ -666,13 +676,10 @@ export const teacherApi = {
       body: JSON.stringify(data),
     }),
 
-  getTaskSubmissionIntegritySummary: async (submissionId: string) => {
-    const summary = await apiFetch<OriginalityCheckSummary>(
+  getTaskSubmissionIntegritySummary: (submissionId: string) =>
+    apiFetch<OriginalityCheckSummary>(
       `/api/teacher/task-submissions/${submissionId}/integrity-summary`
-    );
-
-    return forceCompletedOriginalityCheck(summary);
-  },
+    ),
 
   getTaskSubmissionIntegrityPairs: (submissionId: string) =>
     apiFetch<unknown>(`/api/teacher/task-submissions/${submissionId}/integrity-pairs`),
@@ -680,6 +687,11 @@ export const teacherApi = {
   getTaskSubmissionIntegrityPairDetail: (submissionId: string, comparisonId: string) =>
     apiFetch<unknown>(
       `/api/teacher/task-submissions/${submissionId}/integrity-pairs/${encodeURIComponent(comparisonId)}`
+    ),
+
+  getTaskSubmissionIntegrityPairVisual: (submissionId: string, comparisonId: string) =>
+    apiFetch<IntegrityVisualContext>(
+      `/api/teacher/task-submissions/${submissionId}/integrity-pairs/${encodeURIComponent(comparisonId)}/visual`
     ),
 
   retryTaskSubmissionIntegrity: (submissionId: string) =>

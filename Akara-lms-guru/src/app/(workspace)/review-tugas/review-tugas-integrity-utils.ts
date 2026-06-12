@@ -1,5 +1,7 @@
 import {
+  resolveApiUrl,
   teacherApi,
+  type IntegrityVisualContext,
   type OriginalityCheckSummary,
   type TaskSubmissionDetail,
 } from "@/lib/api-client";
@@ -28,6 +30,41 @@ export type IntegrityPairDetail = {
   matchedFingerprintCount: number;
   highlights: IntegrityHighlight[];
   rawPayload: string;
+};
+
+export type IntegrityPreviewAsset = {
+  id: string | null;
+  side: "A" | "B";
+  layoutMap: {
+    kind: string | null;
+    pages: {
+      pageIndex: number;
+      width: number;
+      height: number;
+      imageUrl: string | null;
+      pdfWidth: number;
+      pdfHeight: number;
+    }[];
+  } | null;
+  highlights: {
+    pageIndex: number;
+    text: string | null;
+    bboxNormalized: {
+      x1: number;
+      y1: number;
+      x2: number;
+      y2: number;
+    } | null;
+  }[];
+};
+
+export type IntegrityPairVisual = {
+  comparisonId: string;
+  similarityScore: number;
+  similarityLevel: string | null;
+  matchedFingerprintCount: number;
+  sourceDocument: IntegrityPreviewAsset;
+  comparisonDocument: IntegrityPreviewAsset;
 };
 
 export type IntegrityCheckContext = {
@@ -83,6 +120,7 @@ function unwrapList(value: unknown): unknown[] {
 
 function extractPeerRecord(record: UnknownRecord) {
   for (const key of [
+    "pairedDocument",
     "peerDocument",
     "matchedDocument",
     "comparedDocument",
@@ -150,6 +188,25 @@ function normalizeHighlights(record: UnknownRecord) {
     .filter((item): item is IntegrityHighlight => item !== null);
 }
 
+function normalizePreviewAsset(
+  document: IntegrityVisualContext["sourceDocument"] | IntegrityVisualContext["comparisonDocument"]
+): IntegrityPreviewAsset {
+  return {
+    id: document.id,
+    side: document.side,
+    layoutMap: document.layoutMap
+      ? {
+          kind: document.layoutMap.kind,
+          pages: document.layoutMap.pages.map((page) => ({
+            ...page,
+            imageUrl: resolveApiUrl(page.imageUrl),
+          })),
+        }
+      : null,
+    highlights: Array.isArray(document.highlights) ? document.highlights : [],
+  };
+}
+
 export async function loadTaskIntegrityContext(submissionId: string) {
   const [currentSubmission, originalityCheck, rawPairs] = await Promise.all([
     teacherApi.getTaskSubmissionDetail(submissionId),
@@ -190,4 +247,20 @@ export async function loadTaskIntegrityPairDetail(
     highlights: normalizeHighlights(record),
     rawPayload: JSON.stringify(payload, null, 2),
   } satisfies IntegrityPairDetail;
+}
+
+export async function loadTaskIntegrityPairVisual(
+  submissionId: string,
+  comparisonId: string
+) {
+  const payload = await teacherApi.getTaskSubmissionIntegrityPairVisual(submissionId, comparisonId);
+
+  return {
+    comparisonId: payload.comparisonId,
+    similarityScore: toPercentage(payload.similarityScore),
+    similarityLevel: payload.similarityLevel,
+    matchedFingerprintCount: payload.matchedFingerprintCount,
+    sourceDocument: normalizePreviewAsset(payload.sourceDocument),
+    comparisonDocument: normalizePreviewAsset(payload.comparisonDocument),
+  } satisfies IntegrityPairVisual;
 }

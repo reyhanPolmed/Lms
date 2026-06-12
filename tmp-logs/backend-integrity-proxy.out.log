@@ -1,0 +1,6 @@
+
+> akara-lms-backend@0.1.0 dev
+> tsx watch src/server.ts
+
+{"level":30,"time":1781096039174,"pid":23576,"hostname":"LAPTOP-0LS5MK5D","msg":"Backend running at http://localhost:3001"}
+{"level":30,"time":1781096039175,"pid":23576,"hostname":"LAPTOP-0LS5MK5D","intervalMs":10000,"msg":"Similarity worker started"}

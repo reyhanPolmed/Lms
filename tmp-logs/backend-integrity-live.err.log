@@ -1,0 +1,3 @@
+2026-06-11T12:43:22.173Z ERROR [Better Auth]: Credential account not found { email: 'riko@akara.sch.id' }
+2026-06-11T12:43:38.332Z ERROR [Better Auth]: Invalid password
+2026-06-11T12:43:46.220Z ERROR [Better Auth]: Invalid password

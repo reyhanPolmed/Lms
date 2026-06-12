@@ -43,6 +43,8 @@ import {
 } from "../controllers/teacher.controller.js";
 import {
   getTaskSubmissionIntegrityPairDetailController,
+  getTaskSubmissionIntegrityPairVisualAssetController,
+  getTaskSubmissionIntegrityPairVisualController,
   getTaskSubmissionIntegritySummaryController,
   listTaskSubmissionIntegrityPairsController,
   retryTaskSubmissionIntegrityController,
@@ -122,6 +124,14 @@ export function createTeacherRouter() {
   router.get(
     "/task-submissions/:id/integrity-pairs/:comparisonId",
     asyncHandler(getTaskSubmissionIntegrityPairDetailController)
+  );
+  router.get(
+    "/task-submissions/:id/integrity-pairs/:comparisonId/visual",
+    asyncHandler(getTaskSubmissionIntegrityPairVisualController)
+  );
+  router.get(
+    "/task-submissions/:id/integrity-pairs/:comparisonId/documents/:side/visual-asset",
+    asyncHandler(getTaskSubmissionIntegrityPairVisualAssetController)
   );
   router.post(
     "/task-submissions/:id/integrity-retry",

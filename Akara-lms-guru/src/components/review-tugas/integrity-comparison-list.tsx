@@ -2,11 +2,11 @@
 
 import { ChevronRight, Files } from "lucide-react";
 
-import type { IntegrityPreviewDocument } from "@/components/review-tugas/integrity-check-mock";
+import type { IntegrityPairSummary } from "@/app/(workspace)/review-tugas/review-tugas-integrity-utils";
 import { cn } from "@/lib/utils";
 
 type IntegrityComparisonListProps = {
-  items: IntegrityPreviewDocument[];
+  items: IntegrityPairSummary[];
   activeDocumentId: string;
   onSelect: (documentId: string) => void;
 };
@@ -39,13 +39,13 @@ export function IntegrityComparisonList({
       <div className="min-h-0 flex-1 overflow-auto p-2">
         <div className="space-y-2">
           {items.map((item) => {
-            const isActive = item.id === activeDocumentId;
+            const isActive = item.comparisonId === activeDocumentId;
 
             return (
               <button
-                key={item.id}
+                key={item.comparisonId}
                 type="button"
-                onClick={() => onSelect(item.id)}
+                onClick={() => onSelect(item.comparisonId)}
                 className={cn(
                   "flex w-full cursor-pointer items-center gap-3 rounded-[18px] border px-3 py-3 text-left transition-colors",
                   isActive
@@ -56,6 +56,9 @@ export function IntegrityComparisonList({
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13px] font-semibold text-[var(--page-ink)]">
                     {item.studentName}
+                  </p>
+                  <p className="mt-1 truncate text-[12px] text-[var(--muted-ink)]">
+                    {item.documentLabel}
                   </p>
                   <div className="mt-2 flex items-center justify-between gap-2">
                     <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--muted-ink)]">
