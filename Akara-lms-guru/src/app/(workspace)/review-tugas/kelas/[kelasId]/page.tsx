@@ -4,7 +4,12 @@ import Link from "next/link";
 import { use, useCallback, useEffect, useMemo, useState } from "react";
 
 import { PageHeader, Surface } from "@/components/workspace/ui";
-import { buildTaskSubjectCards, loadTaskReviewRows, type ReviewTaskSubmissionRow } from "../../review-tugas-utils";
+import {
+  buildTaskSubjectCards,
+  encodeTaskReviewRouteSegment,
+  loadTaskReviewRows,
+  type ReviewTaskSubmissionRow,
+} from "../../review-tugas-utils";
 
 export default function TaskReviewClassSubjectsPage({
   params,
@@ -80,7 +85,7 @@ export default function TaskReviewClassSubjectsPage({
                 </div>
 
                 <Link
-                  href={`/review-tugas/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeURIComponent(item.subjectName)}`}
+                  href={`/review-tugas/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeTaskReviewRouteSegment(item.subjectName)}`}
                   className="mt-4 flex w-full items-center justify-center rounded-[14px] bg-[#715ed7] px-3 py-2.5 text-[13px] font-semibold text-white shadow-[0_12px_24px_rgba(113,94,215,0.20)] transition-opacity hover:opacity-90"
                 >
                   Lihat Tugas

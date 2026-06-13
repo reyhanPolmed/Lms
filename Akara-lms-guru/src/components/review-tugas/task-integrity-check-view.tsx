@@ -55,6 +55,7 @@ export function TaskIntegrityCheckView({
   const [activeDetail, setActiveDetail] = useState<IntegrityPairDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingVisual, setLoadingVisual] = useState(false);
+  const [loadingDetail, setLoadingDetail] = useState(false);
   const [retrying, setRetrying] = useState(false);
   const [error, setError] = useState("");
 
@@ -92,41 +93,56 @@ export function TaskIntegrityCheckView({
     }
 
     let cancelled = false;
+    setError("");
+    setActiveVisual(null);
+    setActiveDetail(null);
     setLoadingVisual(true);
+    setLoadingDetail(false);
 
-    void Promise.allSettled([
-      loadTaskIntegrityPairVisual(submissionId, activeComparisonId),
-      loadTaskIntegrityPairDetail(submissionId, activeComparisonId),
-    ])
-      .then(([visualResult, detailResult]) => {
+    void (async () => {
+      let visualFailed = false;
+
+      try {
+        const visual = await loadTaskIntegrityPairVisual(submissionId, activeComparisonId);
         if (cancelled) return;
-
-        if (visualResult.status === "fulfilled") {
-          setActiveVisual(visualResult.value);
-        } else {
-          setActiveVisual(null);
-        }
-
-        if (detailResult.status === "fulfilled") {
-          setActiveDetail(detailResult.value);
-        } else {
-          setActiveDetail(null);
-        }
-
-        if (visualResult.status === "rejected" && detailResult.status === "rejected") {
-          const reason = visualResult.reason ?? detailResult.reason;
-          setError(
-            reason instanceof Error
-              ? reason.message
-              : "Gagal memuat preview dokumen pembanding."
-          );
-        }
-      })
-      .finally(() => {
+        setActiveVisual(visual);
+      } catch (visualError) {
+        if (cancelled) return;
+        visualFailed = true;
+        setActiveVisual(null);
+        setError(
+          visualError instanceof Error
+            ? visualError.message
+            : "Gagal memuat preview dokumen pembanding."
+        );
+      } finally {
         if (!cancelled) {
           setLoadingVisual(false);
         }
-      });
+      }
+
+      if (cancelled) return;
+
+      setLoadingDetail(true);
+      try {
+        const detail = await loadTaskIntegrityPairDetail(submissionId, activeComparisonId);
+        if (cancelled) return;
+        setActiveDetail(detail);
+      } catch (detailError) {
+        if (cancelled) return;
+        setActiveDetail(null);
+        if (visualFailed) return;
+        setError(
+          detailError instanceof Error
+            ? detailError.message
+            : "Gagal memuat detail segmen pembanding."
+        );
+      } finally {
+        if (!cancelled) {
+          setLoadingDetail(false);
+        }
+      }
+    })();
 
     return () => {
       cancelled = true;
@@ -265,6 +281,8 @@ export function TaskIntegrityCheckView({
                     activeVisual?.sourceDocument ?? {
                       id: null,
                       side: "A",
+                      fileName: null,
+                      annotatedPdfUrl: null,
                       layoutMap: null,
                       highlights: [],
                     }
@@ -280,6 +298,8 @@ export function TaskIntegrityCheckView({
                       activeVisual?.comparisonDocument ?? {
                         id: null,
                         side: "B",
+                        fileName: null,
+                        annotatedPdfUrl: null,
                         layoutMap: null,
                         highlights: [],
                       }
@@ -287,7 +307,11 @@ export function TaskIntegrityCheckView({
                   />
                 ) : null}
               </div>
-              {activeDetail?.highlights.length ? (
+              {loadingDetail ? (
+                <div className="border-t border-[var(--line)] bg-white px-5 py-4 text-[12px] text-[var(--muted-ink)]">
+                  Memuat detail segmen pembanding...
+                </div>
+              ) : activeDetail?.highlights.length ? (
                 <div className="border-t border-[var(--line)] bg-white px-5 py-4">
                   <div className="mb-3">
                     <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--muted-ink)]">

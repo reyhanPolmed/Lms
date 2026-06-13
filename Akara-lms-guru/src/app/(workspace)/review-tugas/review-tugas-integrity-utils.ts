@@ -35,6 +35,8 @@ export type IntegrityPairDetail = {
 export type IntegrityPreviewAsset = {
   id: string | null;
   side: "A" | "B";
+  fileName: string | null;
+  annotatedPdfUrl: string | null;
   layoutMap: {
     kind: string | null;
     pages: {
@@ -194,6 +196,8 @@ function normalizePreviewAsset(
   return {
     id: document.id,
     side: document.side,
+    fileName: document.fileName,
+    annotatedPdfUrl: resolveApiUrl(document.annotatedPdfUrl),
     layoutMap: document.layoutMap
       ? {
           kind: document.layoutMap.kind,

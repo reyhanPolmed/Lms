@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { FileText, Sparkles } from "lucide-react";
 
 import type { IntegrityPreviewAsset } from "@/app/(workspace)/review-tugas/review-tugas-integrity-utils";
@@ -36,6 +37,24 @@ function bboxToStyle(box: {
   };
 }
 
+async function requestPdfBlobUrl(url: string) {
+  const response = await fetch(url, {
+    credentials: "include",
+  });
+  const contentType = response.headers.get("content-type") || "";
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => "");
+    throw new Error(text || `HTTP ${response.status}`);
+  }
+
+  if (!contentType.includes("application/pdf")) {
+    throw new Error(`Response bukan PDF (${contentType || "unknown content-type"}).`);
+  }
+
+  return URL.createObjectURL(await response.blob());
+}
+
 export function IntegrityDocumentPreview({
   label,
   studentName,
@@ -46,6 +65,54 @@ export function IntegrityDocumentPreview({
   const similarityLabel = formatPercent(similarityScore);
   const visualPages = document.layoutMap?.pages.filter((page) => page.imageUrl) ?? [];
   const documentHighlights = Array.isArray(document.highlights) ? document.highlights : [];
+  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
+  const [pdfState, setPdfState] = useState<"idle" | "loading" | "ready" | "failed">("idle");
+  const [pdfError, setPdfError] = useState("");
+  const resolvedFileName = document.fileName ?? fileName;
+  const showPdfPreview = Boolean(
+    document.annotatedPdfUrl && resolvedFileName.toLowerCase().endsWith(".pdf")
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    let objectUrl: string | null = null;
+
+    if (!showPdfPreview || !document.annotatedPdfUrl) {
+      setPdfBlobUrl(null);
+      setPdfState("idle");
+      setPdfError("");
+      return undefined;
+    }
+
+    setPdfState("loading");
+    setPdfError("");
+    setPdfBlobUrl(null);
+
+    void requestPdfBlobUrl(document.annotatedPdfUrl)
+      .then((url) => {
+        if (cancelled) {
+          URL.revokeObjectURL(url);
+          return;
+        }
+
+        objectUrl = url;
+        setPdfBlobUrl(url);
+        setPdfState("ready");
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setPdfBlobUrl(null);
+        setPdfState("failed");
+        setPdfError(error instanceof Error ? error.message : "Gagal memuat PDF hasil highlight.");
+      });
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [document.annotatedPdfUrl, showPdfPreview]);
 
   return (
     <section className="flex min-h-0 flex-col rounded-[22px] border border-[rgba(216,224,236,0.88)] bg-white">
@@ -76,10 +143,53 @@ export function IntegrityDocumentPreview({
 
       <div className="min-h-0 flex-1 overflow-hidden bg-[linear-gradient(180deg,#f8fbff_0%,#f5f7fb_100%)] p-4">
         <div className="mx-auto h-full min-h-full max-w-[720px] overflow-hidden rounded-[28px] border border-[#d7deea] bg-white shadow-[0_16px_48px_rgba(15,23,42,0.08)]">
-          {visualPages.length > 0 ? (
-            <div className="h-full min-h-[720px] overflow-auto bg-[#f8fbff] p-4">
-              <div className="space-y-4">
-                {visualPages.map((page) => {
+          {showPdfPreview || visualPages.length > 0 ? (
+            <div
+              className={
+                showPdfPreview
+                  ? "flex h-full min-h-[720px] flex-col bg-[#f8fbff] p-4"
+                  : "h-full min-h-[720px] overflow-auto bg-[#f8fbff] p-4"
+              }
+            >
+              <div className={showPdfPreview ? "flex min-h-0 flex-1 flex-col" : "space-y-4"}>
+                {showPdfPreview ? (
+                  <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[22px] border border-[#d7deea] bg-white">
+                    <div className="flex items-center justify-between gap-3 border-b border-[#e2e8f0] px-4 py-3">
+                      <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--muted-ink)]">
+                        PDF Highlight
+                      </span>
+                      <span className="truncate text-[12px] text-[var(--muted-ink)]">
+                        {resolvedFileName}
+                      </span>
+                    </div>
+                    <div
+                      className={
+                        pdfState === "failed"
+                          ? "flex min-h-0 flex-1 items-center justify-center bg-[#fff7f9] px-6 text-center"
+                          : pdfState === "loading"
+                            ? "flex min-h-0 flex-1 items-center justify-center bg-[#f8fbff] px-6 text-center text-[13px] text-[var(--muted-ink)]"
+                            : "min-h-0 flex-1 bg-white"
+                      }
+                    >
+                      {pdfState === "ready" && pdfBlobUrl ? (
+                        <iframe
+                          src={pdfBlobUrl}
+                          title="PDF hasil highlight"
+                          loading="lazy"
+                          className="h-full min-h-[720px] w-full border-0"
+                        />
+                      ) : pdfState === "failed" ? (
+                        <p className="text-[13px] text-[#b25a70]">
+                          {pdfError || "Gagal memuat PDF hasil highlight."}
+                        </p>
+                      ) : (
+                        <p>Memuat PDF hasil highlight...</p>
+                      )}
+                    </div>
+                  </section>
+                ) : null}
+                {!showPdfPreview
+                  ? visualPages.map((page) => {
                   const pageHighlights = documentHighlights.filter(
                     (highlight) =>
                       highlight.bboxNormalized !== null &&
@@ -113,7 +223,8 @@ export function IntegrityDocumentPreview({
                       </div>
                     </section>
                   );
-                })}
+                    })
+                  : null}
               </div>
             </div>
           ) : (

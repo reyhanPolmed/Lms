@@ -12,8 +12,15 @@ import {
 } from "./winnowing.service.js";
 
 type UnknownRecord = Record<string, unknown>;
+type CachedComparisonContext = {
+  expiresAt: number;
+  similarityDocumentId: string;
+  pair: UnknownRecord;
+};
 
 export type IntegrityAssetSide = "A" | "B";
+const COMPARISON_CONTEXT_TTL_MS = 2 * 60_000;
+const comparisonContextCache = new Map<string, CachedComparisonContext>();
 
 function asRecord(value: unknown): UnknownRecord {
   return value && typeof value === "object" && !Array.isArray(value)
@@ -94,6 +101,48 @@ function getPeerRecord(record: UnknownRecord): UnknownRecord | null {
   }
 
   return null;
+}
+
+function buildComparisonContextCacheKey(
+  submissionId: string,
+  comparisonId: string,
+  userId: string
+) {
+  return `${userId}:${submissionId}:${comparisonId}`;
+}
+
+function getCachedComparisonContext(
+  submissionId: string,
+  comparisonId: string,
+  userId: string
+) {
+  const key = buildComparisonContextCacheKey(submissionId, comparisonId, userId);
+  const cached = comparisonContextCache.get(key);
+
+  if (!cached) return null;
+  if (cached.expiresAt <= Date.now()) {
+    comparisonContextCache.delete(key);
+    return null;
+  }
+
+  return cached;
+}
+
+function rememberComparisonContext(
+  submissionId: string,
+  comparisonId: string,
+  userId: string,
+  similarityDocumentId: string,
+  pair: UnknownRecord
+) {
+  comparisonContextCache.set(
+    buildComparisonContextCacheKey(submissionId, comparisonId, userId),
+    {
+      expiresAt: Date.now() + COMPARISON_CONTEXT_TTL_MS,
+      similarityDocumentId,
+      pair,
+    }
+  );
 }
 
 function normalizeVisualPages(
@@ -312,6 +361,14 @@ async function getValidatedComparisonContext(
   comparisonId: string,
   userId: string
 ) {
+  const cached = getCachedComparisonContext(submissionId, comparisonId, userId);
+  if (cached) {
+    return {
+      similarityDocumentId: cached.similarityDocumentId,
+      pair: cached.pair,
+    };
+  }
+
   const submission = await getTeacherSubmissionRecord(submissionId, userId);
   const check = submission.similarityCheck;
 
@@ -326,9 +383,16 @@ async function getValidatedComparisonContext(
     throw new AppError("Comparison tidak ditemukan atau tidak bisa diakses", 404);
   }
 
+  rememberComparisonContext(
+    submissionId,
+    comparisonId,
+    userId,
+    check.similarityDocumentId,
+    pair
+  );
+
   return {
-    submission,
-    check,
+    similarityDocumentId: check.similarityDocumentId,
     pair,
   };
 }
@@ -347,7 +411,23 @@ export async function listTaskSubmissionIntegrityPairs(submissionId: string, use
   }
 
   const response = await getTaskSubmissionIntegrityPairs(check.similarityDocumentId);
-  return enrichPairsWithLmsMetadata(response.data);
+  const enriched = await enrichPairsWithLmsMetadata(response.data);
+
+  for (const item of unwrapList(enriched)) {
+    const pair = asRecord(item);
+    const comparisonId = pickString(pair, ["id", "comparisonId", "comparison_id"]);
+    if (!comparisonId) continue;
+
+    rememberComparisonContext(
+      submissionId,
+      comparisonId,
+      userId,
+      check.similarityDocumentId,
+      pair
+    );
+  }
+
+  return enriched;
 }
 
 export async function getTaskSubmissionIntegrityPairDetail(
@@ -365,7 +445,11 @@ export async function getTaskSubmissionIntegrityPairVisual(
   comparisonId: string,
   userId: string
 ) {
-  const { check, pair } = await getValidatedComparisonContext(submissionId, comparisonId, userId);
+  const { similarityDocumentId, pair } = await getValidatedComparisonContext(
+    submissionId,
+    comparisonId,
+    userId
+  );
   let visual: UnknownRecord | null = null;
 
   try {
@@ -375,7 +459,7 @@ export async function getTaskSubmissionIntegrityPairVisual(
     visual = null;
   }
 
-  const sourceSide = resolveSourceSide(pair, check.similarityDocumentId!);
+  const sourceSide = resolveSourceSide(pair, similarityDocumentId);
   const comparisonSide: IntegrityAssetSide = sourceSide === "A" ? "B" : "A";
   const sourceVisualDocument = getVisualDocumentRecord(visual, sourceSide);
   const comparisonVisualDocument = getVisualDocumentRecord(visual, comparisonSide);
@@ -427,12 +511,26 @@ export async function getTaskSubmissionIntegrityPairVisual(
     sourceDocument: {
       id: sourceDocumentId,
       side: sourceSide,
+      fileName: pickString(sourceVisualDocument, ["fileName", "file_name", "title", "name"]),
+      annotatedPdfUrl: buildIntegrityAssetProxyPath(
+        submissionId,
+        comparisonId,
+        sourceSide,
+        pickString(sourceVisualDocument, ["annotatedPdfUrl", "annotated_pdf_url"])
+      ),
       layoutMap: sourceLayoutMap,
       highlights: normalizeVisualHighlights(sourceVisualDocument.highlights),
     },
     comparisonDocument: {
       id: comparisonDocumentId,
       side: comparisonSide,
+      fileName: pickString(comparisonVisualDocument, ["fileName", "file_name", "title", "name"]),
+      annotatedPdfUrl: buildIntegrityAssetProxyPath(
+        submissionId,
+        comparisonId,
+        comparisonSide,
+        pickString(comparisonVisualDocument, ["annotatedPdfUrl", "annotated_pdf_url"])
+      ),
       layoutMap: comparisonLayoutMap,
       highlights: normalizeVisualHighlights(comparisonVisualDocument.highlights),
     },
@@ -446,12 +544,17 @@ export async function getTaskSubmissionIntegrityVisualAsset(
   userId: string,
   rawAssetPath?: string | null
 ) {
-  await getValidatedComparisonContext(submissionId, comparisonId, userId);
+  const cached = getCachedComparisonContext(submissionId, comparisonId, userId);
+  if (!cached) {
+    await getValidatedComparisonContext(submissionId, comparisonId, userId);
+  }
   let providerPath: string | null = null;
 
   if (
     rawAssetPath?.startsWith("/api/v1/ocr-assets/") ||
-    rawAssetPath?.startsWith("/static/results/")
+    rawAssetPath?.startsWith("/static/results/") ||
+    rawAssetPath?.startsWith("/api/v1/comparisons/") ||
+    rawAssetPath?.startsWith("/api/v1/documents/")
   ) {
     providerPath = rawAssetPath;
   }

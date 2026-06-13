@@ -6,7 +6,13 @@ import { use, useEffect, useMemo, useState } from "react";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { TaskReviewTaskCard } from "@/components/review-tugas/task-review-task-card";
 import { PageHeader, Surface } from "@/components/workspace/ui";
-import { buildTaskCards, loadTaskReviewRows, type ReviewTaskSubmissionRow } from "../../../../review-tugas-utils";
+import {
+  buildTaskCards,
+  decodeTaskReviewRouteSegment,
+  encodeTaskReviewRouteSegment,
+  loadTaskReviewRows,
+  type ReviewTaskSubmissionRow,
+} from "../../../../review-tugas-utils";
 
 export default function TaskReviewSubjectTasksPage({
   params,
@@ -15,7 +21,7 @@ export default function TaskReviewSubjectTasksPage({
 }) {
   const { kelasId, mapelId } = use(params);
   const className = decodeURIComponent(kelasId);
-  const subjectName = decodeURIComponent(mapelId);
+  const subjectName = decodeTaskReviewRouteSegment(mapelId);
 
   const [submissions, setSubmissions] = useState<ReviewTaskSubmissionRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,7 +86,7 @@ export default function TaskReviewSubjectTasksPage({
               <TaskReviewTaskCard
                 key={item.taskId}
                 card={item}
-                href={`/review-tugas/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeURIComponent(subjectName)}/tugas/${encodeURIComponent(item.taskId)}`}
+                href={`/review-tugas/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeTaskReviewRouteSegment(subjectName)}/tugas/${encodeURIComponent(item.taskId)}`}
               />
             ))}
           </div>

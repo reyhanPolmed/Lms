@@ -1,3 +1,4 @@
+import { Readable } from "node:stream";
 import type { Request, Response } from "express";
 import { z } from "zod";
 
@@ -43,8 +44,19 @@ async function streamAssetResponse(
   upstream: globalThis.Response
 ) {
   writeProxyHeaders(response, upstream);
-  const arrayBuffer = await upstream.arrayBuffer();
-  response.send(Buffer.from(arrayBuffer));
+  if (!upstream.body) {
+    response.status(204).end();
+    return;
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    const stream = Readable.fromWeb(upstream.body as globalThis.ReadableStream);
+    stream.on("error", reject);
+    response.on("close", resolve);
+    response.on("finish", resolve);
+    response.on("error", reject);
+    stream.pipe(response);
+  });
 }
 
 export async function getTaskSubmissionIntegritySummaryController(

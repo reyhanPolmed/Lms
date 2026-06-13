@@ -6,7 +6,12 @@ import { use, useEffect, useMemo, useState } from "react";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { TaskReviewSubmissionsTable } from "@/components/review-tugas/task-review-submissions-table";
 import { PageHeader, Surface } from "@/components/workspace/ui";
-import { loadTaskReviewRows, type ReviewTaskSubmissionRow } from "../../../../../../review-tugas-utils";
+import {
+  decodeTaskReviewRouteSegment,
+  encodeTaskReviewRouteSegment,
+  loadTaskReviewRows,
+  type ReviewTaskSubmissionRow,
+} from "../../../../../../review-tugas-utils";
 
 const PAGE_SIZE = 8;
 
@@ -17,7 +22,7 @@ export default function TaskReviewTaskSubmissionsPage({
 }) {
   const { kelasId, mapelId, tugasId } = use(params);
   const className = decodeURIComponent(kelasId);
-  const subjectName = decodeURIComponent(mapelId);
+  const subjectName = decodeTaskReviewRouteSegment(mapelId);
   const taskId = decodeURIComponent(tugasId);
 
   const [submissions, setSubmissions] = useState<ReviewTaskSubmissionRow[]>([]);
@@ -78,7 +83,7 @@ export default function TaskReviewTaskSubmissionsPage({
       <PageHeader
         title={`Pengumpulan ${taskTitle}`}
         description="Pilih submission siswa dari tugas yang sama agar proses review lebih fokus dan rapi."
-        actionHref={`/review-tugas/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeURIComponent(subjectName)}`}
+        actionHref={`/review-tugas/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeTaskReviewRouteSegment(subjectName)}`}
         actionLabel="Kembali ke tugas"
       />
 
@@ -106,10 +111,10 @@ export default function TaskReviewTaskSubmissionsPage({
             totalPages={totalPages}
             onPageChange={setCurrentPage}
             buildDetailHref={(submissionId) =>
-              `/review-tugas/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeURIComponent(subjectName)}/pengumpulan/${submissionId}`
+              `/review-tugas/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeTaskReviewRouteSegment(subjectName)}/pengumpulan/${submissionId}`
             }
             buildIntegrityHref={(submissionId) =>
-              `/review-tugas/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeURIComponent(subjectName)}/pengumpulan/${submissionId}/integrity-check`
+              `/review-tugas/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeTaskReviewRouteSegment(subjectName)}/pengumpulan/${submissionId}/integrity-check`
             }
           />
         )}

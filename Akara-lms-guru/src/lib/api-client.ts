@@ -190,6 +190,8 @@ export type TaskSubmissionDetail = {
 export type IntegrityVisualDocument = {
   id: string | null;
   side: "A" | "B";
+  fileName: string | null;
+  annotatedPdfUrl: string | null;
   layoutMap: {
     kind: string | null;
     pages: {

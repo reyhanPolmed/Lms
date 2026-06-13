@@ -38,6 +38,26 @@ export type ReviewTaskCard = {
   latestSubmittedAt: string | null;
 };
 
+export function encodeTaskReviewRouteSegment(value: string) {
+  return encodeURIComponent(encodeURIComponent(value));
+}
+
+export function decodeTaskReviewRouteSegment(value: string) {
+  let decoded = value;
+
+  for (let index = 0; index < 2; index += 1) {
+    try {
+      const nextValue = decodeURIComponent(decoded);
+      if (nextValue === decoded) break;
+      decoded = nextValue;
+    } catch {
+      break;
+    }
+  }
+
+  return decoded;
+}
+
 export function formatTaskSubmittedAt(value: string | null) {
   if (!value) return "—";
 
