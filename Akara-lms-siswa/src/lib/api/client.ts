@@ -84,7 +84,7 @@ function flattenModuleItems(module: MockModuleBlueprint) {
 function getModuleOrThrow(id: string) {
   const found = moduleById[id];
   if (!found) {
-    throw new Error("Modul tidak ditemukan");
+    throw new Error("Mata Kuliah tidak ditemukan");
   }
   return found;
 }
@@ -169,7 +169,7 @@ function buildModuleDetail(moduleId: string): ModuleDetail {
       items: section.items.map((item) => {
         const sidebarItem = sidebar.find((entry) => entry.id === item.id);
         if (!sidebarItem) {
-          throw new Error("Item modul tidak ditemukan");
+          throw new Error("Item mata kuliah tidak ditemukan");
         }
         return sidebarItem;
       })
@@ -402,7 +402,7 @@ function buildDashboardData(): DashboardData {
     user: clone(profileState),
     metrics: [
       {
-        label: "Modul aktif",
+        label: "Mata Kuliah aktif",
         value: modules.length,
         helper: "Gabungan mata pelajaran dan praktik lintas jurusan yang sedang diikuti.",
         tone: "gold"

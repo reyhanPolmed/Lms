@@ -63,7 +63,7 @@ export function SidebarOutline({
     <section className="surface-card overflow-hidden">
       <div className="flex items-center justify-between border-b border-slate-200/80 bg-white px-5 py-4">
         <div>
-          <p className="eyebrow">Outline modul</p>
+          <p className="eyebrow">Outline mata kuliah</p>
           <h3 className="mt-1 text-base font-semibold text-slate-950">Daftar materi</h3>
         </div>
         <List className="h-5 w-5 text-slate-400" />

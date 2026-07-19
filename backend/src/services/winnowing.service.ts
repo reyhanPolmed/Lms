@@ -149,6 +149,25 @@ function asRecord(value: unknown): UnknownRecord {
     : {};
 }
 
+function getPeerRecord(record: UnknownRecord): UnknownRecord | null {
+  for (const key of [
+    "pairedDocument",
+    "peerDocument",
+    "matchedDocument",
+    "comparedDocument",
+    "targetDocument",
+    "documentB",
+    "document2",
+  ]) {
+    const value = record[key];
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      return value as UnknownRecord;
+    }
+  }
+
+  return null;
+}
+
 function unwrapPairs(value: unknown) {
   const record = asRecord(value);
   if (Array.isArray(record.pairs)) return record.pairs;
@@ -181,22 +200,17 @@ function normalizePairSummaries(value: unknown) {
   const pairs = unwrapPairs(value);
   return pairs.map((item) => {
     const pair = asRecord(item);
+    const peer = getPeerRecord(pair) ?? {};
 
     return {
       similarityScore: pickNumber(pair, ["similarityScore", "similarity_score", "score"]),
       similarityLevel: pickString(pair, ["similarityLevel", "similarity_level", "level"]),
-      pairedDocumentId: pickString(pair, [
-        "pairedDocumentId",
-        "paired_document_id",
-        "documentId",
-        "document_id",
-      ]),
-      pairedExternalId: pickString(pair, [
-        "pairedExternalId",
-        "paired_external_id",
-        "externalId",
-        "external_id",
-      ]),
+      pairedDocumentId:
+        pickString(pair, ["pairedDocumentId", "paired_document_id", "documentId", "document_id"]) ??
+        pickString(peer, ["id", "documentId", "document_id", "pairedDocumentId", "paired_document_id"]),
+      pairedExternalId:
+        pickString(pair, ["pairedExternalId", "paired_external_id", "externalId", "external_id"]) ??
+        pickString(peer, ["externalId", "external_id", "submissionId", "submission_id", "pairedExternalId", "paired_external_id"]),
     } satisfies PairSummarySnapshot;
   });
 }

@@ -16,35 +16,30 @@ const KPI_DEFINITIONS = [
   {
     key: "activeModules",
     label: "Modul Aktif",
-    helper: "Mata pelajaran yang sedang berjalan pada semester ini.",
     icon: BookOpen,
     tone: "indigo" as const,
   },
   {
     key: "activeClasses",
     label: "Kelas Aktif",
-    helper: "Rombel yang saat ini membutuhkan monitoring rutin.",
     icon: Users,
     tone: "blue" as const,
   },
   {
     key: "draftItems",
     label: "Draft Item",
-    helper: "Konten yang masih perlu diselesaikan sebelum dipublikasikan.",
     icon: FileEdit,
     tone: "amber" as const,
   },
   {
     key: "needReview",
     label: "Perlu Review",
-    helper: "Attempt kuis atau tugas yang menunggu keputusan guru.",
     icon: Search,
     tone: "rose" as const,
   },
   {
     key: "pendingRevision",
     label: "Menunggu Revisi",
-    helper: "Siswa yang perlu tindak lanjut berdasarkan feedback terakhir.",
     icon: RefreshCw,
     tone: "emerald" as const,
   },
@@ -79,7 +74,7 @@ export default function DashboardPage() {
     >
       {loading ? (
         <SectionCard
-          title="Memuat dashboard guru"
+          title="Memuat dashboard dosen"
           description="Sedang mengambil ringkasan operasional pengajaran terbaru."
         >
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -94,7 +89,7 @@ export default function DashboardPage() {
       ) : !data ? (
         <SectionCard
           title="Dashboard belum dapat dimuat"
-          description="Terjadi kendala saat mengambil data teacher dashboard."
+          description="Terjadi kendala saat mengambil data dosen dashboard."
           variant="accent"
         >
           <p className="rounded-[20px] border border-[rgba(244,63,94,0.16)] bg-[var(--danger-soft)] px-4 py-4 text-sm text-[#b4234f]">
@@ -117,20 +112,18 @@ export default function DashboardPage() {
           ) : null}
           <div className="w-full">
             <PageTitle
-              eyebrow="Teacher Dashboard"
+              eyebrow="Dosen Dashboard"
               title={`Selamat datang, ${data.teacher.name}`}
-              description="Pantau modul aktif, review yang menunggu tindakan, dan kondisi progres siswa dari satu dashboard yang lebih fokus dan siap dipakai harian."
               meta={[data.teacher.department, `NIP ${data.teacher.nip}`]}
             />
           </div>
 
           <section className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-            {KPI_DEFINITIONS.map(({ key, label, helper, icon, tone }) => (
+            {KPI_DEFINITIONS.map(({ key, label, icon, tone }) => (
               <StatCard
                 key={key}
                 label={label}
                 value={data.kpi[key]}
-                helper={helper}
                 icon={icon}
                 tone={tone}
               />

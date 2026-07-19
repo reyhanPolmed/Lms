@@ -82,7 +82,7 @@ export default function TaskReviewTaskSubmissionsPage({
     <div className="grid min-h-full grid-rows-[auto_minmax(0,1fr)] gap-2">
       <PageHeader
         title={`Pengumpulan ${taskTitle}`}
-        description="Pilih submission siswa dari tugas yang sama agar proses review lebih fokus dan rapi."
+        description="Pilih submission mahasiswa dari tugas yang sama agar proses review lebih fokus dan rapi."
         actionHref={`/review-tugas/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeTaskReviewRouteSegment(subjectName)}`}
         actionLabel="Kembali ke tugas"
       />
@@ -98,7 +98,7 @@ export default function TaskReviewTaskSubmissionsPage({
           <EmptyState
             icon={ListChecks}
             title="Belum ada pengumpulan untuk tugas ini"
-            description="Daftar submission akan muncul di sini setelah siswa mengirimkan tugas yang dipilih."
+            description="Daftar submission akan muncul di sini setelah mahasiswa mengirimkan tugas yang dipilih."
           />
         ) : (
           <TaskReviewSubmissionsTable
@@ -111,10 +111,10 @@ export default function TaskReviewTaskSubmissionsPage({
             totalPages={totalPages}
             onPageChange={setCurrentPage}
             buildDetailHref={(submissionId) =>
-              `/review-tugas/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeTaskReviewRouteSegment(subjectName)}/pengumpulan/${submissionId}`
+              `/review-tugas/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeTaskReviewRouteSegment(subjectName)}/tugas/${encodeURIComponent(taskId)}/pengumpulan/${submissionId}`
             }
             buildIntegrityHref={(submissionId) =>
-              `/review-tugas/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeTaskReviewRouteSegment(subjectName)}/pengumpulan/${submissionId}/integrity-check`
+              `/review-tugas/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeTaskReviewRouteSegment(subjectName)}/tugas/${encodeURIComponent(taskId)}/pengumpulan/${submissionId}/integrity-check`
             }
           />
         )}

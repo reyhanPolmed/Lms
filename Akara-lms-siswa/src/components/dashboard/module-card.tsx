@@ -43,7 +43,7 @@ export function ModuleCard({ module }: { module: ModuleSummary }) {
 
         <div className="mt-5">
           <div className="flex items-center justify-between text-sm text-slate-500">
-            <span>Progress modul</span>
+            <span>Progress mata kuliah</span>
             <span>{module.completionRate ?? 0}%</span>
           </div>
           <div className="mt-3 h-2 rounded-full bg-slate-100">
@@ -59,7 +59,7 @@ export function ModuleCard({ module }: { module: ModuleSummary }) {
         </p>
 
         <div className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
-          Buka detail modul
+          Buka detail mata kuliah
           <ArrowUpRight className="h-4 w-4" />
         </div>
       </div>

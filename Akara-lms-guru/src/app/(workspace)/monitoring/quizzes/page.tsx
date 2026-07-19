@@ -157,7 +157,7 @@ export default function QuizMonitoringPage() {
     <div className="space-y-5 pb-4">
       <PageHeader
         title="Monitoring Kuis"
-        description="Kelola bank kuis per mata pelajaran, pantau status publish, dan siapkan kuis untuk dipakai lintas kelas."
+        description="Kelola bank kuis per mata kuliah, pantau status publish, dan siapkan kuis untuk dipakai lintas kelas."
       />
 
       <Surface
@@ -173,7 +173,7 @@ export default function QuizMonitoringPage() {
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div className="w-full max-w-[280px]">
             <MiniSelect
-              label="Mata Pelajaran"
+              label="Mata Kuliah"
               options={subjects}
               placeholder="Semua mapel"
               value={subjectFilter}
@@ -206,7 +206,7 @@ export default function QuizMonitoringPage() {
               <TableHeader className="bg-[var(--surface-subtle)]">
                 <TableRow>
                   <TableHead className="w-[28%]">Kuis</TableHead>
-                  <TableHead className="w-[22%]">Mata Pelajaran</TableHead>
+                  <TableHead className="w-[22%]">Mata Kuliah</TableHead>
                   <TableHead className="w-[10%]">Soal</TableHead>
                   <TableHead className="w-[10%]">Pass</TableHead>
                   <TableHead className="w-[12%]">Durasi</TableHead>

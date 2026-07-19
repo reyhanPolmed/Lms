@@ -64,9 +64,11 @@ export function TaskIntegrityCheckView({
     [activeComparisonId, data?.comparisons]
   );
 
-  const loadData = async () => {
-    setLoading(true);
-    setError("");
+  const loadData = async (isSilent = false) => {
+    if (!isSilent) {
+      setLoading(true);
+      setError("");
+    }
 
     try {
       const response = await loadTaskIntegrityContext(submissionId);
@@ -75,15 +77,36 @@ export function TaskIntegrityCheckView({
         (currentComparisonId) => currentComparisonId || response.comparisons[0]?.comparisonId || ""
       );
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Gagal memuat integrity check.");
+      if (!isSilent) {
+        setError(loadError instanceof Error ? loadError.message : "Gagal memuat integrity check.");
+      }
     } finally {
-      setLoading(false);
+      if (!isSilent) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    void loadData();
+    void loadData(false);
   }, [submissionId]);
+
+  useEffect(() => {
+    if (!data) return undefined;
+
+    const currentStatus = data.originalityCheck.status;
+    if (currentStatus !== "queued" && currentStatus !== "processing") {
+      return undefined;
+    }
+
+    const intervalId = setInterval(() => {
+      void loadData(true);
+    }, 6000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [submissionId, data?.originalityCheck.status]);
 
   useEffect(() => {
     if (!activeComparisonId || !data || data.originalityCheck.status !== "completed") {

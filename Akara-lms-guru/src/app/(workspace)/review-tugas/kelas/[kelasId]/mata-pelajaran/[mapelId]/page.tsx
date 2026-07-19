@@ -59,7 +59,7 @@ export default function TaskReviewSubjectTasksPage({
     <div className="grid min-h-full grid-rows-[auto_minmax(0,1fr)] gap-2">
       <PageHeader
         title={`Tugas ${subjectName}`}
-        description="Pilih tugas terlebih dahulu agar guru bisa masuk ke daftar pengumpulan yang lebih fokus."
+        description="Pilih tugas terlebih dahulu agar dosen bisa masuk ke daftar pengumpulan yang lebih fokus."
         actionHref={`/review-tugas/kelas/${encodeURIComponent(className)}`}
         actionLabel="Kembali ke mapel"
       />
@@ -78,7 +78,7 @@ export default function TaskReviewSubjectTasksPage({
           <EmptyState
             icon={ListChecks}
             title="Belum ada tugas dengan pengumpulan"
-            description="Tugas akan muncul di halaman ini setelah siswa mengirimkan submission pada mata pelajaran yang dipilih."
+            description="Tugas akan muncul di halaman ini setelah mahasiswa mengirimkan submission pada mata kuliah yang dipilih."
           />
         ) : (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">

@@ -32,8 +32,8 @@ type ActiveModulesTableProps = {
 export function ActiveModulesTable({ modules }: ActiveModulesTableProps) {
   return (
     <DataTable
-      title="Mata pelajaran aktif"
-      description="Daftar modul yang sedang Anda ampu beserta status konten dan progres penyelesaian siswa."
+      title="Mata Kuliah aktif"
+      description="Daftar modul yang sedang Anda ampu beserta status konten dan progres penyelesaian mahasiswa."
       action={
         <Button asChild variant="secondary" size="sm">
           <Link href="/modules">Buka semua modul</Link>
@@ -44,7 +44,7 @@ export function ActiveModulesTable({ modules }: ActiveModulesTableProps) {
         <div className="px-6 py-6">
           <EmptyState
             icon={BookOpen}
-            title="Belum ada mata pelajaran aktif"
+            title="Belum ada mata kuliah aktif"
             description="Saat admin menugaskan modul baru, daftar aktif akan muncul di sini lengkap dengan progresnya."
           />
         </div>
@@ -54,10 +54,10 @@ export function ActiveModulesTable({ modules }: ActiveModulesTableProps) {
             <Table className="min-w-[920px]">
               <TableHeader>
                 <TableRow className="bg-[rgba(248,250,252,0.92)] hover:bg-[rgba(248,250,252,0.92)]">
-                  <TableHead className="pl-6">Mata Pelajaran</TableHead>
+                  <TableHead className="pl-6">Mata Kuliah</TableHead>
                   <TableHead>Cakupan Konten</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Progress Siswa</TableHead>
+                  <TableHead>Progress Mahasiswa</TableHead>
                   <TableHead className="w-[72px] pr-6 text-right">Aksi</TableHead>
                 </TableRow>
               </TableHeader>

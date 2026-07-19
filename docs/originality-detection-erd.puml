@@ -1,0 +1,198 @@
+@startuml
+hide circle
+hide methods
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam linetype ortho
+skinparam defaultFontName "Times New Roman"
+skinparam entity {
+  BackgroundColor white
+  BorderColor #333333
+  FontColor #111111
+}
+skinparam note {
+  BackgroundColor #FFFBEA
+  BorderColor #B79B45
+  FontColor #333333
+}
+
+title ERD Implementasi Final Sistem Deteksi Kemiripan Dokumen Tugas
+
+entity "users" as users {
+  * id : bigint <<PK>>
+  --
+  name : varchar(255)
+  email : varchar(255)
+  identifier : varchar(255)
+  email_verified : boolean
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity "students" as students {
+  * id : bigint <<PK>>
+  --
+  user_id : bigint <<FK>>
+  kelas_id : bigint <<FK>>
+  jurusan_id : bigint
+  tingkat_id : bigint
+  nama : varchar(255)
+  nis : varchar(30)
+}
+
+entity "teachers" as teachers {
+  * id : bigint <<PK>>
+  --
+  user_id : bigint <<FK>>
+  jurusan_id : bigint
+  nama : varchar(255)
+  nip : varchar(255)
+  email : varchar(255)
+}
+
+entity "student_classes" as student_classes {
+  * id : bigint <<PK>>
+  --
+  homeroom_teacher_id : bigint <<FK>>
+  jurusan_id : bigint
+  tingkat_id : bigint
+  nama_kelas : varchar(255)
+  level : varchar(255)
+}
+
+entity "modules" as modules {
+  * id : bigint <<PK>>
+  --
+  jurusan_id : bigint
+  tingkat_id : bigint
+  judul : varchar(255)
+  deskripsi : text
+  is_aktif : boolean
+}
+
+entity "modules_student_class" as modules_student_class {
+  * id : bigint <<PK>>
+  --
+  module_id : bigint <<FK>>
+  teacher_id : bigint <<FK>>
+  student_class_id : bigint <<FK>>
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity "tasks" as tasks {
+  * id : bigint <<PK>>
+  --
+  modules_student_class_id : bigint <<FK>>
+  lesson_id : bigint
+  section_id : bigint
+  judul : varchar(255)
+  deskripsi : text
+  deadline : timestamp
+  submit_method : varchar(20)
+  attachment_path : varchar(255)
+  attachment_type : varchar(50)
+  allow_revision : boolean
+  status : varchar(20)
+}
+
+entity "task_submissions" as task_submissions {
+  * id : bigint <<PK>>
+  --
+  task_id : bigint <<FK>>
+  user_id : bigint <<FK>>
+  submission_link : varchar(255)
+  submission_file_path : varchar(255)
+  submission_file_type : varchar(100)
+  status : submission_status
+  score : int
+  submitted_at : timestamp
+  teacher_feedback : text
+  teacher_note : text
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+entity "task_submission_similarity_checks" as similarity_checks {
+  * id : bigint <<PK>>
+  --
+  task_submission_id : bigint <<FK>> <<UNIQUE>>
+  tenant_id : varchar(255)
+  external_id : varchar(255)
+  similarity_document_id : varchar(255)
+  similarity_job_id : varchar(255)
+  similarity_status : varchar(30)
+  provider_status : varchar(40)
+  max_similarity : double
+  similarity_level : varchar(20)
+  revision : int
+  retry_count : int
+  next_retry_at : timestamp
+  last_synced_at : timestamp
+  checked_at : timestamp
+  similarity_error : text
+  created_at : timestamp
+  updated_at : timestamp
+}
+
+users ||--o{ students : "profil siswa"
+users ||--o{ teachers : "profil guru"
+teachers ||--o{ student_classes : "wali kelas"
+student_classes ||--o{ students : "anggota kelas"
+modules ||--o{ modules_student_class : "ditawarkan ke kelas"
+teachers ||--o{ modules_student_class : "mengajar"
+student_classes ||--o{ modules_student_class : "mengikuti"
+modules_student_class ||--o{ tasks : "memiliki tugas"
+tasks ||--o{ task_submissions : "dikumpulkan"
+users ||--o{ task_submissions : "mengumpulkan"
+task_submissions ||--o| similarity_checks : "tracking originality"
+
+note right of task_submissions
+Tabel ini menyimpan submission akademik
+yang benar-benar dikumpulkan siswa.
+File tugas dan link submission menjadi
+input awal proses deteksi kemiripan.
+end note
+
+note right of similarity_checks
+Tabel ini adalah inti implementasi lokal
+sistem pendeteksian pada LMS.
+
+Yang disimpan di LMS:
+- status pemeriksaan
+- documentId/jobId dari provider
+- skor kemiripan tertinggi
+- level kemiripan
+- informasi retry dan sinkronisasi
+
+Yang TIDAK dipersistenkan penuh di LMS:
+- hasil OCR detail
+- fingerprint detail
+- comparison lengkap
+- annotated PDF
+- highlight visual
+
+Data detail tersebut berada pada
+layanan originality/OCR eksternal
+dan diambil backend saat diperlukan.
+end note
+
+note bottom of modules_student_class
+Entitas ini menjadi konteks akademik
+yang menghubungkan modul, guru, dan kelas.
+Task ditempatkan pada konteks ini sebelum
+siswa melakukan submission.
+end note
+
+legend right
+  = Fokus ERD =
+  Diagram ini hanya menampilkan entitas
+  yang paling relevan dengan implementasi
+  final sistem deteksi kemiripan dokumen tugas.
+
+  Tabel LMS lain seperti lessons, sections,
+  quiz, rubric, dan auth tidak ditampilkan
+  agar diagram tetap fokus dan mudah dibaca.
+endlegend
+
+@enduml

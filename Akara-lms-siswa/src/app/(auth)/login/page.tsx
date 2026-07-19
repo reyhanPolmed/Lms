@@ -85,7 +85,7 @@ export default function LoginPage() {
   return (
     <main className="relative isolate h-screen overflow-hidden bg-[#f5f0e8] text-slate-900">
       <Image
-        alt="Ilustrasi kampus untuk halaman login siswa"
+        alt="Ilustrasi kampus untuk halaman login mahasiswa"
         className="object-cover object-center"
         fill
         placeholder="blur"
@@ -105,7 +105,7 @@ export default function LoginPage() {
             </div>
             <div className="min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                Akara LMS Siswa
+                Akara LMS Mahasiswa
               </p>
               <h1 className="text-[15px] font-semibold tracking-[-0.02em] text-slate-900">
                 Portal Belajar
@@ -125,10 +125,10 @@ export default function LoginPage() {
           <section className="mt-4 flex w-full max-w-[500px] min-h-0 shrink-0 flex-col overflow-hidden rounded-[24px] border border-white/70 bg-white/76 p-4 shadow-[0_24px_70px_-38px_rgba(15,23,42,0.2)] backdrop-blur-xl sm:p-5">
             <div className="mb-2.5 shrink-0">
               <h2 className="text-[15px] font-semibold tracking-[-0.03em] text-slate-900">
-                Masuk ke akun siswa
+                Masuk ke akun mahasiswa
               </h2>
               <p className="mt-1 text-[11px] text-slate-500">
-                Gunakan email siswa yang sudah terdaftar.
+                Gunakan email mahasiswa yang sudah terdaftar.
               </p>
             </div>
 
@@ -158,7 +158,7 @@ export default function LoginPage() {
                     autoComplete="email"
                     className="h-11 w-full rounded-[18px] border border-slate-200/90 bg-white/92 pl-9 pr-3 text-[12px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:ring-4 focus:ring-slate-900/5"
                     onChange={(event) => setEmail(event.target.value)}
-                    placeholder="siswa@akara.edu"
+                    placeholder="mahasiswa@akara.edu"
                     required
                     type="email"
                     value={email}
@@ -204,7 +204,7 @@ export default function LoginPage() {
               <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-900/5 text-slate-700">
                 <CheckCircle2 className="h-3 w-3" />
               </span>
-              <p>Akses dibatasi untuk siswa yang sudah terdaftar.</p>
+              <p>Akses dibatasi untuk mahasiswa yang sudah terdaftar.</p>
             </div>
           </section>
         </div>

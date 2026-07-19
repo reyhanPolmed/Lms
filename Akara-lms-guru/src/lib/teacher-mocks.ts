@@ -182,7 +182,7 @@ export const notifications = [
   {
     id: "ntf-3",
     title: "Kuis banyak tidak lulus",
-    description: "Algebra Basics: 9 siswa di bawah passing grade",
+    description: "Algebra Basics: 9 mahasiswa di bawah passing grade",
     time: "1 jam lalu",
     action: "Buka progres",
   },

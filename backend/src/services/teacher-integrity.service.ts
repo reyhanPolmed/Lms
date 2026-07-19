@@ -9,6 +9,7 @@ import {
   getTaskSubmissionIntegrityComparisonVisual,
   getTaskSubmissionIntegrityPairs,
   retryTaskSubmissionIntegrityCheck,
+  syncSimilaritySummaryFromPairs,
 } from "./winnowing.service.js";
 
 type UnknownRecord = Record<string, unknown>;
@@ -399,7 +400,17 @@ async function getValidatedComparisonContext(
 
 export async function getTaskSubmissionIntegritySummary(submissionId: string, userId: string) {
   const submission = await getTeacherSubmissionRecord(submissionId, userId);
-  return buildOriginalitySummary(submission.similarityCheck);
+  let check = submission.similarityCheck;
+
+  if (check && check.similarityStatus === "completed" && check.similarityDocumentId) {
+    try {
+      check = await syncSimilaritySummaryFromPairs(check);
+    } catch (error) {
+      // Silently fallback if Winnowing API is offline
+    }
+  }
+
+  return buildOriginalitySummary(check);
 }
 
 export async function listTaskSubmissionIntegrityPairs(submissionId: string, userId: string) {

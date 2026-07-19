@@ -30,12 +30,12 @@ const actions: QuickAction[] = [
   {
     href: "/review-tugas",
     label: "Review Tugas",
-    description: "Selesaikan penilaian tugas dan feedback guru.",
+    description: "Selesaikan penilaian tugas dan feedback dosen.",
     icon: ClipboardCheck,
   },
   {
     href: "/progress",
-    label: "Progres Siswa",
+    label: "Progres Mahasiswa",
     description: "Lihat kelas yang memerlukan perhatian khusus.",
     icon: Users,
   },
@@ -45,7 +45,7 @@ export function QuickActions() {
   return (
     <SectionCard
       title="Aksi cepat"
-      description="Akses workflow utama guru tanpa harus berpindah terlalu jauh."
+      description="Akses workflow utama dosen tanpa harus berpindah terlalu jauh."
       variant="accent"
       padding="compact"
     >

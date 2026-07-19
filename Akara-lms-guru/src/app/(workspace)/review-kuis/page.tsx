@@ -75,7 +75,7 @@ export default function QuizReviewClassesPage() {
   return (
     <div className="space-y-5 pb-6">
       <PageHeader
-        title="Review Kuis Siswa"
+        title="Review Kuis Mahasiswa"
         description="Pilih kelas sebagai pintu masuk awal untuk meninjau hasil kuis dan menentukan tindak lanjut."
       />
 
@@ -83,7 +83,7 @@ export default function QuizReviewClassesPage() {
         {loadingQuizzes || loadingSubmissions ? (
           <LoadingState
             title="Memuat ringkasan kelas"
-            description="Menggabungkan daftar kuis dan pengumpulan siswa untuk halaman review."
+            description="Menggabungkan daftar kuis dan pengumpulan mahasiswa untuk halaman review."
           />
         ) : error ? (
           <ErrorState message={error} />
@@ -91,7 +91,7 @@ export default function QuizReviewClassesPage() {
           <EmptyState
             icon={School}
             title="Belum ada pengumpulan kuis"
-            description="Kelas akan muncul setelah siswa mulai mengerjakan kuis yang sudah dipublikasikan."
+            description="Kelas akan muncul setelah mahasiswa mulai mengerjakan kuis yang sudah dipublikasikan."
           />
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
@@ -103,7 +103,7 @@ export default function QuizReviewClassesPage() {
                 href={`/review-kuis/kelas/${encodeURIComponent(item.className)}`}
                 ctaLabel="Tinjau Kelas"
                 metrics={[
-                  { label: "Siswa", value: item.studentCount, icon: Users },
+                  { label: "Mahasiswa", value: item.studentCount, icon: Users },
                   { label: "Kuis", value: item.quizCount, icon: ClipboardList },
                   {
                     label: "Perlu review",

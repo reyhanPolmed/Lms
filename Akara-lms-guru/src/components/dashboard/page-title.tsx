@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 type PageTitleProps = {
   eyebrow?: string;
   title: string;
-  description: string;
   meta?: string[];
   aside?: ReactNode;
   className?: string;
@@ -14,7 +13,6 @@ type PageTitleProps = {
 export function PageTitle({
   eyebrow,
   title,
-  description,
   meta = [],
   aside,
   className,
@@ -36,9 +34,6 @@ export function PageTitle({
           <h2 className="mt-1.5 text-[24px] font-semibold leading-[1.12] tracking-[var(--tracking-tight)] text-[var(--page-ink)] sm:text-[28px]">
             {title}
           </h2>
-          <p className="mt-2 max-w-2xl text-[14px] leading-6 text-[var(--muted-ink)]">
-            {description}
-          </p>
           {meta.length > 0 ? (
             <div className="mt-3 flex flex-wrap items-center gap-2 text-[13px] text-[var(--muted-ink)]">
               {meta.map((item) => (

@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 
 const mainNavItems = [
   { href: "/dashboard", label: "Dashboard", icon: Gauge },
-  { href: "/modules", label: "Modul Saya", icon: GraduationCap },
+  { href: "/modules", label: "Mata Kuliah Saya", icon: GraduationCap },
   { href: "/schedule", label: "Jadwal", icon: CalendarDays },
   { href: "/library", label: "Pustaka", icon: BookOpen },
 ];
@@ -40,7 +40,7 @@ export function Sidebar() {
           <p className="font-heading text-lg font-semibold tracking-[-0.03em] text-slate-950">
             Akara LMS
           </p>
-          <p className="mt-1 text-[11px] font-medium text-slate-500">Portal belajar siswa</p>
+          <p className="mt-1 text-[11px] font-medium text-slate-500">Portal belajar mahasiswa</p>
         </div>
       </Link>
 

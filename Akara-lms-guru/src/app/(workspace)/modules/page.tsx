@@ -35,12 +35,12 @@ export default function ModulesPage() {
   return (
     <div className="space-y-5 pb-6">
       <PageHeader
-        title="Mata Pelajaran"
-        description="Kelola mata pelajaran yang didaftarkan admin dan lengkapi konten pembelajarannya secara terstruktur."
+        title="Mata Kuliah"
+        description="Kelola mata kuliah yang didaftarkan admin dan lengkapi konten pembelajarannya secara terstruktur."
       />
 
       <Surface
-        title="Daftar Mata Pelajaran"
+        title="Daftar Mata Kuliah"
         action={
           <span className="rounded-full border border-[var(--line)] bg-[var(--surface-subtle)] px-3 py-1.5 text-[12px] font-semibold text-[var(--muted-ink)]">
             {modules.length} modul aktif
@@ -49,16 +49,16 @@ export default function ModulesPage() {
       >
         {loading ? (
           <LoadingState
-            title="Memuat mata pelajaran"
-            description="Mengambil daftar modul yang ditugaskan untuk guru pengampu."
+            title="Memuat mata kuliah"
+            description="Mengambil daftar modul yang ditugaskan untuk dosen pengampu."
           />
         ) : error ? (
           <ErrorState message={error} />
         ) : modules.length === 0 ? (
           <EmptyState
             icon={BookOpen}
-            title="Belum ada mata pelajaran"
-            description="Mata pelajaran akan muncul setelah admin mendaftarkan modul untuk guru ini."
+            title="Belum ada mata kuliah"
+            description="Mata Kuliah akan muncul setelah admin mendaftarkan modul untuk dosen ini."
           />
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
@@ -103,7 +103,7 @@ export default function ModulesPage() {
 
                 <Button asChild variant="secondary" className="mt-5 w-full">
                   <Link href={`/modules/${module.id}/builder`}>
-                    Detail Mata Pelajaran
+                    Detail Mata Kuliah
                     <CheckCircle2 className="h-4 w-4" />
                   </Link>
                 </Button>

@@ -31,21 +31,21 @@ export default function ModulesPage() {
           Dashboard
         </Link>
         <ChevronRight className="h-4 w-4" />
-        <span className="text-slate-950">Modul</span>
+        <span className="text-slate-950">Mata Kuliah</span>
       </div>
 
       <section className="surface-card p-6 sm:p-7">
-        <p className="eyebrow">Modul siswa</p>
-        <h1 className="section-title mt-2">Semua modul yang sedang diikuti</h1>
+        <p className="eyebrow">Mata Kuliah mahasiswa</p>
+        <h1 className="section-title mt-2">Semua mata kuliah yang sedang diikuti</h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500">
-          Akses seluruh modul yang aktif, cek progres per mata pelajaran, lalu masuk ke materi,
+          Akses seluruh mata kuliah yang aktif, cek progres per mata pelajaran, lalu masuk ke materi,
           kuis, atau tugas dari satu daftar yang konsisten.
         </p>
       </section>
 
       {data.length === 0 ? (
         <section className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500">
-          Belum ada modul yang tersedia dari backend.
+          Belum ada mata kuliah yang tersedia dari backend.
         </section>
       ) : (
         <section className="grid gap-5 xl:grid-cols-2 2xl:grid-cols-3">

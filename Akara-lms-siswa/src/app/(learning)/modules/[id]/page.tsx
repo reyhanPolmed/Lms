@@ -60,7 +60,7 @@ export default function ModuleDetailPage({
         <Home className="h-4 w-4" />
         <ChevronRight className="h-4 w-4" />
         <Link className="transition hover:text-slate-900" href="/modules">
-          Modul
+          Mata Kuliah
         </Link>
         <ChevronRight className="h-4 w-4" />
         <span className="text-slate-950">{data.title}</span>
@@ -95,7 +95,7 @@ export default function ModuleDetailPage({
 
           <div className="dashboard-panel min-w-full p-5 sm:min-w-[290px] lg:max-w-[320px]">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-              Progress modul
+              Progress mata kuliah
             </p>
             <p className="mt-3 text-[36px] font-semibold leading-none tracking-[-0.05em] text-slate-950">
               {data.completionRate ?? 0}%
@@ -117,7 +117,7 @@ export default function ModuleDetailPage({
         <div className="space-y-6">
           {data.sections.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500">
-              Belum ada section untuk modul ini.
+              Belum ada section untuk mata kuliah ini.
             </div>
           ) : (
             data.sections.map((section) => (
@@ -152,7 +152,7 @@ export default function ModuleDetailPage({
         </div>
 
         <aside className="surface-card p-6">
-          <p className="eyebrow">Ringkasan modul</p>
+          <p className="eyebrow">Ringkasan mata kuliah</p>
           <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">Arah belajar</h2>
           <ul className="mt-5 space-y-3 text-sm leading-6 text-slate-600">
             <li>Jumlah item belajar: {data.totalItems}</li>

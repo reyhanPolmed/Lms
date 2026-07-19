@@ -102,8 +102,8 @@ export function DashboardShell({ children }: { children: ReactNode }) {
       <Sheet open={!isIntegrityCheckPage && mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
         <SheetContent side="left" className="w-[min(88vw,20rem)] p-0">
           <SheetHeader className="sr-only">
-            <SheetTitle>Navigasi Teacher Hub</SheetTitle>
-            <SheetDescription>Menu utama untuk berpindah halaman workspace guru.</SheetDescription>
+            <SheetTitle>Navigasi Dosen Hub</SheetTitle>
+            <SheetDescription>Menu utama untuk berpindah halaman workspace dosen.</SheetDescription>
           </SheetHeader>
           <AppSidebar
             pathname={pathname}
@@ -137,9 +137,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             <>
               <IconBadge icon={LogOut} size="lg" tone="danger" className="h-14 w-14 rounded-full" />
               <DialogHeader className="mt-4">
-                <DialogTitle>Keluar dari Teacher Hub?</DialogTitle>
+                <DialogTitle>Keluar dari Dosen Hub?</DialogTitle>
                 <DialogDescription>
-                  Anda akan keluar dari sesi kerja saat ini dan perlu login kembali untuk membuka dashboard guru.
+                  Anda akan keluar dari sesi kerja saat ini dan perlu login kembali untuk membuka dashboard dosen.
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter className="mt-6">

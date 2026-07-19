@@ -72,7 +72,7 @@ export default function ProfilePage() {
   return (
     <div className="space-y-5 pb-6">
       <PageHeader
-        title="Profil Guru"
+        title="Profil Dosen"
         description="Lihat informasi profil Anda dan kelola keamanan akun."
       />
 
@@ -86,7 +86,7 @@ export default function ProfilePage() {
               {data?.teacher?.name || "Memuat..."}
             </h3>
             <p className="mb-5 mt-2 rounded-full border border-[rgba(79,70,199,0.14)] bg-[var(--accent-soft)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">
-              {data?.teacher?.department || "Guru"}
+              {data?.teacher?.department || "Dosen"}
             </p>
             
             <div className="w-full space-y-3 rounded-[18px] border border-[var(--line)] bg-[var(--surface-subtle)] p-5 text-left text-sm text-[var(--muted-ink)]">
@@ -104,7 +104,7 @@ export default function ProfilePage() {
                   <BookOpen className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted-ink)]">Mata Pelajaran</p>
+                  <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted-ink)]">Mata Kuliah</p>
                   <p className="font-semibold text-[var(--page-ink)]">{data?.teacher?.department || "-"}</p>
                 </div>
               </div>

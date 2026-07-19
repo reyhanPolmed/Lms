@@ -30,7 +30,7 @@ export default function TaskReviewClassSubjectsPage({
     loadTaskReviewRows()
       .then((rows) => setSubmissions(rows.filter((row) => row.className === className)))
       .catch((loadError: unknown) => {
-        setError(loadError instanceof Error ? loadError.message : "Gagal memuat mata pelajaran kelas.");
+        setError(loadError instanceof Error ? loadError.message : "Gagal memuat mata kuliah kelas.");
       })
       .finally(() => setLoading(false));
   }, [className]);
@@ -44,22 +44,22 @@ export default function TaskReviewClassSubjectsPage({
   return (
     <div className="grid min-h-full grid-rows-[auto_minmax(0,1fr)] gap-2">
       <PageHeader
-        title={`Mata Pelajaran ${className}`}
-        description="Pilih mata pelajaran terlebih dahulu, lalu buka pengumpulan tugas siswa pada mapel tersebut."
+        title={`Mata Kuliah ${className}`}
+        description="Pilih mata kuliah terlebih dahulu, lalu buka pengumpulan tugas mahasiswa pada mapel tersebut."
         actionHref="/review-tugas"
         actionLabel="Kembali ke kelas"
       />
 
-      <Surface title={`Pilih Mata Pelajaran - ${className}`}>
+      <Surface title={`Pilih Mata Kuliah - ${className}`}>
         {loading ? (
-          <p className="py-8 text-center text-[13px] text-[#626b8b]">Memuat mata pelajaran...</p>
+          <p className="py-8 text-center text-[13px] text-[#626b8b]">Memuat mata kuliah...</p>
         ) : error ? (
           <p className="rounded-[12px] border border-[#f4d1d8] bg-[#fff7f9] px-3 py-2 text-[12px] text-[#b25a70]">
             {error}
           </p>
         ) : subjectCards.length === 0 ? (
           <div className="rounded-[18px] border border-dashed border-[rgba(113,94,215,0.16)] bg-[#fcfbff] px-4 py-8 text-center">
-            <p className="text-[13px] text-[#626b8b]">Belum ada mata pelajaran dengan pengumpulan tugas di kelas ini.</p>
+            <p className="text-[13px] text-[#626b8b]">Belum ada mata kuliah dengan pengumpulan tugas di kelas ini.</p>
           </div>
         ) : (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">

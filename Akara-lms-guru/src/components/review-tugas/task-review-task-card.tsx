@@ -57,7 +57,7 @@ export function TaskReviewTaskCard({ card, href, className }: TaskReviewTaskCard
       <div className="mt-4 space-y-2 text-[13px] text-[var(--muted-ink)]">
         <div className="flex items-center gap-2">
           <UsersRound className="h-4 w-4 text-[var(--accent)]" />
-          <span>{card.studentCount} siswa mengumpulkan</span>
+          <span>{card.studentCount} mahasiswa mengumpulkan</span>
         </div>
         <div className="flex items-center gap-2">
           <Clock3 className="h-4 w-4 text-[var(--accent)]" />

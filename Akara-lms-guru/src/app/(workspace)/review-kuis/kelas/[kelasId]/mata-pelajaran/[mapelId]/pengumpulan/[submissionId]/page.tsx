@@ -59,7 +59,7 @@ export default function QuizSubmissionDetailPage({
       setDetail(updated);
 
       if (action === "draft") toast.success("Draft review berhasil disimpan.");
-      if (action === "retake") toast.success("Permintaan revisi dikirim ke siswa.");
+      if (action === "retake") toast.success("Permintaan revisi dikirim ke mahasiswa.");
       if (action === "publish") toast.success("Nilai kuis berhasil dipublish.");
     } catch (error: unknown) {
       toast.error?.(error instanceof Error ? error.message : "Gagal menyimpan aksi review.");
@@ -72,7 +72,7 @@ export default function QuizSubmissionDetailPage({
     <div className="grid min-h-full grid-rows-[auto_minmax(0,1fr)] gap-2">
       <PageHeader
         title="Detail Jawaban Kuis"
-        description="Periksa jawaban siswa secara fokus lalu simpan draft, minta revisi, atau publish nilai."
+        description="Periksa jawaban mahasiswa secara fokus lalu simpan draft, minta revisi, atau publish nilai."
         actionHref={`/review-kuis/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeReviewRouteSegment(subjectName)}`}
         actionLabel="Kembali ke pengumpulan"
       />
@@ -129,7 +129,7 @@ export default function QuizSubmissionDetailPage({
 
                   <div className={`mt-4 rounded-[16px] border p-3 ${getQuestionAnswerTone(question)}`}>
                     <p className="text-[13px] font-semibold uppercase tracking-[0.14em] opacity-70">
-                      Jawaban siswa
+                      Jawaban mahasiswa
                     </p>
                     <p className="mt-2 text-[13px] leading-5">
                       {question.studentAnswer ?? "Belum ada jawaban"}

@@ -20,7 +20,7 @@ export function PageHeader({
 }) {
   return (
     <PageTitle
-      eyebrow="Teacher Workspace"
+      eyebrow="Dosen Workspace"
       title={title}
       description={description}
       aside={

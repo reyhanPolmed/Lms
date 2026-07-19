@@ -103,7 +103,7 @@ export default function QuizEditorPage() {
 
   const validatePayload = () => {
     if (!title.trim()) return "Judul kuis wajib diisi.";
-    if (!selectedModuleId) return "Pilih mata pelajaran terlebih dahulu.";
+    if (!selectedModuleId) return "Pilih mata kuliah terlebih dahulu.";
     const score = Number(passScore);
     if (Number.isNaN(score) || score < 0 || score > 100) return "Pass score harus angka 0 sampai 100.";
     if (questions.length === 0) return "Minimal harus ada 1 soal.";
@@ -154,7 +154,7 @@ export default function QuizEditorPage() {
     <div className="grid min-h-full grid-rows-[auto_minmax(0,1fr)] gap-2">
       <PageHeader
         title="Editor Kuis"
-        description="Buat bank kuis pilihan ganda per mata pelajaran. Kuis baru akan terhubung ke kelas saat dipasang dari builder modul."
+        description="Buat bank kuis pilihan ganda per mata kuliah. Kuis baru akan terhubung ke kelas saat dipasang dari builder modul."
       />
       <section className="grid min-h-0 gap-2 xl:grid-cols-[1.35fr_0.85fr]">
         <Surface title="Form & Composer Soal">
@@ -185,13 +185,13 @@ export default function QuizEditorPage() {
 
             <div className="grid gap-2 md:grid-cols-2">
               <label className="block">
-                <FieldLabel>Mata Pelajaran</FieldLabel>
+                <FieldLabel>Mata Kuliah</FieldLabel>
                 <select
                   value={selectedModuleId}
                   onChange={(e) => setSelectedModuleId(e.target.value)}
                   className="h-9 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white px-3 text-[13px] text-[#4f5678] outline-none"
                 >
-                  <option value="">Pilih mata pelajaran</option>
+                  <option value="">Pilih mata kuliah</option>
                   {subjectOptions.map((m) => (
                     <option key={m.moduleId ?? m.id} value={m.moduleId ?? m.id}>
                       {m.title}
@@ -319,7 +319,7 @@ export default function QuizEditorPage() {
               Pass score: <b className="text-[#2f355f]">{passScore || "—"}</b>
             </li>
             <li className="rounded-[10px] bg-[#faf8ff] px-2.5 py-2">
-              Mata Pelajaran:{" "}
+              Mata Kuliah:{" "}
               <b className="text-[#2f355f]">
                 {subjectOptions.find((m) => (m.moduleId ?? m.id) === selectedModuleId)?.title ?? "—"}
               </b>

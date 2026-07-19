@@ -123,7 +123,7 @@ export default function QuizReviewSubjectSubmissionsPage({
     <div className="grid min-h-full grid-rows-[auto_minmax(0,1fr)] gap-2">
       <PageHeader
         title={`Pengumpulan ${subjectName}`}
-        description="Pilih salah satu pengumpulan kuis untuk membuka detail jawaban siswa."
+        description="Pilih salah satu pengumpulan kuis untuk membuka detail jawaban mahasiswa."
         actionHref={`/review-kuis/kelas/${encodeURIComponent(className)}`}
         actionLabel="Kembali ke mapel"
       />
@@ -137,7 +137,7 @@ export default function QuizReviewSubjectSubmissionsPage({
           </p>
         ) : submissions.length === 0 ? (
           <div className="rounded-[18px] border border-dashed border-[rgba(113,94,215,0.16)] bg-[#fcfbff] px-4 py-8 text-center">
-            <p className="text-[13px] text-[#626b8b]">Belum ada pengumpulan kuis untuk mata pelajaran ini.</p>
+            <p className="text-[13px] text-[#626b8b]">Belum ada pengumpulan kuis untuk mata kuliah ini.</p>
           </div>
         ) : (
           <div className="flex min-h-0 flex-1 flex-col">
@@ -150,7 +150,7 @@ export default function QuizReviewSubjectSubmissionsPage({
 
             <div className="overflow-hidden rounded-[18px] border border-[rgba(113,94,215,0.10)] bg-white">
               <div className="grid grid-cols-[1.15fr_1.1fr_0.95fr_0.7fr_0.9fr_0.78fr] gap-3 border-b border-[rgba(113,94,215,0.08)] bg-[#fbfaff] px-4 py-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-[#8a92b6]">
-                <span>Siswa</span>
+                <span>Mahasiswa</span>
                 <span>Kuis</span>
                 <span>Dikumpulkan</span>
                 <span>Skor</span>

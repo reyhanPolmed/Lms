@@ -83,12 +83,13 @@ export function TaskReviewSubmissionsTable({
       </div>
 
       <div className="overflow-hidden rounded-[18px] border border-[rgba(216,224,236,0.86)] bg-[var(--surface)]">
-        <div className="grid grid-cols-[0.88fr_0.84fr_0.5fr_0.84fr_0.76fr_1.18fr] gap-2.5 border-b border-[rgba(216,224,236,0.86)] bg-[var(--surface-subtle)] px-4 py-3 text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--muted-ink)]">
-          <span className="whitespace-nowrap">Siswa</span>
+        <div className="grid grid-cols-[0.88fr_0.84fr_0.5fr_0.84fr_0.8fr_0.8fr_1.18fr] gap-2.5 border-b border-[rgba(216,224,236,0.86)] bg-[var(--surface-subtle)] px-4 py-3 text-[12px] font-semibold uppercase tracking-[0.14em] text-[var(--muted-ink)]">
+          <span className="whitespace-nowrap">Mahasiswa</span>
           <span className="whitespace-nowrap">Dikumpulkan</span>
           <span className="whitespace-nowrap">Skor</span>
           <span className="whitespace-nowrap">Status Review</span>
-          <span className="whitespace-nowrap pr-3 text-center">Indeks kemiripan</span>
+          <span className="whitespace-nowrap text-center">Originality Check</span>
+          <span className="whitespace-nowrap text-center">Indeks kemiripan</span>
           <span className="whitespace-nowrap pl-3">Aksi</span>
         </div>
 
@@ -96,7 +97,7 @@ export function TaskReviewSubmissionsTable({
           {submissions.map((submission) => (
             <div
               key={submission.id}
-              className="grid grid-cols-[0.88fr_0.84fr_0.5fr_0.84fr_0.76fr_1.18fr] items-center gap-2.5 px-4 py-3 text-left"
+              className="grid grid-cols-[0.88fr_0.84fr_0.5fr_0.84fr_0.8fr_0.8fr_1.18fr] items-center gap-2.5 px-4 py-3 text-left"
             >
               <span className="truncate whitespace-nowrap text-[13px] font-semibold text-[var(--page-ink)]">
                 {submission.studentName}
@@ -122,9 +123,14 @@ export function TaskReviewSubmissionsTable({
                     getOriginalityTone(submission.originalityCheck.status)
                   )}
                 >
+                  {getOriginalityLabel(submission.originalityCheck.status)}
+                </span>
+              </div>
+              <div className="flex justify-center">
+                <span className="whitespace-nowrap text-[12px] font-semibold text-[var(--page-ink)]">
                   {submission.originalityCheck.status === "completed"
                     ? formatSimilarityPercentage(submission.originalityCheck.maxSimilarity)
-                    : getOriginalityLabel(submission.originalityCheck.status)}
+                    : "—"}
                 </span>
               </div>
               <div className="flex items-center gap-2 whitespace-nowrap">

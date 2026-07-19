@@ -32,8 +32,8 @@ const poppins = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Akara LMS Guru",
-  description: "Teacher dashboard for managing modules, lessons, quizzes, and student progress.",
+  title: "Akara LMS Dosen",
+  description: "Dosen dashboard for managing modules, lessons, quizzes, and student progress.",
 };
 
 export default function RootLayout({

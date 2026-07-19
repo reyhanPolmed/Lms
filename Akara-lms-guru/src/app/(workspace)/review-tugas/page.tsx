@@ -33,11 +33,11 @@ export default function TaskReviewClassesPage() {
   return (
     <div className="space-y-5 pb-6">
       <PageHeader
-        title="Review Tugas Siswa"
+        title="Review Tugas Mahasiswa"
         description="Pilih kelas untuk meninjau pengumpulan tugas, feedback revisi, dan status penilaian."
       />
 
-      <Surface title="Pilih Kelas" description="Daftar ini membantu guru masuk ke antrean tugas berdasarkan kelas.">
+      <Surface title="Pilih Kelas" description="Daftar ini membantu dosen masuk ke antrean tugas berdasarkan kelas.">
         {loading ? (
           <LoadingState
             title="Memuat ringkasan kelas"
@@ -49,7 +49,7 @@ export default function TaskReviewClassesPage() {
           <EmptyState
             icon={School}
             title="Belum ada pengumpulan tugas"
-            description="Kelas akan muncul setelah siswa mengirimkan tugas untuk mata pelajaran aktif."
+            description="Kelas akan muncul setelah mahasiswa mengirimkan tugas untuk mata kuliah aktif."
           />
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
@@ -61,7 +61,7 @@ export default function TaskReviewClassesPage() {
                 href={`/review-tugas/kelas/${encodeURIComponent(item.className)}`}
                 ctaLabel="Tinjau Kelas"
                 metrics={[
-                  { label: "Siswa", value: item.studentCount, icon: Users },
+                  { label: "Mahasiswa", value: item.studentCount, icon: Users },
                   { label: "Mapel", value: item.subjectCount, icon: ClipboardList },
                   {
                     label: "Perlu review",

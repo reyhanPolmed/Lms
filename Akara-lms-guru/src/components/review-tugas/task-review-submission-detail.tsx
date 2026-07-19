@@ -1,6 +1,7 @@
 "use client";
 
-import { AlertCircle, ExternalLink, FileText } from "lucide-react";
+import Link from "next/link";
+import { AlertCircle, ExternalLink, FileText, ScanSearch } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { PageHeader, Surface } from "@/components/workspace/ui";
@@ -10,6 +11,7 @@ import { teacherApi, type TaskSubmissionDetail } from "@/lib/api-client";
 type TaskReviewSubmissionDetailProps = {
   submissionId: string;
   backHref: string;
+  integrityHref?: string;
 };
 
 function getOriginalityLabel(status: string) {
@@ -30,6 +32,7 @@ function getOriginalityLabel(status: string) {
 export function TaskReviewSubmissionDetail({
   submissionId,
   backHref,
+  integrityHref,
 }: TaskReviewSubmissionDetailProps) {
   const { toast } = useToast();
   const [detail, setDetail] = useState<TaskSubmissionDetail | null>(null);
@@ -42,32 +45,60 @@ export function TaskReviewSubmissionDetail({
   useEffect(() => {
     let cancelled = false;
 
-    const loadDetail = async () => {
-      setLoadingDetail(true);
-      setDetailError("");
+    const loadDetail = async (isSilent = false) => {
+      if (!isSilent) {
+        setLoadingDetail(true);
+        setDetailError("");
+      }
 
       try {
         const response = await teacherApi.getTaskSubmissionDetail(submissionId);
         if (cancelled) return;
 
         setDetail(response);
-        setScoreInput(response.score !== null ? String(response.score) : "");
-        setFeedback(response.teacherFeedback ?? "");
+        if (!isSilent) {
+          setScoreInput(response.score !== null ? String(response.score) : "");
+          setFeedback(response.teacherFeedback ?? "");
+        }
       } catch (error: unknown) {
         if (cancelled) return;
-        setDetail(null);
-        setDetailError(error instanceof Error ? error.message : "Gagal memuat detail review tugas.");
+        if (!isSilent) {
+          setDetail(null);
+          setDetailError(error instanceof Error ? error.message : "Gagal memuat detail review tugas.");
+        }
       } finally {
-        if (!cancelled) setLoadingDetail(false);
+        if (!cancelled && !isSilent) setLoadingDetail(false);
       }
     };
 
-    void loadDetail();
+    void loadDetail(false);
 
     return () => {
       cancelled = true;
     };
   }, [submissionId]);
+
+  useEffect(() => {
+    if (!detail) return undefined;
+
+    const currentStatus = detail.originalityCheck.status;
+    if (currentStatus !== "queued" && currentStatus !== "processing") {
+      return undefined;
+    }
+
+    const intervalId = setInterval(async () => {
+      try {
+        const response = await teacherApi.getTaskSubmissionDetail(submissionId);
+        setDetail(response);
+      } catch (pollError) {
+        console.error("Gagal melakukan polling status orisinalitas detail:", pollError);
+      }
+    }, 6000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [submissionId, detail?.originalityCheck.status]);
 
   const previewScore = useMemo(() => {
     if (scoreInput.trim() === "") return null;
@@ -110,7 +141,7 @@ export function TaskReviewSubmissionDetail({
       setFeedback(updated.teacherFeedback ?? "");
 
       if (action === "draft") toast.success("Draft penilaian disimpan.");
-      if (action === "revision") toast.success("Permintaan revisi dikirim ke siswa.");
+      if (action === "revision") toast.success("Permintaan revisi dikirim ke mahasiswa.");
       if (action === "publish") toast.success("Nilai tugas berhasil dipublish.");
     } catch (error: unknown) {
       toast.error?.(error instanceof Error ? error.message : "Gagal menyimpan aksi review.");
@@ -123,7 +154,7 @@ export function TaskReviewSubmissionDetail({
     <div className="grid min-h-full grid-rows-[auto_minmax(0,1fr)] gap-2">
       <PageHeader
         title="Detail Submission Tugas"
-        description="Periksa submission siswa secara fokus lalu beri nilai akhir secara langsung dari 0 sampai 100."
+        description="Periksa submission mahasiswa secara fokus lalu beri nilai akhir secara langsung dari 0 sampai 100."
         actionHref={backHref}
         actionLabel="Kembali ke pengumpulan"
       />
@@ -162,7 +193,7 @@ export function TaskReviewSubmissionDetail({
             <div className="mt-3 flex-1 space-y-3 overflow-y-auto pr-1">
               <div className="rounded-[18px] border border-[rgba(113,94,215,0.10)] bg-white p-4 shadow-[0_10px_20px_rgba(28,24,62,0.03)]">
                 <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[#8a92b6]">
-                  Submission Siswa
+                  Submission Mahasiswa
                 </p>
                 <div className="mt-3 space-y-2">
                   {detail.submissionLink ? (
@@ -196,7 +227,7 @@ export function TaskReviewSubmissionDetail({
                   ) : null}
 
                   {!detail.submissionLink && !detail.submissionFile ? (
-                    <p className="text-[13px] text-[#626b8b]">Tidak ada submission dari siswa.</p>
+                    <p className="text-[13px] text-[#626b8b]">Tidak ada submission dari mahasiswa.</p>
                   ) : null}
                 </div>
               </div>
@@ -211,12 +242,23 @@ export function TaskReviewSubmissionDetail({
                       {getOriginalityLabel(detail.originalityCheck.status)}
                     </p>
                     <p className="mt-1 text-[12px] text-[#626b8b]">
-                      Hasil ini adalah indikator risiko untuk review manual guru.
+                      Hasil ini adalah indikator risiko untuk review manual dosen.
                     </p>
                   </div>
-                  <p className="text-[20px] font-semibold text-[#715ed7]">
-                    {detail.originalityCheck.maxSimilarity.toFixed(1)}%
-                  </p>
+                  <div className="flex items-center gap-3">
+                    <p className="text-[20px] font-semibold text-[#715ed7]">
+                      {detail.originalityCheck.maxSimilarity.toFixed(1)}%
+                    </p>
+                    {integrityHref && detail.originalityCheck.status === "completed" ? (
+                      <Link
+                        href={integrityHref}
+                        className="inline-flex h-8 items-center justify-center rounded-[10px] border border-[rgba(180,83,9,0.18)] bg-[var(--warning-soft)] px-2.5 text-[12px] font-semibold text-[var(--warning)] hover:border-[var(--warning)] transition-colors"
+                      >
+                        <ScanSearch className="mr-1 h-3.5 w-3.5" />
+                        Integrity Check
+                      </Link>
+                    ) : null}
+                  </div>
                 </div>
               </div>
 
@@ -240,13 +282,13 @@ export function TaskReviewSubmissionDetail({
 
               <label className="block rounded-[18px] border border-[rgba(113,94,215,0.10)] bg-white p-4 shadow-[0_10px_20px_rgba(28,24,62,0.03)]">
                 <span className="flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.16em] text-[#8a92b6]">
-                  <AlertCircle className="h-4 w-4" /> Feedback Guru
+                  <AlertCircle className="h-4 w-4" /> Feedback Dosen
                 </span>
                 <textarea
                   value={feedback}
                   onChange={(event) => setFeedback(event.target.value)}
                   className="mt-3 h-24 w-full resize-none rounded-[14px] border border-[rgba(113,94,215,0.12)] bg-[#fbfaff] p-3 text-[13px] text-[#4f5678] outline-none focus:border-[#715ed7]"
-                  placeholder="Berikan catatan, masukan, atau alasan mengapa siswa perlu melakukan revisi..."
+                  placeholder="Berikan catatan, masukan, atau alasan mengapa mahasiswa perlu melakukan revisi..."
                 />
               </label>
             </div>

@@ -90,7 +90,7 @@ export default function LoginPage() {
     <main className="relative isolate h-full overflow-hidden bg-[#f5f0e8] text-slate-900">
       <Image
         src={backgroundLogin}
-        alt="Ilustrasi kampus untuk halaman login guru"
+        alt="Ilustrasi kampus untuk halaman login dosen"
         fill
         priority
         className="object-cover object-center"
@@ -108,7 +108,7 @@ export default function LoginPage() {
             </div>
             <div className="min-w-0">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-600">
-                Akara LMS Guru
+                Akara LMS Dosen
               </p>
               <h1 className="text-[17px] font-bold tracking-[-0.02em] text-slate-900">
                 Portal Pengajar
@@ -121,14 +121,14 @@ export default function LoginPage() {
               Kelola kelas dan materi dari satu ruang kerja.
             </p>
             <p className="max-w-[420px] text-[12px] leading-5 text-slate-700 sm:text-[13px]">
-              Masuk untuk membuka modul, tugas, kuis, dan pemantauan progres siswa.
+              Masuk untuk membuka modul, tugas, kuis, dan pemantauan progres mahasiswa.
             </p>
           </div>
 
           <section className="mt-3.5 flex w-full max-w-[500px] min-h-0 shrink-0 flex-col overflow-hidden rounded-[22px] border border-white/65 bg-white/72 p-3 shadow-[0_24px_80px_rgba(15,23,42,0.16)] backdrop-blur-xl sm:p-3.5">
             <div className="mb-2.5 shrink-0">
               <h2 className="text-[17px] font-bold tracking-[-0.03em] text-slate-900">
-                Masuk ke akun guru
+                Masuk ke akun dosen
               </h2>
               <p className="mt-1 text-[12px] text-slate-600">
                 Gunakan email institusi yang sudah terdaftar.
@@ -162,7 +162,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    placeholder="guru@akara.edu"
+                    placeholder="dosen@akara.edu"
                     className="h-10 w-full rounded-[18px] border border-slate-200/90 bg-white/90 pl-9 pr-3 text-[12px] text-slate-900 outline-none transition focus:border-slate-300 focus:ring-4 focus:ring-slate-900/5"
                   />
                 </span>
@@ -205,7 +205,7 @@ export default function LoginPage() {
               <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-900/5 text-slate-700">
                 <CheckCircle2 className="h-3 w-3" />
               </span>
-              <p>Akses dibatasi untuk guru yang sudah diverifikasi.</p>
+              <p>Akses dibatasi untuk dosen yang sudah diverifikasi.</p>
             </div>
           </section>
         </div>

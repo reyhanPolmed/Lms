@@ -19,6 +19,7 @@ export default function TaskSubmissionDetailByTaskPage({
     <TaskReviewSubmissionDetail
       submissionId={submissionId}
       backHref={`/review-tugas/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeTaskReviewRouteSegment(subjectName)}/tugas/${encodeURIComponent(taskId)}`}
+      integrityHref={`/review-tugas/kelas/${encodeURIComponent(className)}/mata-pelajaran/${encodeTaskReviewRouteSegment(subjectName)}/tugas/${encodeURIComponent(taskId)}/pengumpulan/${submissionId}/integrity-check`}
     />
   );
 }

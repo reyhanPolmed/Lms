@@ -72,7 +72,7 @@ export default function ModuleItemDetailPage({
   }
 
   if (!routeEntry) {
-    return <div className="surface-card p-6 text-sm text-rose-600">Item modul tidak ditemukan.</div>;
+    return <div className="surface-card p-6 text-sm text-rose-600">Item mata kuliah tidak ditemukan.</div>;
   }
 
   if (routeEntry.type === "lesson") {
@@ -248,7 +248,7 @@ function Breadcrumbs({
       <Home className="h-4 w-4" />
       <ChevronRight className="h-4 w-4" />
       <Link className="transition hover:text-slate-900" href="/modules">
-        Modul
+        Mata Kuliah
       </Link>
       <ChevronRight className="h-4 w-4" />
       <Link className="transition hover:text-slate-900" href={`/modules/${moduleId}`}>
@@ -268,7 +268,7 @@ function BackToModuleLink({ moduleId }: { moduleId: string }) {
         href={`/modules/${moduleId}`}
       >
         <ArrowLeft className="h-4 w-4" />
-        Kembali ke modul
+        Kembali ke mata kuliah
       </Link>
     </div>
   );

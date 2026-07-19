@@ -27,20 +27,20 @@ type SidebarProps = {
 
 const navGroups = [
   {
-    title: "Workspace",
+    title: "Ruang Kerja",
     items: [
       { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-      { href: "/modules", label: "Mata Pelajaran", icon: Archive },
+      { href: "/modules", label: "Mata Kuliah", icon: Archive },
       { href: "/review-kuis", label: "Review Kuis", icon: FileCheck2 },
       { href: "/review-tugas", label: "Review Tugas", icon: ClipboardCheck },
       { href: "/monitoring/quizzes", label: "Monitoring Kuis", icon: ClipboardList },
-      { href: "/progress", label: "Progres Siswa", icon: Users },
+      { href: "/progress", label: "Progres Mahasiswa", icon: Users },
     ],
   },
   {
     title: "Akun",
     items: [
-      { href: "/profile", label: "Profil Guru", icon: User },
+      { href: "/profile", label: "Profil Dosen", icon: User },
     ],
   },
 ];
@@ -136,9 +136,6 @@ export function AppSidebar({
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--muted-ink)]">
               Akara LMS
-            </p>
-            <p className="text-lg font-semibold tracking-[var(--tracking-tight)] text-[var(--page-ink)]">
-              Teacher Hub
             </p>
           </div>
         </div>

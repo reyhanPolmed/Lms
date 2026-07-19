@@ -137,7 +137,7 @@ const initialChapters: Chapter[] = [
         id: "item-3",
         kind: "Tugas",
         title: "Ringkasan Bab 1",
-        description: "Siswa menulis ringkasan konsep inti dalam 250 kata.",
+        description: "Mahasiswa menulis ringkasan konsep inti dalam 250 kata.",
         details: {
           taskStartAt: "2026-05-10T08:00",
           taskDeadline: "2026-05-15T23:59",
@@ -773,8 +773,8 @@ export default function ModuleBuilderPage({
   return (
     <div className="grid min-h-full grid-rows-[auto_minmax(0,1fr)] gap-2">
       <PageHeader
-        title={`Detail Mata Pelajaran: ${moduleId}`}
-        description="Mata pelajaran berasal dari admin. Guru dapat menambah Bab, materi, tugas, kuis, lalu mengelola tiap item."
+        title={`Detail Mata Kuliah: ${moduleId}`}
+        description="Mata Kuliah berasal dari admin. Dosen dapat menambah Bab, materi, tugas, kuis, lalu mengelola tiap item."
       />
 
       {loading ? (
@@ -983,7 +983,7 @@ export default function ModuleBuilderPage({
                       <textarea
                         value={activeDraft.description}
                         onChange={(event) => handleDraftChange("description", event.target.value)}
-                        placeholder="Ringkasan singkat untuk guru dan siswa"
+                        placeholder="Ringkasan singkat untuk dosen dan mahasiswa"
                         className="h-20 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white p-3 text-[13px] text-[#4f5678] outline-none"
                       />
                     </label>
@@ -1078,7 +1078,7 @@ export default function ModuleBuilderPage({
                       <textarea
                         value={activeDraft.description}
                         onChange={(event) => handleDraftChange("description", event.target.value)}
-                        placeholder="Ringkasan singkat untuk guru dan siswa"
+                        placeholder="Ringkasan singkat untuk dosen dan mahasiswa"
                         className="h-20 w-full rounded-[10px] border border-[rgba(113,94,215,0.12)] bg-white p-3 text-[13px] text-[#4f5678] outline-none"
                       />
                     </label>

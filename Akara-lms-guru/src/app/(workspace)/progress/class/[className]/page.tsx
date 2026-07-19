@@ -30,7 +30,7 @@ export default function ClassStudentsPage({
     teacherApi
       .getStudentProgress()
       .then(setRows)
-      .catch((e: unknown) => setError(e instanceof Error ? e.message : "Gagal memuat data siswa"))
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : "Gagal memuat data mahasiswa"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -42,20 +42,20 @@ export default function ClassStudentsPage({
   return (
     <div className="grid min-h-full grid-rows-[auto_minmax(0,1fr)] gap-2">
       <PageHeader
-        title={`Siswa Kelas ${className}`}
-        description="Pilih siswa yang ingin ditinjau, lalu buka detail progress untuk melihat perkembangan belajarnya."
+        title={`Mahasiswa Kelas ${className}`}
+        description="Pilih mahasiswa yang ingin ditinjau, lalu buka detail progress untuk melihat perkembangan belajarnya."
       />
 
-      <Surface title="Daftar Siswa">
+      <Surface title="Daftar Mahasiswa">
         {loading ? (
-          <p className="py-8 text-center text-[13px] text-[#626b8b]">Memuat daftar siswa...</p>
+          <p className="py-8 text-center text-[13px] text-[#626b8b]">Memuat daftar mahasiswa...</p>
         ) : error ? (
           <p className="rounded-[10px] border border-[#f5c4cd] bg-[#fff2f5] px-3 py-2 text-[12px] text-[#ba4b64]">
             {error}
           </p>
         ) : students.length === 0 ? (
           <div className="flex flex-1 items-center justify-center rounded-[14px] border border-dashed border-[rgba(113,94,215,0.16)] bg-[#fcfbff] px-4 py-8 text-center">
-            <p className="text-[13px] text-[#626b8b]">Belum ada data siswa untuk kelas ini.</p>
+            <p className="text-[13px] text-[#626b8b]">Belum ada data mahasiswa untuk kelas ini.</p>
           </div>
         ) : (
           <div className="grid gap-3 md:grid-cols-2">

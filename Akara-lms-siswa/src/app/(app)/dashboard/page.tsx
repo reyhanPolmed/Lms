@@ -18,7 +18,7 @@ export default function DashboardPage() {
   const { data, isLoading, isError, error } = useDashboardQuery();
 
   if (isLoading) {
-    return <LoadingState label="Memuat dashboard siswa..." />;
+    return <LoadingState label="Memuat dashboard mahasiswa..." />;
   }
 
   if (isError || !data) {
@@ -29,13 +29,13 @@ export default function DashboardPage() {
     );
   }
 
-  const firstName = data.user.fullName.split(" ").filter(Boolean)[0] ?? "Siswa";
+  const firstName = data.user.fullName.split(" ").filter(Boolean)[0] ?? "Mahasiswa";
   const agendaItems = [...data.upcomingQuizzes, ...data.upcomingTasks]
     .sort((left, right) => new Date(left.dueAt).getTime() - new Date(right.dueAt).getTime())
     .slice(0, 5);
   const stats = [
     {
-      label: "Modul aktif",
+      label: "Mata Kuliah aktif",
       value: data.modules.length,
       helper: "Sedang berjalan",
       icon: BookOpen
@@ -59,10 +59,10 @@ export default function DashboardPage() {
       <section className="surface-card overflow-hidden p-6 sm:p-7">
         <div className="flex flex-col gap-6 2xl:flex-row 2xl:items-end xl:justify-between">
           <div className="max-w-3xl">
-            <p className="eyebrow">Dashboard siswa</p>
+            <p className="eyebrow">Dashboard mahasiswa</p>
             <h1 className="section-title mt-2">Selamat datang kembali, {firstName}.</h1>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
-              Pantau progres belajar, modul aktif, dan agenda yang paling dekat dari satu halaman
+              Pantau progres belajar, mata kuliah aktif, dan agenda yang paling dekat dari satu halaman
               yang lebih rapi dan mudah dibaca.
             </p>
             <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium text-slate-600">
@@ -112,7 +112,7 @@ export default function DashboardPage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="eyebrow">Modul aktif</p>
+              <p className="eyebrow">Mata Kuliah aktif</p>
               <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">
                 Lanjutkan kelas yang sedang berjalan
               </h2>
@@ -128,7 +128,7 @@ export default function DashboardPage() {
 
           {data.modules.length === 0 ? (
             <div className="surface-card p-6 text-sm text-slate-500">
-              Belum ada modul aktif yang ditampilkan.
+              Belum ada mata kuliah aktif yang ditampilkan.
             </div>
           ) : (
             <div className="grid gap-5 lg:grid-cols-2">

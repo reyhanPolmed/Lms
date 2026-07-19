@@ -30,7 +30,7 @@ export default function StudentProgressOverviewPage({
     teacherApi
       .getStudentProgress()
       .then(setRows)
-      .catch((e: unknown) => setError(e instanceof Error ? e.message : "Gagal memuat progress siswa"))
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : "Gagal memuat progress mahasiswa"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -42,20 +42,20 @@ export default function StudentProgressOverviewPage({
   return (
     <div className="grid min-h-full grid-rows-[auto_minmax(0,1fr)] gap-2">
       <PageHeader
-        title={student ? `Detail Progress ${student.studentName}` : "Detail Progress Siswa"}
-        description="Halaman ini merangkum progres siswa per mata pelajaran. Buka timeline mapel untuk melihat detail aktivitas yang lebih spesifik."
+        title={student ? `Detail Progress ${student.studentName}` : "Detail Progress Mahasiswa"}
+        description="Halaman ini merangkum progres mahasiswa per mata kuliah. Buka timeline mapel untuk melihat detail aktivitas yang lebih spesifik."
       />
 
-      <Surface title="Ringkasan Progress Siswa">
+      <Surface title="Ringkasan Progress Mahasiswa">
         {loading ? (
-          <p className="py-8 text-center text-[13px] text-[#626b8b]">Memuat detail progress siswa...</p>
+          <p className="py-8 text-center text-[13px] text-[#626b8b]">Memuat detail progress mahasiswa...</p>
         ) : error ? (
           <p className="rounded-[10px] border border-[#f5c4cd] bg-[#fff2f5] px-3 py-2 text-[12px] text-[#ba4b64]">
             {error}
           </p>
         ) : !student ? (
           <div className="flex flex-1 items-center justify-center rounded-[14px] border border-dashed border-[rgba(113,94,215,0.16)] bg-[#fcfbff] px-4 py-8 text-center">
-            <p className="text-[13px] text-[#626b8b]">Data siswa untuk kelas ini tidak ditemukan.</p>
+            <p className="text-[13px] text-[#626b8b]">Data mahasiswa untuk kelas ini tidak ditemukan.</p>
           </div>
         ) : (
           <div className="flex min-h-0 flex-1 flex-col">
@@ -163,7 +163,7 @@ export default function StudentProgressOverviewPage({
                       href={`/progress/class/${encodeURIComponent(className)}`}
                       className="rounded-[10px] border border-[rgba(113,94,215,0.14)] bg-[#faf8ff] px-2.5 py-1.5 text-[12px] font-semibold text-[#6b63a4] transition-colors hover:border-[#715ed7] hover:text-[#715ed7]"
                     >
-                      Kembali ke daftar siswa
+                      Kembali ke daftar mahasiswa
                     </Link>
                   </div>
                 </article>

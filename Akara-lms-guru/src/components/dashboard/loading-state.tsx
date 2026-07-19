@@ -10,7 +10,7 @@ type LoadingStateProps = {
 
 export function LoadingState({
   title = "Memuat data",
-  description = "Sedang mengambil data terbaru dari workspace guru.",
+  description = "Sedang mengambil data terbaru dari workspace dosen.",
   className,
 }: LoadingStateProps) {
   return (

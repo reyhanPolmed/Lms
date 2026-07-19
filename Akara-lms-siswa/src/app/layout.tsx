@@ -13,7 +13,7 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: "Akara LMS",
-  description: "Frontend LMS sekolah berbasis Next.js untuk alur belajar siswa."
+  description: "Frontend LMS sekolah berbasis Next.js untuk alur belajar mahasiswa."
 };
 
 export default function RootLayout({

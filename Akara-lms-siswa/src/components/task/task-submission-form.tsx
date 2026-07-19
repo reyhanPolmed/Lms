@@ -121,6 +121,20 @@ export function TaskSubmissionForm({
   const handleFileSelection = async (file?: File | null) => {
     if (!file) return;
 
+    const allowedExtensions = ["pdf", "doc", "docx", "jpg", "jpeg", "png", "webp"];
+    const extension = file.name.split(".").pop()?.toLowerCase();
+
+    if (!extension || !allowedExtensions.includes(extension)) {
+      toast.error("Format file tidak didukung. Gunakan PDF, DOC, DOCX, atau Gambar (JPG, JPEG, PNG, WEBP).");
+      return;
+    }
+
+    const maxFileSizeInBytes = 2 * 1024 * 1024; // 2MB
+    if (file.size > maxFileSizeInBytes) {
+      toast.error("Ukuran file terlalu besar. Maksimal 2MB.");
+      return;
+    }
+
     try {
       const base64Data = await readFileAsBase64(file);
       setSubmissionFile({
@@ -274,7 +288,7 @@ export function TaskSubmissionForm({
               >
                 <input
                   ref={fileInputRef}
-                  accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png"
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp"
                   className="sr-only"
                   disabled={hasSubmitted}
                   onChange={handleFileInputChange}
@@ -296,7 +310,7 @@ export function TaskSubmissionForm({
                     Tarik dan lepaskan file di sini
                   </p>
                   <p className="mt-2 text-sm text-slate-500">
-                    Format yang didukung: PDF, DOC, DOCX, PPT, PPTX, JPG, PNG
+                    Format yang didukung: PDF, DOC, DOCX, JPG, JPEG, PNG, WEBP (Maks: 2MB)
                   </p>
                   <button
                     className="mt-6 inline-flex items-center justify-center rounded-2xl bg-slate-950 px-8 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
@@ -339,7 +353,7 @@ export function TaskSubmissionForm({
           {hasSubmitted && (
             <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
               <CheckCircle2 className="h-5 w-5 shrink-0" />
-              <span>Tugas sudah dikumpulkan. Status modul sekarang complete.</span>
+              <span>Tugas sudah dikumpulkan. Status mata kuliah sekarang complete.</span>
             </div>
           )}
 
@@ -388,12 +402,6 @@ export function TaskSubmissionForm({
           <p className="mt-4 text-sm text-slate-500">
             Dikirim pada {formatDateTime(task.currentSubmission.submittedAt)}
           </p>
-          <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700">
-            <p className="font-semibold text-slate-900">Status pemeriksaan orisinalitas</p>
-            <p className="mt-1">
-              {getOriginalityStatusLabel(task.currentSubmission.originalityCheck?.status)}
-            </p>
-          </div>
           {task.currentSubmission.teacherNote && (
             <div className="mt-4 rounded-2xl bg-amber-50 p-4 text-sm leading-6 text-amber-900">
               Catatan guru: {task.currentSubmission.teacherNote}

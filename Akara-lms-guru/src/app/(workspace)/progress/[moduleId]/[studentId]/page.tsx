@@ -49,7 +49,7 @@ export default function StudentModuleDetailPage({
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <p className="text-[12px] text-[#626b8b]">Memuat detail siswa...</p>
+        <p className="text-[12px] text-[#626b8b]">Memuat detail mahasiswa...</p>
       </div>
     );
   }
@@ -65,8 +65,8 @@ export default function StudentModuleDetailPage({
   return (
     <div className="grid min-h-full grid-rows-[auto_minmax(0,1fr)] gap-2">
       <PageHeader
-        title={`Detail Siswa: ${data.student.name}`}
-        description={`Journey siswa pada modul ${data.module.title}: timeline item, status, nilai, feedback.`}
+        title={`Detail Mahasiswa: ${data.student.name}`}
+        description={`Journey mahasiswa pada modul ${data.module.title}: timeline item, status, nilai, feedback.`}
       />
       <section className="grid min-h-0 gap-2 xl:grid-cols-[1.2fr_0.8fr]">
         <Surface title="Timeline Item Belajar">
@@ -91,7 +91,7 @@ export default function StudentModuleDetailPage({
             )}
           </div>
         </Surface>
-        <Surface title="Catatan Guru Internal">
+        <Surface title="Catatan Dosen Internal">
           <label className="block">
             <span className="mb-1 block text-[12px] font-semibold uppercase tracking-[0.16em] text-[#626b8b]">
               Catatan

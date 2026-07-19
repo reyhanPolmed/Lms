@@ -23,14 +23,14 @@ export function RecentSubmissionsTable({
   return (
     <DataTable
       title="Submission terbaru"
-      description="Antrean penilaian terakhir dari berbagai kelas dan mata pelajaran."
+      description="Antrean penilaian terakhir dari berbagai kelas dan mata kuliah."
     >
       {submissions.length === 0 ? (
         <div className="px-6 py-6">
           <EmptyState
             icon={ClipboardList}
             title="Belum ada submission baru"
-            description="Saat siswa mengirim tugas baru, antrean penilaian terbaru akan tampil di sini."
+            description="Saat mahasiswa mengirim tugas baru, antrean penilaian terbaru akan tampil di sini."
           />
         </div>
       ) : (
@@ -39,8 +39,8 @@ export function RecentSubmissionsTable({
             <Table className="min-w-[880px]">
               <TableHeader>
                 <TableRow className="bg-[rgba(248,250,252,0.92)] hover:bg-[rgba(248,250,252,0.92)]">
-                  <TableHead className="pl-6">Siswa</TableHead>
-                  <TableHead>Mata Pelajaran</TableHead>
+                  <TableHead className="pl-6">Mahasiswa</TableHead>
+                  <TableHead>Mata Kuliah</TableHead>
                   <TableHead>Tugas</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="pr-6 text-right">Skor</TableHead>
@@ -91,7 +91,7 @@ export function RecentSubmissionsTable({
                 <div className="mt-4 space-y-3 text-sm">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted-ink)]">
-                      Mata Pelajaran
+                      Mata Kuliah
                     </p>
                     <p className="mt-1 text-[var(--page-ink)]">{sub.courseTitle}</p>
                   </div>

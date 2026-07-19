@@ -129,7 +129,7 @@ export const mockProfile: ProfileDetail = {
   department: "Perhotelan",
   weeklyProgress: 72,
   phone: "0812-7788-9900",
-  bio: "Siswa aktif yang fokus pada service excellence, hospitality workflow, dan presentasi tugas praktik.",
+  bio: "Mahasiswa aktif yang fokus pada service excellence, hospitality workflow, dan presentasi tugas praktik.",
   nisn: "9988776655"
 };
 
@@ -227,7 +227,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
             excerpt:
               "Materi ini menekankan pentingnya akurasi input data reservasi, kebutuhan khusus tamu, dan validasi sebelum check-in.",
             content:
-              "Siswa belajar membaca reservation note, memeriksa permintaan khusus, menyelaraskan tipe kamar, serta menghindari mismatch data yang memicu komplain.",
+              "Mahasiswa belajar membaca reservation note, memeriksa permintaan khusus, menyelaraskan tipe kamar, serta menghindari mismatch data yang memicu komplain.",
             durationTargetSeconds: 780,
             tips: [
               "Pastikan jenis kamar sesuai dengan reservasi.",
@@ -237,7 +237,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
           }),
           quiz("fo-q2", "Bab 2", "Quiz Validasi Reservasi", {
             intro:
-              "Quiz untuk memastikan siswa memahami validasi data reservasi, special request, dan etika upselling.",
+              "Quiz untuk memastikan mahasiswa memahami validasi data reservasi, special request, dan etika upselling.",
             passScore: 80,
             durationMinutes: 15,
             dueAt: "2026-05-06T09:00:00+07:00",
@@ -269,7 +269,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
                 options: [
                   "Di catatan pribadi petugas",
                   "Di reservation note/sistem operasional",
-                  "Di grup chat siswa",
+                  "Di grup chat mahasiswa",
                   "Di menu promosi"
                 ],
                 correct: "b"
@@ -299,7 +299,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
             contentUrl: "",
             excerpt:
               "Fokus pada langkah mendengarkan komplain, mengklarifikasi akar masalah, dan menawarkan solusi yang realistis.",
-            content: "Service recovery menuntut empati, kecepatan respon, dan dokumentasi insiden. Dalam praktiknya, siswa perlu tahu kapan memberi solusi langsung dan kapan melakukan eskalasi.",
+            content: "Service recovery menuntut empati, kecepatan respon, dan dokumentasi insiden. Dalam praktiknya, mahasiswa perlu tahu kapan memberi solusi langsung dan kapan melakukan eskalasi.",
             durationTargetSeconds: 840,
             tips: [
               "Dengarkan penuh sebelum merespon.",
@@ -369,7 +369,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
     teacher: "Pak Arya Suranta",
     accent: "#F59E0B",
     description:
-      "Modul praktik kitchen workflow, teknik memasak dasar, food costing, dan plating untuk layanan industri.",
+      "Mata Kuliah praktik kitchen workflow, teknik memasak dasar, food costing, dan plating untuk layanan industri.",
     sections: [
       {
         id: "cl-bab-1",
@@ -382,7 +382,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
             excerpt:
               "Memahami alur kerja station kitchen, sanitasi alat, dan pemetaan tugas saat service dimulai.",
             content:
-              "Siswa mempelajari pembagian station, urutan mise en place, prosedur sanitasi dasar, dan koordinasi antar anggota tim di dapur produksi.",
+              "Mahasiswa mempelajari pembagian station, urutan mise en place, prosedur sanitasi dasar, dan koordinasi antar anggota tim di dapur produksi.",
             durationTargetSeconds: 720,
             tips: [
               "Pisahkan area prep dan plating.",
@@ -396,7 +396,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
             passScore: 75,
             durationMinutes: 15,
             dueAt: "2026-05-02T13:00:00+07:00",
-            penaltyNote: "Simulasi fullscreen violation meniru penalti saat siswa keluar dari mode fokus.",
+            penaltyNote: "Simulasi fullscreen violation meniru penalti saat mahasiswa keluar dari mode fokus.",
             questions: buildQuestions("cl-q1", [
               {
                 prompt: "Tujuan mise en place adalah?",
@@ -454,7 +454,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
             excerpt:
               "Mengenal saute, boil, steam, dan cara memilih teknik panas sesuai karakter bahan.",
             content:
-              "Teknik panas menentukan tekstur, rasa, dan konsistensi hasil akhir. Siswa perlu mengenali kapan memakai dry heat, moist heat, atau kombinasi keduanya.",
+              "Teknik panas menentukan tekstur, rasa, dan konsistensi hasil akhir. Mahasiswa perlu mengenali kapan memakai dry heat, moist heat, atau kombinasi keduanya.",
             durationTargetSeconds: 840,
             tips: [
               "Sesuaikan panas dengan jenis protein atau sayur.",
@@ -526,7 +526,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
             excerpt:
               "Belajar menghitung biaya bahan per porsi, waste sederhana, dan margin dasar sebelum menentukan harga jual.",
             content:
-              "Food costing membantu siswa memahami hubungan antara bahan baku, porsi, waste, dan target harga jual agar menu tetap efisien namun layak dijual.",
+              "Food costing membantu mahasiswa memahami hubungan antara bahan baku, porsi, waste, dan target harga jual agar menu tetap efisien namun layak dijual.",
             durationTargetSeconds: 900,
             tips: [
               "Pisahkan bahan utama dan garnish.",
@@ -596,7 +596,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
     teacher: "Bu Ninda Prameswari",
     accent: "#0F766E",
     description:
-      "Rangkaian belajar riset brand, visual identity, hingga portfolio presentation untuk siswa DKV.",
+      "Rangkaian belajar riset brand, visual identity, hingga portfolio presentation untuk mahasiswa DKV.",
     sections: [
       {
         id: "ds-bab-1",
@@ -609,7 +609,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
             excerpt:
               "Materi pengantar tentang riset audiens, benchmark visual, dan penyusunan moodboard proyek desain.",
             content:
-              "Siswa diminta memahami siapa target audiensnya, gaya visual referensi, serta bagaimana menyaring insight riset menjadi arah konsep desain.",
+              "Mahasiswa diminta memahami siapa target audiensnya, gaya visual referensi, serta bagaimana menyaring insight riset menjadi arah konsep desain.",
             durationTargetSeconds: 780,
             tips: [
               "Mulai dari problem statement.",
@@ -681,7 +681,7 @@ export const mockModuleBlueprints: MockModuleBlueprint[] = [
             excerpt:
               "Mempelajari penyusunan logo, sistem warna, grid, dan elemen visual pendukung agar identitas brand konsisten.",
             content:
-              "Bab ini mendorong siswa menyusun pilihan visual yang bisa dipertanggungjawabkan, bukan sekadar menarik secara estetika namun lemah secara konsep.",
+              "Bab ini mendorong mahasiswa menyusun pilihan visual yang bisa dipertanggungjawabkan, bukan sekadar menarik secara estetika namun lemah secara konsep.",
             durationTargetSeconds: 840,
             tips: [
               "Uji logo pada ukuran kecil dan besar.",

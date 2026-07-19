@@ -25,14 +25,12 @@ const statToneVariants = cva("text-[var(--accent)]", {
 type StatCardProps = VariantProps<typeof statToneVariants> & {
   label: string;
   value: number | string;
-  helper: string;
   icon: LucideIcon;
 };
 
 export function StatCard({
   label,
   value,
-  helper,
   icon: Icon,
   tone,
 }: StatCardProps) {
@@ -61,7 +59,6 @@ export function StatCard({
           iconClassName={cn("text-[var(--accent)]", statToneVariants({ tone }))}
         />
       </div>
-      <p className="mt-2.5 text-[12px] leading-[1.5] text-[var(--muted-ink)]">{helper}</p>
     </motion.article>
   );
 }
